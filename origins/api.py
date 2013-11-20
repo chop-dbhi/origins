@@ -8,6 +8,8 @@ from .utils import parse_uri, res, cached_property
 BACKENDS = {
     'sqlite': 'origins.backends.sqlite',
     'postgresql': 'origins.backends.postgresql',
+    'delimited': 'origins.backends.delimited',
+    'csv': 'origins.backends.delimited',  # alias for being so common
 }
 
 
