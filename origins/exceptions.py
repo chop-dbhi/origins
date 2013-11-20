@@ -11,4 +11,4 @@ class UnknownBackend(OriginsError):
 class BackendNotSupported(OriginsError):
     def __init__(self, backend):
         message = 'backend not supported: {}'.format(backend)
-        super(UnknownBackend, self).__init__(message)
+        super(BackendNotSupported, self).__init__(message)
