@@ -10,6 +10,7 @@ BACKENDS = {
     'postgresql': 'origins.backends.postgresql',
     'delimited': 'origins.backends.delimited',
     'csv': 'origins.backends.delimited',  # alias for being so common
+    'directory': 'origins.backends.directory',
 }
 
 
