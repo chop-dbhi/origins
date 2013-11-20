@@ -10,6 +10,8 @@ Origins is introspection, indexer, and semantic analyzer of data elements. It co
 >>> db.elements()
 ```
 
+Read through a [Origins Introduction example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Origins%2520Introduction.ipynb?token=515142__eyJzY29wZSI6IlJhd0Jsb2I6Y2JtaS9vcmlnaW5zL21hc3Rlci9ub3RlYm9va3MvT3JpZ2lucyBJbnRyb2R1Y3Rpb24uaXB5bmIiLCJleHBpcmVzIjoxMzg1NTU3Nzc0fQ%3D%3D--412f3de08be68e89e61417492787965c1880098a)
+
 ## Design
 
 - The core focus is exposing _just enough_ API for indexing data elements.
