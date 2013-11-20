@@ -7,6 +7,7 @@ from .utils import parse_uri, res, cached_property
 
 BACKENDS = {
     'sqlite': 'origins.backends.sqlite',
+    'postgresql': 'origins.backends.postgresql',
 }
 
 
