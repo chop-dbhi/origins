@@ -12,6 +12,7 @@ BACKENDS = {
     'csv': 'origins.backends.delimited',  # alias for being so common
     'directory': 'origins.backends.directory',
     'excel': 'origins.backends.excel',
+    'mongodb': 'origins.backends.mongodb',
 }
 
 
