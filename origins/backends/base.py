@@ -75,7 +75,7 @@ class Node(object):
         attrs = deepcopy(self.attrs)
         attrs['id'] = self.id
         if self.source:
-            attrs['source'] = unicode(self.source)
+            attrs['source'] = self.source.id
         return attrs
 
     def branches(self):
