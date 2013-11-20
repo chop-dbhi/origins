@@ -104,11 +104,7 @@ class Node(object):
 
 
 class Container(object):
-    """A branch is an intermediate container with a dict-like interface that
-    contains a set of nodes. For example, a relational database would have the
-    database as the origin, with a branch of tables, each table would have a
-    branch of elements.
-    """
+    "A container provides a dict-like interface that to a set of nodes."
     __slots__ = ('_nodes', 'source')
 
     def __init__(self, nodes=None, source=None):
@@ -120,11 +116,11 @@ class Container(object):
         }
 
     def __getitem__(self, key):
-        key = '{}:{}'.format(self.source._node.id, key)
+        key = '{}.{}'.format(self.source._node.id, key)
         return self._nodes.get(key, None)
 
     def __contains__(self, key):
-        key = '{}:{}'.format(self.source._node.id, key)
+        key = '{}.{}'.format(self.source._node.id, key)
         return key in self._nodes
 
     def __iter__(self):
@@ -132,7 +128,8 @@ class Container(object):
             yield self._nodes[key]
 
     def __repr__(self):
-        return pformat(self._nodes.values())
+        prefix = len(self.source.id) + 1  # account for delimiter
+        return pformat([n.id[prefix:] for n in self._nodes.values()])
 
     def __unicode__(self):
         return ', '.join(unicode(n) for n in self)

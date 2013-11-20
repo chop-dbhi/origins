@@ -60,7 +60,7 @@ class Node(object):
             if not node.source:
                 break
             node = node.source
-        return u':'.join(reversed(path))
+        return u'.'.join(reversed(path))
 
     @property
     def name(self):
