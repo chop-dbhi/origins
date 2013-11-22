@@ -13,6 +13,7 @@ BACKENDS = {
     'directory': 'origins.backends.directory',
     'excel': 'origins.backends.excel',
     'mongodb': 'origins.backends.mongodb',
+    'mysql': 'origins.backends.mysql',
 }
 
 
