@@ -1,13 +1,21 @@
 language: python
+
 python:
     - "2.7"
+
 install:
     - pip install -q coveralls --use-mirrors
     - pip install -r tests/requirements.txt
     - pip install flake8
+
 before_script:
-    flake8 origins
+    - flake8 origins
+    - psql -U postgres -c 'create database chinook'
+    - psql -U postgres -d chinook < tests/data/chinook_postgresql.sql
+    - mongorestore --db chinook tests/data/mongodb
+
 script:
     - coverage run test_suite.py
+
 after_success:
     - coveralls

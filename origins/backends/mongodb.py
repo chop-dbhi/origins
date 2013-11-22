@@ -44,7 +44,7 @@ class Collection(base.Node):
         function(key, values) {
             var count = 0;
             values.forEach(function() { count++; });
-            return count
+            return count;
         }
     ''')
 

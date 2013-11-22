@@ -19,17 +19,23 @@ class Directory(base.Node):
         for root, dirs, files in os.walk(self.client.path):
             for f in files:
                 path = os.path.join(root, f)
-                attrs = {'path': os.path.relpath(path, self.client.path)}
+                attrs = {
+                    'path': os.path.relpath(path, self.client.path),
+                    'abspath': path,
+                }
                 node = File(attrs=attrs, source=self, client=self.client)
                 nodes.append(node)
         return nodes
+
+    def synchronize(self):
+        self['path'] = os.path.abspath(self['path'])
 
 
 class File(base.Node):
     label_attribute = 'path'
 
     def synchronize(self):
-        stats = os.stat(self['path'])
+        stats = os.stat(self['abspath'])
 
         # Convert into datetime from timestamp floats
         atime = datetime.fromtimestamp(stats.st_atime)
