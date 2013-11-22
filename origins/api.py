@@ -120,11 +120,13 @@ class Container(object):
         }
 
     def __getitem__(self, key):
-        key = '{}.{}'.format(self.source._node.id, key)
+        if self.source:
+            key = '{}.{}'.format(self.source._node.id, key)
         return self._nodes.get(key, None)
 
     def __contains__(self, key):
-        key = '{}.{}'.format(self.source._node.id, key)
+        if self.source:
+            key = '{}.{}'.format(self.source._node.id, key)
         return key in self._nodes
 
     def __iter__(self):
