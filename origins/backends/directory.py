@@ -1,6 +1,7 @@
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
 from . import base
+from ..constants import DATETIME_FORMAT
 
 import os
 from datetime import datetime
@@ -31,8 +32,6 @@ class File(base.Node):
     def synchronize(self):
         stats = os.stat(self['path'])
 
-        dformat = '%Y-%m-%dT%H:%M:%S'
-
         # Convert into datetime from timestamp floats
         atime = datetime.fromtimestamp(stats.st_atime)
         mtime = datetime.fromtimestamp(stats.st_mtime)
@@ -43,9 +42,9 @@ class File(base.Node):
             'uid': stats.st_uid,
             'gid': stats.st_gid,
             'size': stats.st_size,
-            'accessed': atime.strftime(dformat),
-            'modified': mtime.strftime(dformat),
-            'created': ctime.strftime(dformat),
+            'accessed': atime.strftime(DATETIME_FORMAT),
+            'modified': mtime.strftime(DATETIME_FORMAT),
+            'created': ctime.strftime(DATETIME_FORMAT),
         })
 
 
