@@ -1,5 +1,7 @@
 # Origins
 
+[![Build Status](https://travis-ci.org/cbmi/origins.png?branch=master)](https://travis-ci.org/cbmi/origins) [![Coverage Status](https://coveralls.io/repos/cbmi/origins/badge.png)](https://coveralls.io/r/cbmi/origins)
+
 Origins is introspection, indexer, and semantic analyzer of data elements. It connects to data sources and extracts the data elements from those sources and gathers as much metadata about the data as it can an along the way. This metadata is used to show the inherent structure of the elements, but can be used for comparison against elements in other sources.
 
 ## Usage
@@ -12,12 +14,99 @@ Origins is introspection, indexer, and semantic analyzer of data elements. It co
 
 Read through a [Origins Introduction example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Origins%2520Introduction.ipynb?token=515142__eyJzY29wZSI6IlJhd0Jsb2I6Y2JtaS9vcmlnaW5zL21hc3Rlci9ub3RlYm9va3MvT3JpZ2lucyBJbnRyb2R1Y3Rpb24uaXB5bmIiLCJleHBpcmVzIjoxMzg1NTU3Nzc0fQ%3D%3D--412f3de08be68e89e61417492787965c1880098a)
 
+## Backends
+
+Backends are grouped by type and are broken down into subsections. The first section lists the backend name and a list of dependencies that must be installed for the backend. The **Options** section lists all the options that can be passed when loading/connecting to the backend. Options that do not apply to all backends of a given type will be denoted (and are simply ignored). **Hierarchy** lists the path from the origin to the elements, for example `database.tables` will access the table nodes. `database.tables['foo'].columns` will access all the columns on the `foo` table. The **Attributes** section lists the attributes for each type that are captured by the backend. Attributes that are not captured by all backends will be denoted.
+
+### Relational Databases
+
+- `sqlite`
+- `postgresql` - requires [psycopg2](https://pypi.python.org/pypi/psycopg2)
+- `mysql` - requires [MySQL-python](https://pypi.python.org/pypi/MySQL-python)
+
+**Options**
+
+- `database` - name of the database
+- `host` - host of the server
+- `port` - port of the server
+- `user` - user for authentication
+- `password` - password for authentication
+
+**Hierarchy**
+
+- `database`
+- `schemas` (PostgreSQL only)
+- `tables`
+- `columns`
+
+### Document Stores
+
+- `mongodb` - requires [PyMongo](https://pypi.python.org/pypi/pymongo)
+
+**Options**
+
+- `database` - name of the database
+- `host` - host of the server
+- `port` - port of the server
+- `user` - user for authentication
+- `password` - password for authentication
+
+**Hierarchy**
+
+- `database`
+- `collections`
+- `fields`*
+
+*Note: the fields of nested documents are not indexed, however this could be implemented as an option if a use case presents itself.*
+
+
+### Files
+
+- `delimited`
+- `csv` (alias to delimited)
+
+**Options**
+
+- `path` - Path to the file
+- `delimiter` - The delimiter between fields, defaults to comma
+- `header` - A list/tuple of column names. If not specified, the header will be detected if it exists, otherwise the column names will be the indices.
+- `sniff` - The number of bytes to use of the file when detecting the header.
+- `dialect` - `csv.Dialect` instance. This will be detected if not specified.
+
+**Hierarchy**
+
+- `file`
+- `columns`
+
+### Excel
+
+- `excel` - requires [openpyxl](https://pypi.python.org/pypi/openpyxl)
+
+**Options**
+
+- `path` - Path to the file
+- `headers` - If `True`, the first row on each sheet will be assume to be the header. If `False` the column indices will be used. If a list/tuple, the columns will apply to the first sheet. If a dict, keys are the sheet names and the values are a list/tuple of column names for the sheet.
+
+#### Directory
+
+- `directory`
+
+**Options**
+
+- `path` - Path to directory
+
+**Hierarchy**
+
+- `directory`
+- `files`
+
 ## Design
 
 - The core focus is exposing _just enough_ API for indexing data elements.
 - The API is dynamic to allow the backend to be exposed with familiar names, while still maintaing a consistent API for generic manipulation.
 - The top-level source (as exposed by the backend) is known as the _origin_.
 - Except for the origin, nodes are contained in a _named branch_ which is accessible via the branch's source. For example, the relational database backends expose the `tables` branch on `Database` (the origin) which contain `Table` instances (which are themselves sources).
+
 
 ## Structures
 
