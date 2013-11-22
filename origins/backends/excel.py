@@ -13,23 +13,24 @@ class Workbook(base.Node):
     def branches(self):
         nodes = []
         for i, name in enumerate(self.client.workbook.get_sheet_names()):
-            attrs = {'name': name, 'index': i}
+            attrs = {'sheet_name': name, 'index': i}
             node = Sheet(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
         return nodes
 
 
 class Sheet(base.Node):
+    label_attribute = 'sheet_name'
     elements_property = 'columns'
 
     def elements(self):
         workbook = self.client.workbook
-        sheet = workbook.get_sheet_by_name(self['name'])
+        sheet = workbook.get_sheet_by_name(self['sheet_name'])
 
         if self.client.has_headers:
             header = [c.internal_value for c in next(sheet.iter_rows())]
         else:
-            header = self.client.headers.get(self['name'])
+            header = self.client.headers.get(self['sheet_name'])
             if not header:
                 header = range(len(next(sheet.iter_rows())))
 
@@ -42,7 +43,7 @@ class Sheet(base.Node):
         return nodes
 
     def synchronize(self):
-        sheet = self.client.workbook.get_sheet_by_name(self['name'])
+        sheet = self.client.workbook.get_sheet_by_name(self['sheet_name'])
         self.attrs['title'] = sheet.title
 
 

@@ -85,6 +85,7 @@ Backends are grouped by type and are broken down into subsections. The first sec
 ### Excel
 
 - `excel` - requires [openpyxl](https://pypi.python.org/pypi/openpyxl)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Excel%2520Example.ipynb)
 
 **Options**
 
