@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals
 from importlib import import_module
 from pprint import pformat
 from .exceptions import UnknownBackend, BackendNotSupported
-from .utils import parse_uri, res, cached_property
+from .utils import res, cached_property
 
 
 BACKENDS = {
@@ -44,21 +44,19 @@ def check_backend(name):
         return unicode(e)
 
 
-def connect(uri, **options):
-    "Connects to a backend and returns the origin node."
-    if '://' not in uri:
-        defaults = {'backend': uri}
-    else:
-        defaults = parse_uri(uri or '')
-        defaults['backend'] = defaults['scheme']
+def connect(backend, **options):
+    """Connects to the origin of the specified backend.
 
-    backend = import_backend(defaults['backend'])
+    `options` are passed to the backend's `Client` which sets up the necessary
+    components for the backend to work (database connections, opening file
+    handlers, etc.)
 
-    options.update(defaults)
-
-    client = backend.Client(**options)
-    origin = backend.Origin(attrs=options, client=client)
-
+    An origin node is initialized and returned wrapped in the public API node.
+    """
+    module = import_backend(backend)
+    options['backend'] = backend
+    client = module.Client(**options)
+    origin = module.Origin(attrs=options, client=client)
     return Node(origin)
 
 
