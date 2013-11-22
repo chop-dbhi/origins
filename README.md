@@ -12,7 +12,7 @@ Origins is introspection, indexer, and semantic analyzer of data elements. It co
 >>> db.elements()
 ```
 
-Read through a [Origins Introduction example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Origins%2520Introduction.ipynb?token=515142__eyJzY29wZSI6IlJhd0Jsb2I6Y2JtaS9vcmlnaW5zL21hc3Rlci9ub3RlYm9va3MvT3JpZ2lucyBJbnRyb2R1Y3Rpb24uaXB5bmIiLCJleHBpcmVzIjoxMzg1NTU3Nzc0fQ%3D%3D--412f3de08be68e89e61417492787965c1880098a)
+Read through a [Origins Introduction example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Origins%2520Introduction.ipynb)
 
 ## Backends
 
@@ -21,8 +21,11 @@ Backends are grouped by type and are broken down into subsections. The first sec
 ### Relational Databases
 
 - `sqlite`
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Origins%2520Introduction.ipynb)
 - `postgresql` - requires [psycopg2](https://pypi.python.org/pypi/psycopg2)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/PostgreSQL%2520Example.ipynb)
 - `mysql` - requires [MySQL-python](https://pypi.python.org/pypi/MySQL-python)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/MySQL%2520Example.ipynb)
 
 **Options**
 
@@ -64,6 +67,7 @@ Backends are grouped by type and are broken down into subsections. The first sec
 
 - `delimited`
 - `csv` (alias to delimited)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/CSV%2520Example.ipynb)
 
 **Options**
 
@@ -90,6 +94,7 @@ Backends are grouped by type and are broken down into subsections. The first sec
 #### Directory
 
 - `directory`
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Directory%2520Example.ipynb)
 
 **Options**
 
