@@ -29,6 +29,8 @@ class Node(object):
         self.source = source
         self._client = client
 
+        self.synchronize()
+
     def __unicode__(self):
         return unicode(self.label)
 
