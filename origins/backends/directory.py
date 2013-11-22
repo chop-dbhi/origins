@@ -1,5 +1,4 @@
-from __future__ import division, print_function, unicode_literals, \
-    absolute_import
+from __future__ import division, unicode_literals
 from . import base
 from ..constants import DATETIME_FORMAT
 
@@ -11,7 +10,7 @@ class Directory(base.Node):
     elements_property = 'files'
 
     @property
-    def name(self):
+    def label(self):
         return os.path.abspath(self['path'])
 
     def elements(self):
@@ -27,7 +26,7 @@ class Directory(base.Node):
 
 
 class File(base.Node):
-    name_attribute = 'path'
+    label_attribute = 'path'
 
     def synchronize(self):
         stats = os.stat(self['path'])

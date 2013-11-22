@@ -95,8 +95,8 @@ class Node(object):
         return res(self._node, 'id')
 
     @property
-    def name(self):
-        return res(self._node, 'name')
+    def label(self):
+        return res(self._node, 'label')
 
     @cached_property
     def branches(self):

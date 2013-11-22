@@ -10,7 +10,7 @@ class File(base.Node):
     elements_property = 'columns'
 
     @property
-    def name(self):
+    def label(self):
         return os.path.basename(self['path'])
 
     def elements(self):
@@ -32,9 +32,10 @@ class File(base.Node):
 
 
 class Column(base.Node):
-    pass
+    label_attribute = 'name'
 
 
+# Exported classes for API
 Origin = File
 
 

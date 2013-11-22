@@ -8,8 +8,6 @@ class Node(object):
     """A node contains attributes and optionally a source. It implements
     a dict-like interface for accessing the attributes of the node.
     """
-    id_separator = '.'
-
     id_attribute = 'id'
     label_attribute = 'label'
 
@@ -71,7 +69,7 @@ class Node(object):
             path = [self.source.id or '', label]
         else:
             path = [label]
-        return self.id_separator.join(path)
+        return '.'.join(path)
 
     @property
     def label(self):

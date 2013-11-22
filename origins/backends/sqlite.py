@@ -10,7 +10,7 @@ class Database(base.Node):
     branches_property = 'tables'
 
     @property
-    def name(self):
+    def label(self):
         return os.path.basename(self['path'])
 
     def branches(self):
@@ -38,7 +38,7 @@ class Database(base.Node):
 
 class Table(base.Node):
     elements_property = 'columns'
-    name_attribute = 'table_name'
+    label_attribute = 'table_name'
 
     def elements(self):
         c = self.client.connection.cursor()
@@ -60,12 +60,12 @@ class Table(base.Node):
         self.attrs['count'] = self.count()
 
     def count(self):
-        query = 'select count(*) from "{}"'.format(self.name)
+        query = 'select count(*) from "{}"'.format(self['table_name'])
         return self.client.one(query)[0]
 
 
 class Column(base.Node):
-    name_attribute = 'column_name'
+    label_attribute = 'column_name'
 
     def synchronize(self):
         self.attrs['count'] = self.count()

@@ -7,7 +7,7 @@ import openpyxl
 
 
 class Workbook(base.Node):
-    name_attribute = 'path'
+    label_attribute = 'path'
     branches_property = 'sheets'
 
     def branches(self):
@@ -47,7 +47,7 @@ class Sheet(base.Node):
 
 
 class Column(base.Node):
-    name_attribute = 'column'
+    label_attribute = 'column'
 
 
 # Export to public API

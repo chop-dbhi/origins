@@ -6,7 +6,7 @@ import psycopg2
 
 
 class Database(base.Node):
-    name_attribute = 'database'
+    label_attribute = 'database'
     branches_property = 'schemas'
 
     def branches(self):
@@ -42,7 +42,7 @@ class Database(base.Node):
 
 class Schema(base.Node):
     branches_property = 'tables'
-    name_attribute = 'schema_name'
+    label_attribute = 'schema_name'
 
     def branches(self):
         query = '''
@@ -67,7 +67,7 @@ class Schema(base.Node):
 
 class Table(base.Node):
     elements_property = 'columns'
-    name_attribute = 'table_name'
+    label_attribute = 'table_name'
 
     def elements(self):
         query = '''
@@ -109,7 +109,7 @@ class Table(base.Node):
 
 
 class Column(base.Node):
-    name_attribute = 'column_name'
+    label_attribute = 'column_name'
 
     def count(self):
         query = '''

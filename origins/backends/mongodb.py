@@ -7,7 +7,7 @@ from bson.code import Code
 
 
 class Database(base.Node):
-    name_attribute = 'database'
+    label_attribute = 'database'
     branches_property = 'collections'
 
     def branches(self):
@@ -29,6 +29,7 @@ class Database(base.Node):
 
 
 class Collection(base.Node):
+    label_attribute = 'name'
     elements_property = 'fields'
 
     _map_fields = Code('''
@@ -71,6 +72,8 @@ class Collection(base.Node):
 
 
 class Field(base.Node):
+    label_attribute = 'name'
+
     def synchronize(self):
         self.attrs['count'] = self.count()
         self.attrs['unique_count'] = self.unique_count()
