@@ -72,9 +72,17 @@ class Client(object):
             self.dialect = dialect
             self.delimiter = delimiter
 
+            # Map of column name to index
+            self._header_index = dict(zip(header, range(len(header))))
+
     @property
-    def reader(self):
+    def _file(self):
         f = open(self.path, 'rb')
         if self.has_header:
             next(f)
-        return csv.reader(f, dialect=self.dialect, delimiter=self.delimiter)
+        return f
+
+    @property
+    def reader(self):
+        return csv.reader(self._file, dialect=self.dialect,
+                          delimiter=self.delimiter)
