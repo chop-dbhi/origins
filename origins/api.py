@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
-from importlib import import_module
 from pprint import pformat
+from importlib import import_module
+from collections import OrderedDict
 from .exceptions import UnknownBackend, BackendNotSupported
 from .utils import res, cached_property
 
