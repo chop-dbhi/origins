@@ -2,6 +2,15 @@ from __future__ import print_function, unicode_literals
 from pprint import pformat
 from copy import deepcopy
 from ..exceptions import OriginsError
+from ..utils import res
+
+
+class LazyAttr(object):
+    def __repr__(self):
+        return '<lazy>'
+
+
+LAZY_ATTR = LazyAttr()
 
 
 class Node(object):
@@ -10,6 +19,7 @@ class Node(object):
     """
     id_attribute = 'id'
     label_attribute = 'label'
+    lazy_attributes = ()
 
     branches_property = None
     elements_property = None
@@ -29,6 +39,9 @@ class Node(object):
         self.source = source
         self._client = client
 
+        for attr in self.lazy_attributes:
+            self.attrs[attr] = LAZY_ATTR
+
         self.synchronize()
 
     def __unicode__(self):
@@ -41,7 +54,11 @@ class Node(object):
         return pformat(self.serialize())
 
     def __getitem__(self, key):
-        return self.attrs.get(key, None)
+        value = self.attrs.get(key)
+        if value is LAZY_ATTR:
+            value = res(self, key)
+            self.attrs[key] = value
+        return value
 
     def __setitem__(self, key, value):
         self.attrs[key] = value
@@ -92,7 +109,8 @@ class Node(object):
 
     def synchronize(self):
         """Synchronizes the node with the backend updating any attributes that
-        were derived or computed from the backend.
+        were derived or computed from the backend. For attributes that are
+        expensive, define it as a method and add it as a `lazy_attributes`.
         """
 
     def serialize(self):
