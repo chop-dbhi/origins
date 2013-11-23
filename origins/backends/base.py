@@ -63,6 +63,9 @@ class Node(object):
     def __setitem__(self, key, value):
         self.attrs[key] = value
 
+    def __delitem__(self, key):
+        del self.attrs[key]
+
     def __contains__(self, key):
         return key in self.attrs
 
