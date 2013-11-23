@@ -62,6 +62,10 @@ def connect(backend, **options):
 
 
 class Node(object):
+    """This class exposes a simplified API for interacting with backend
+    nodes. It ensures consistency across backends and hides private backend
+    methods.
+    """
     def __init__(self, node):
         self._node = node
 
@@ -82,6 +86,12 @@ class Node(object):
 
     def __getitem__(self, key):
         return self._node[key]
+
+    def __setitem__(self, key, value):
+        self._node[key] = value
+
+    def __delitem__(self, key):
+        del self._node[key]
 
     def __contains__(self, key):
         return self._node[key]
@@ -106,6 +116,9 @@ class Node(object):
     def elements(self):
         nodes = res(self._node, 'elements')
         return Container(nodes, source=self)
+
+    def serialize(self):
+        return res(self._node, 'serialize')
 
 
 class Container(object):
