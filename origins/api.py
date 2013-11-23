@@ -129,18 +129,18 @@ class Container(object):
         self.source = source
         if nodes is None:
             nodes = ()
-        self._nodes = {
-            node.id: Node(node) for node in nodes
-        }
+        self._nodes = OrderedDict([
+            (node.relid(source), Node(node)) for node in nodes
+        ])
 
     def __getitem__(self, key):
-        if self.source:
-            key = '{}.{}'.format(self.source._node.id, key)
-        return self._nodes.get(key, None)
+        if key in self._nodes:
+            return self._nodes[key]
+        # Return node by index
+        if isinstance(key, int) and key < len(self._nodes):
+            return self._nodes[self._nodes.keys()[key]]
 
     def __contains__(self, key):
-        if self.source:
-            key = '{}.{}'.format(self.source._node.id, key)
         return key in self._nodes
 
     def __iter__(self):
@@ -148,8 +148,7 @@ class Container(object):
             yield self._nodes[key]
 
     def __repr__(self):
-        prefix = len(self.source.id) + 1  # account for delimiter
-        return pformat([n.id[prefix:] for n in self._nodes.values()])
+        return pformat([n.id for n in self._nodes.values()])
 
     def __unicode__(self):
         return ', '.join(unicode(n) for n in self)

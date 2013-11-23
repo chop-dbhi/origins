@@ -11,6 +11,7 @@ class LazyAttr(object):
 
 
 LAZY_ATTR = LazyAttr()
+ID_SEPARATOR = '/'
 
 
 class Node(object):
@@ -84,14 +85,21 @@ class Node(object):
 
         label = self.label
         if label is None:
-            return
+            return ''
 
         # Prefix with the id of the source
         if self.source:
-            path = [self.source.id or '', label]
+            path = [self.source.id, label]
         else:
             path = [label]
-        return '.'.join(path)
+        return ID_SEPARATOR.join(path)
+
+    def relid(self, root=None):
+        "Returns an id relative to the root."
+        _id = self.id
+        if root is None:
+            return _id
+        return _id[len(root.id) + len(ID_SEPARATOR):]
 
     @property
     def label(self):
@@ -99,7 +107,7 @@ class Node(object):
         property can be specified (defaults to 'label') or this can be
         overridden for custom labels.
         """
-        return self[self.label_attribute]
+        return self.attrs.get(self.label_attribute, '')
 
     @property
     def client(self):
@@ -116,14 +124,16 @@ class Node(object):
         expensive, define it as a method and add it as a `lazy_attributes`.
         """
 
-    def serialize(self):
-        "Serializes by doing a deepcopy of the node's attributes."
-        attrs = deepcopy(self.attrs)
-        _id = self.id
-        if _id is not None:
-            attrs['id'] = _id
-        if self.source:
-            attrs['source'] = self.source.id
+    def serialize(self, deep=False):
+        """Serializes the node's attributes by making a shallow copy. Set deep
+        to true to perform a deep copy.
+        """
+        attrs = {'id': self.id}
+        for key in self.attrs:
+            value = self[key]
+            if deep:
+                value = deepcopy(value)
+            attrs[key] = value
         return attrs
 
     def branches(self):

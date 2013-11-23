@@ -15,8 +15,8 @@ class TestBase(unittest.TestCase):
         self.assertEqual(node.source, None)
         self.assertEqual(node._client, None)
 
-        self.assertEqual(node.id, None)
-        self.assertEqual(node.label, None)
+        self.assertEqual(node.id, '')
+        self.assertEqual(node.label, '')
         self.assertRaises(OriginsError, lambda: node.client)
 
         # No-op by default
@@ -24,7 +24,7 @@ class TestBase(unittest.TestCase):
         self.assertEqual(node.attrs, {})
 
         # No id exists nor source
-        self.assertEqual(node.serialize(), {})
+        self.assertEqual(node.serialize(), {'id': ''})
 
         self.assertEqual(node.branches(), [])
         self.assertEqual(node.elements(), [])
@@ -50,4 +50,4 @@ class TestBase(unittest.TestCase):
         self.assertEqual(node.attrs['foo'], 1)
         self.assertEqual(node.attrs['bar'], None)
 
-        self.assertEqual(node.serialize(), {'foo': 1, 'bar': None})
+        self.assertEqual(node.serialize(), {'id': '', 'foo': 1, 'bar': None})
