@@ -149,7 +149,7 @@ class Container(object):
             yield self._nodes[key]
 
     def __repr__(self):
-        return pformat([n.id for n in self._nodes.values()])
+        return pformat([n.relid(self.source) for n in self._nodes.values()])
 
     def __unicode__(self):
         return ', '.join(unicode(n) for n in self)
