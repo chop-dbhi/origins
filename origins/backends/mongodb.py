@@ -44,9 +44,7 @@ class Collection(base.Node):
 
     _count_fields = Code('''
         function(key, values) {
-            var count = 0;
-            values.forEach(function() { count++; });
-            return count;
+            return Array.sum(values);
         }
     ''')
 
@@ -56,7 +54,6 @@ class Collection(base.Node):
                                full_response=True)
 
         nodes = []
-
         inputs = out['counts']['input']
 
         for result in out['results']:
