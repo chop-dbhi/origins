@@ -45,6 +45,7 @@ Backends are grouped by type and are broken down into subsections. The first sec
 ### Document Stores
 
 - `mongodb` - requires [PyMongo](https://pypi.python.org/pypi/pymongo)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/MongoDB%2520Example.ipynb)
 
 **Options**
 
