@@ -8,7 +8,7 @@ Origins is introspection, indexer, and semantic analyzer of data elements. It co
 
 ```python
 >>> import origins
->>> db = origins.connect('sqlite://./tests/data/chinook.db')
+>>> db = origins.connect('sqlite', path='./tests/data/chinook.db')
 >>> db.elements()
 ```
 
