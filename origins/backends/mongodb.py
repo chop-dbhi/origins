@@ -15,6 +15,8 @@ class Database(base.Node):
         nodes = []
 
         for name in names:
+            if name == 'system.indexes':
+                continue
             attrs = {'name': name}
             node = Collection(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
