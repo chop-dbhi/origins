@@ -4,3 +4,4 @@
 .coverage
 dist
 MANIFEST
+.ipynb_checkpoints
