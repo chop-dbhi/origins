@@ -4,5 +4,5 @@ if __name__ == '__main__':
     import unittest
     loader = unittest.TestLoader()
     runner = unittest.runner.TextTestRunner()
-    tests = loader.discover('tests', '*_test.py')
+    tests = loader.discover('tests', '*.py')
     runner.run(tests)
