@@ -26,6 +26,8 @@ Backends are grouped by type and are broken down into subsections. The first sec
     - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/PostgreSQL%2520Example.ipynb)
 - `mysql` - requires [MySQL-python](https://pypi.python.org/pypi/MySQL-python)
     - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/MySQL%2520Example.ipynb)
+- `oracle` - requires [cx_Oracle](https://pypi.python.org/pypi/cx_Oracle)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Oracle%2520Example.ipynb)
 
 **Options**
 

@@ -15,6 +15,7 @@ BACKENDS = {
     'excel': 'origins.backends.excel',
     'mongodb': 'origins.backends.mongodb',
     'mysql': 'origins.backends.mysql',
+    'oracle': 'origins.backends.oracle',
 }
 
 
