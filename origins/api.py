@@ -10,13 +10,27 @@ BACKENDS = {
     'sqlite': 'origins.backends.sqlite',
     'postgresql': 'origins.backends.postgresql',
     'delimited': 'origins.backends.delimited',
-    'csv': 'origins.backends.delimited',  # alias for being so common
     'directory': 'origins.backends.directory',
     'excel': 'origins.backends.excel',
     'mongodb': 'origins.backends.mongodb',
     'mysql': 'origins.backends.mysql',
     'oracle': 'origins.backends.oracle',
     'vcf': 'origins.backends.vcf',
+}
+
+BACKEND_ALIASES = {
+    'csv': {
+        'backend': 'delimited',
+        'options': {
+            'delimiter': b',',
+        }
+    },
+    'tab': {
+        'backend': 'delimited',
+        'options': {
+            'delimiter': b'\t',
+        }
+    }
 }
 
 
@@ -26,6 +40,9 @@ def register_backend(name, module):
 
 def import_backend(name):
     "Attempts to import a backend by name."
+    if name in BACKEND_ALIASES:
+        name = BACKEND_ALIASES[name]['backend']
+
     module = BACKENDS.get(name)
 
     if not module:
@@ -57,6 +74,11 @@ def connect(backend, **options):
 
     An origin node is initialized and returned wrapped in the public API node.
     """
+    if backend in BACKEND_ALIASES:
+        alias = BACKEND_ALIASES[backend]
+        backend = alias['backend']
+        options.update(alias['options'])
+
     module = import_backend(backend)
     options['backend'] = backend
     client = module.Client(**options)
