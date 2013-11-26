@@ -109,6 +109,20 @@ Backends are grouped by type and are broken down into subsections. The first sec
 - `directory`
 - `files`
 
+### VCF Files
+
+- `vcf` - requires [PyVCF](https://pypi.python.org/pypi/PyVCF)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/VCF%2520Example.ipynb)
+
+**Options**
+
+- `path` - Path to VCF file
+
+**Hierarchy**
+
+- `file`
+- `field`
+
 ## Design
 
 - The core focus is exposing _just enough_ API for indexing data elements.

@@ -16,6 +16,7 @@ BACKENDS = {
     'mongodb': 'origins.backends.mongodb',
     'mysql': 'origins.backends.mysql',
     'oracle': 'origins.backends.oracle',
+    'vcf': 'origins.backends.vcf',
 }
 
 
