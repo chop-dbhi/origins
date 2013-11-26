@@ -1,6 +1,5 @@
 from __future__ import print_function, unicode_literals
 from pprint import pformat
-from copy import deepcopy
 from ..exceptions import OriginsError
 from ..utils import res
 
@@ -124,16 +123,13 @@ class Node(object):
         expensive, define it as a method and add it as a `lazy_attributes`.
         """
 
-    def serialize(self, deep=False):
+    def serialize(self):
         """Serializes the node's attributes by making a shallow copy. Set deep
         to true to perform a deep copy.
         """
         attrs = {'id': self.id}
         for key in self.attrs:
-            value = self[key]
-            if deep:
-                value = deepcopy(value)
-            attrs[key] = value
+            attrs[key] = self[key]
         return attrs
 
     def branches(self):
