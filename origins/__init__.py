@@ -19,4 +19,4 @@ def get_version(short=False):
 __version__ = get_version()
 
 
-from .api import BACKENDS, connect, check_backend  # noqa
+from .api import BACKENDS, connect  # noqa

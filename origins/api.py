@@ -54,17 +54,6 @@ def import_backend(name):
         raise BackendNotSupported(unicode(e))
 
 
-def check_backend(name):
-    """Checks if a backend is supported by importing the module.
-    Returns none if successful, other the reason for it not being supported
-    will be returned.
-    """
-    try:
-        import_backend(name)
-    except (UnknownBackend, BackendNotSupported) as e:
-        return unicode(e)
-
-
 def connect(backend, **options):
     """Connects to the origin of the specified backend.
 
