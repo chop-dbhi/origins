@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+    <head>
+        <link href="css/bootstrap.css" rel="stylesheet">
+        <link href="css/font-awesome.css" rel="stylesheet">
+        <style>
+            .list-group-item-text {
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class=container>
+            <div class=row>
+                <div class="col-lg-6 col-lg-offset-3">
+                    <form class=form action="#" method="post">
+                        <div class=form-group>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                                <input id=search class="form-control" type=text placeholder="Search...">
+                            </div>
+                        </div>
+                    </form>
+
+                    <ul class=pager>
+                        <li class="previous disabled"><a id=pager-previous href=#>&larr; Previous</a></li>
+                        <li class="next disabled"><a id=pager-next href=#>Next &rarr;</a></li>
+                    </ul>
+
+                    <div id=results class=list-group></div>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/jquery.js"></script>
+        <script src="js/underscore.js"></script>
+        <script src="js/backbone.js"></script>
+        <script src="js/origins.js"></script>
+    </body>
+</html>
