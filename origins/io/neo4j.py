@@ -106,8 +106,10 @@ def export(origin, uri=DEFAULT_URI, include_sources=True, batch_size=100):
                     break
 
                 if not factory.hasref(source.uri):
-                    stmts.append(factory.merge_node_statement(source, label='Branch'))
-                stmts.append(factory.merge_rel_statement(source, 'BRANCH', child))
+                    stmts.append(factory.merge_node_statement(source,
+                                                              label='Branch'))
+                stmts.append(factory.merge_rel_statement(source,
+                                                         'BRANCH', child))
 
                 child = source
                 source = child.source
