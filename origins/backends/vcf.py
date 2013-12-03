@@ -1,45 +1,64 @@
 from __future__ import division, unicode_literals, absolute_import
-from . import base
+from ..utils import cached_property
+from . import base, _file
 
-import os
 import vcf
 
 
-class File(base.Node):
-    label_attribute = 'path'
-    elements_property = 'fields'
+FIXED_FIELDS = (
+    ('CHROM', 'Chromosome'),
+    ('POS', 'Position'),
+    ('ID', 'Unique identifier'),
+    ('REF', 'Reference base(s)'),
+    ('ALT', 'Alternate non-reference alleles'),
+    ('QUAL', 'Phred-scale quality score for assertion made in ALT'),
+    ('FILTER', 'PASS or filters that have not passed'),
+)
 
-    def elements(self):
-        nodes = []
 
-        r = self.client.reader
+class Client(_file.Client):
+    @property
+    def reader(self):
+        return vcf.Reader(self.file_handler)
+
+    def fields(self):
+        r = self.reader
+
+        keys = ('field_name', 'possible_values', 'data_type', 'description')
+        fields = []
 
         # Fixed fields
-        for field, desc in self.client.FIXED_FIELDS:
-            attrs = {'field_name': field, 'desc': desc}
-            node = Field(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
+        for name, desc in FIXED_FIELDS:
+            attrs = dict(zip(keys, (name, desc, None)))
+            fields.append(attrs)
 
         # INFO fields
-        for field, info in r.infos.items():
-            attrs = dict(zip(info._fields, info))
-            del attrs['id']  # this will be set as the field_name
-            attrs['field_name'] = field
-            node = Field(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
+        for info in r.infos.values():
+            attrs = dict(zip(keys, info[:3]))
+            fields.append(attrs)
 
         # FORMAT fields
-        for field, info in r.formats.items():
-            attrs = dict(zip(info._fields, info))
-            del attrs['id']  # this will be set as the field_name
-            attrs['field_name'] = field
-            node = Field(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
+        for info in r.formats.values():
+            attrs = dict(zip(keys, info[:3]))
+            fields.append(attrs)
 
-        return nodes
+        return fields
+
+
+class File(base.Node):
+    elements_property = 'fields'
 
     def synchronize(self):
+        super(File, self).synchronize()
         self.attrs.update(self.client.reader.metadata)
+
+    @cached_property
+    def fields(self):
+        nodes = []
+        for attrs in self.client.fields():
+            node = Field(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
 
 
 class Field(base.Node):
@@ -47,26 +66,3 @@ class Field(base.Node):
 
 
 Origin = File
-
-
-class Client(object):
-    FIXED_FIELDS = (
-        ('CHROM', 'Chromosome'),
-        ('POS', 'Position'),
-        ('ID', 'Unique identifier'),
-        ('REF', 'Reference base(s)'),
-        ('ALT', 'Alternate non-reference alleles'),
-        ('QUAL', 'Phred-scale quality score for assertion made in ALT'),
-        ('FILTER', 'PASS or filters that have not passed'),
-    )
-
-    def __init__(self, path, **kwargs):
-        self.path = os.path.abspath(path)
-
-    @property
-    def _file(self):
-        return open(self.path)
-
-    @property
-    def reader(self):
-        return vcf.Reader(self._file)

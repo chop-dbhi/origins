@@ -1,114 +1,121 @@
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
-import os
-from . import base
+from ..utils import cached_property
+from . import base, _database
 
+import os
 import sqlite3
 
 
-class Database(base.Node):
-    branches_property = 'tables'
+class Client(_database.Client):
+    def __init__(self, path, **kwargs):
+        self.path = os.path.abspath(path)
+        self.connect(user=kwargs.get('user'), password=kwargs.get('password'))
 
-    @property
-    def label(self):
-        return os.path.basename(self['path'])
+    def connect(self, user=None, password=None):
+        self.connection = sqlite3.connect(self.path)
 
-    def branches(self):
-        query = "SELECT name FROM sqlite_master WHERE type='table'"
-        nodes = []
-
-        for row in self.client.all(query):
-            attrs = {'table_name': row[0]}
-            node = Table(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return nodes
-
-    def synchronize(self):
-        self.attrs['version'] = self.version()
-        self.attrs['size'] = self.size()
+    def qn(self, name):
+        return '"{}"'.format(name)
 
     def version(self):
-        return self.client.one('PRAGMA schema_version')[0]
+        return self.fetchvalue('PRAGMA schema_version')
 
-    def size(self):
-        page_size = self.client.one('PRAGMA page_size')[0]
-        page_count = self.client.one('PRAGMA page_count')[0]
+    def database_size(self):
+        page_size = self.fetchvalue('PRAGMA page_size')
+        page_count = self.fetchvalue('PRAGMA page_count')
         return page_size * page_count
+
+    def tables(self):
+        query = '''
+            SELECT name
+            FROM sqlite_master
+            WHERE type='table'
+            ORDER BY name
+        '''
+
+        keys = ('table_name',)
+        tables = []
+
+        for row in self.fetchall(query):
+            attrs = dict(zip(keys, row))
+            tables.append(attrs)
+
+        return tables
+
+    def columns(self, table_name):
+        query = 'PRAGMA table_info({table})'.format(table=self.qn(table_name))
+
+        keys = ('column_index', 'column_name', 'data_type', 'nullable')
+                #'default_value', 'primary_key')
+        columns = []
+
+        for row in self.fetchall(query):
+            attrs = dict(zip(keys, row))
+            # Invert boolean
+            attrs['nullable'] = not bool(attrs['nullable'])
+            columns.append(attrs)
+
+        return columns
+
+    def table_count(self, table_name):
+        query = '''
+            SELECT COUNT(*) FROM {table}
+        '''.format(table=self.qn(table_name))
+        return self.fetchvalue(query)
+
+    def column_unique_count(self, table_name, column_name):
+        query = '''
+            SELECT COUNT(DISTINCT {column}) FROM {table}
+        '''.format(column=self.qn(column_name),
+                   table=self.qn(table_name))
+        return self.fetchvalue(query)
+
+    def column_unique_values(self, table_name, column_name, ordered=True):
+        query = '''
+            SELECT DISTINCT {column} FROM {table}
+        '''.format(column=self.qn(column_name),
+                   table=self.qn(table_name))
+        if ordered:
+            query += ' ORDER BY {column}'.format(column=self.qn(column_name))
+
+        for row in self.fetchall(query):
+            yield row[0]
+
+
+class Database(base.Node):
+    label_attribute = 'database_name'
+    branches_property = 'tables'
+
+    def synchronize(self):
+        self.attrs['database_path'] = self.client.path
+        self.attrs['database_name'] = os.path.basename(self.client.path)
+
+    @cached_property
+    def tables(self):
+        nodes = []
+        for attrs in self.client.tables():
+            node = Table(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
 
 
 class Table(base.Node):
     elements_property = 'columns'
     label_attribute = 'table_name'
 
-    def elements(self):
-        c = self.client.connection.cursor()
-        c.execute('PRAGMA table_info("{}")'.format(self['table_name']))
-
+    @cached_property
+    def columns(self):
         nodes = []
-        keys = ('position', 'column_name', 'type', 'nullable',
-                'default', 'primary_key')
-
-        for row in c.fetchall():
-            attrs = dict(zip(keys, row))
-            attrs['nullable'] = not attrs['nullable']  # flip negation
-            attrs['table_name'] = self['table_name']
+        for attrs in self.client.columns(self['table_name']):
             node = Column(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
-        return nodes
-
-    def synchronize(self):
-        self.attrs['count'] = self.count()
-
-    def count(self):
-        query = 'select count(*) from "{}"'.format(self['table_name'])
-        return self.client.one(query)[0]
+        return base.Container(nodes, source=self)
 
 
 class Column(base.Node):
     label_attribute = 'column_name'
 
-    def synchronize(self):
-        self.attrs['count'] = self.count()
-        self.attrs['unique_count'] = self.unique_count()
 
-    def count(self):
-        query = 'select count("{}") from "{}"'\
-                .format(self['column_name'], self['table_name'])
-        return self.client.one(query)[0]
-
-    def unique_count(self):
-        query = 'select count(distinct "{}") from "{}"'\
-                .format(self['column_name'], self['table_name'])
-        return self.client.one(query)[0]
-
-    def values(self):
-        query = 'select "{}" from "{}"'\
-                .format(self['column_name'], self['table_name'])
-        return [r[0] for r in self.client.all(query)]
-
-    def unique_values(self):
-        query = 'select distinct "{}" from "{}"'\
-                .format(self['column_name'], self['table_name'])
-        return [r[0] for r in self.client.all(query)]
-
-
-# Exported classes for API
+# Export for API
 Origin = Database
-
-
-class Client(object):
-    """Wrapper for Python DB-API compatible connection objects that removes
-    some boilerplate when executing queries.
-    """
-    def __init__(self, path, **kwargs):
-        self.connection = sqlite3.connect(path)
-
-    def all(self, *args, **kwargs):
-        c = self.connection.cursor()
-        c.execute(*args, **kwargs)
-        return c.fetchall()
-
-    def one(self, *args, **kwargs):
-        c = self.connection.cursor()
-        c.execute(*args, **kwargs)
-        return c.fetchone()

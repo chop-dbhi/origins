@@ -1,75 +1,85 @@
-from __future__ import division, print_function, unicode_literals, \
-    absolute_import
-from . import base
+from __future__ import division, unicode_literals, absolute_import
+from ..utils import cached_property
+from . import base, _file
 
-import os
 import openpyxl
 
 
-class Workbook(base.Node):
-    label_attribute = 'path'
+class Client(_file.Client):
+    def __init__(self, path, headers=True, **kwargs):
+        super(Client, self).__init__(path, **kwargs)
+
+        self._sheet_columns = {}
+
+        if isinstance(headers, bool):
+            self.has_headers = headers
+        else:
+            self.has_headers = False
+            first_sheet = self.workbook.get_sheet_names()[0]
+            if isinstance(headers, (list, tuple)):
+                self._sheet_columns[first_sheet] = headers
+            elif headers:
+                self._sheet_columns = headers
+
+    @property
+    def workbook(self):
+        return openpyxl.load_workbook(self.file_path, use_iterators=True)
+
+    def sheets(self):
+        return [{
+            'sheet_name': name,
+            'sheet_index': i,
+        } for i, name in enumerate(self.workbook.get_sheet_names())]
+
+    def columns(self, sheet_name):
+        "Return the sheet header names or indices."
+        if sheet_name in self._sheet_columns:
+            column_names = self._sheet_columns[sheet_name]
+        else:
+            sheet = self.workbook.get_sheet_by_name(sheet_name)
+            first_row = next(sheet.iter_rows())
+            if self.has_headers:
+                column_names = [c.internal_value for c in first_row]
+            else:
+                column_names = range(len(first_row))
+
+        columns = []
+        for i, name in enumerate(column_names):
+            columns.append({
+                'column_name': name,
+                'column_index': i
+            })
+        return columns
+
+
+class Workbook(_file.Node):
     branches_property = 'sheets'
 
-    def branches(self):
+    @cached_property
+    def sheets(self):
         nodes = []
-        for i, name in enumerate(self.client.workbook.get_sheet_names()):
-            attrs = {'sheet_name': name, 'index': i}
+        for attrs in self.client.sheets():
             node = Sheet(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
-        return nodes
+        return base.Container(nodes, source=self)
 
 
 class Sheet(base.Node):
     label_attribute = 'sheet_name'
     elements_property = 'columns'
 
-    def elements(self):
-        workbook = self.client.workbook
-        sheet = workbook.get_sheet_by_name(self['sheet_name'])
-
-        if self.client.has_headers:
-            header = [c.internal_value for c in next(sheet.iter_rows())]
-        else:
-            header = self.client.headers.get(self['sheet_name'])
-            if not header:
-                header = range(len(next(sheet.iter_rows())))
-
+    @cached_property
+    def columns(self):
         nodes = []
-
-        for i, column in enumerate(header):
-            attrs = {'column': column, 'index': i}
+        for attrs in self.client.columns(self['sheet_name']):
             node = Column(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
-        return nodes
-
-    def synchronize(self):
-        sheet = self.client.workbook.get_sheet_by_name(self['sheet_name'])
-        self.attrs['title'] = sheet.title
+        return base.Container(nodes, source=self)
 
 
 class Column(base.Node):
-    label_attribute = 'column'
+    label_attribute = 'column_name'
 
 
-# Export to public API
+# Export for API
 Origin = Workbook
-
-
-class Client(object):
-    def __init__(self, path, headers=True, **kwargs):
-        self.path = os.path.join(path)
-
-        if isinstance(headers, bool):
-            self.has_headers = headers
-            self.headers = {}
-        else:
-            self.has_headers = False
-            first_sheet = self.workbook.get_sheet_names()[0]
-            if isinstance(headers, (list, tuple)):
-                self.headers = {first_sheet: headers}
-            else:
-                self.headers = headers or {}
-
-    @property
-    def workbook(self):
-        return openpyxl.load_workbook(self.path, use_iterators=True)

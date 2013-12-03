@@ -1,47 +1,76 @@
-from __future__ import print_function, unicode_literals
+from __future__ import unicode_literals, absolute_import
+import urllib
 from pprint import pformat
-from ..exceptions import OriginsError
-from ..utils import res
+from collections import OrderedDict
+from ..utils import res, cached_property
+
+PATH_SEPERATOR = '/'
 
 
-class LazyAttr(object):
-    def __repr__(self):
-        return '<lazy>'
+def build_uri(scheme, host=None, port=None, path=None):
+    """Builds an Origins-based URI which acts as a unique identifier
+    for external use.
+    """
+    if not scheme:
+        raise ValueError('cannot have an empty scheme')
+
+    host = host or ''
+
+    if not path:
+        path = PATH_SEPERATOR
+    elif not path.startswith(PATH_SEPERATOR):
+        path = PATH_SEPERATOR + path
+
+    if port:
+        netloc = '{}:{}'.format(host, port)
+    else:
+        netloc = host
+
+    return '{}://{}{}'.format(scheme, netloc, urllib.quote(path))
 
 
-LAZY_ATTR = LazyAttr()
-ID_SEPARATOR = '/'
+class Client(object):
+    def connect(self, **kwargs):
+        pass
+
+    def disconnect(self):
+        pass
+
+    def version(self):
+        pass
+
+    def scheme(self):
+        return self.__module__.split('.')[-1]
+
+    def uri(self, path=None):
+        host = res(self, 'host')
+        port = res(self, 'port')
+        scheme = res(self, 'scheme')
+        return build_uri(scheme=scheme, host=host, port=port, path=path)
 
 
 class Node(object):
-    """A node contains attributes and optionally a source. It implements
-    a dict-like interface for accessing the attributes of the node.
-    """
-    id_attribute = 'id'
-    label_attribute = 'label'
-    lazy_attributes = ()
+    """A node contains attributes and a source (if not the origin).
+    It implements a dict-like interface for accessing the attributes of the
+    node.
 
-    branches_property = None
+    Each node identifies itself by it's `uri` which is constructed relative to
+    the origin and client.
+    """
+    label_attribute = 'label'
+    path_attribute = None
+
     elements_property = None
+    branches_property = None
 
     def __init__(self, attrs=None, source=None, client=None):
         if attrs is None:
-            attrs = {}
-        elif not isinstance(attrs, dict):
-            try:
-                attrs = dict(attrs)
-            except TypeError as e:
-                raise TypeError('Invalid type "{}". Attributes must be '
-                                'a dict or a sequence of key/value pairs.'
-                                .format(type(e)))
+            self.attrs = {}
+        else:
+            self.attrs = dict(attrs)
 
-        self.attrs = attrs
         self.source = source
-        self._client = client
-
-        for attr in self.lazy_attributes:
-            self.attrs[attr] = LAZY_ATTR
-
+        self.client = client
         self.synchronize()
 
     def __unicode__(self):
@@ -51,14 +80,10 @@ class Node(object):
         return bytes(self.label)
 
     def __repr__(self):
-        return pformat(self.serialize())
+        return pformat(self.attrs)
 
     def __getitem__(self, key):
-        value = self.attrs.get(key)
-        if value is LAZY_ATTR:
-            value = res(self, key)
-            self.attrs[key] = value
-        return value
+        return self.attrs[key]
 
     def __setitem__(self, key, value):
         self.attrs[key] = value
@@ -73,72 +98,121 @@ class Node(object):
         return iter(self.attrs)
 
     @property
-    def id(self):
-        """Returns a unique identifier for this node from the origin.
-        By default, the node contains an 'id' attribute, this will be used
-        otherwise the id will be generated from the label and ids of all
-        ancestors.
-        """
-        if 'id' in self:
-            return self['id']
-
-        label = self.label
-        if label is None:
-            return ''
-
-        # Prefix with the id of the source
+    def origin(self):
+        "Returns the origin of this node."
         if self.source:
-            path = [self.source.id, label]
-        else:
-            path = [label]
-        return ID_SEPARATOR.join(path)
-
-    def relid(self, root=None):
-        "Returns an id relative to the root."
-        _id = self.id
-        if root is None:
-            return _id
-        return _id[len(root.id) + len(ID_SEPARATOR):]
+            return self.source.origin
+        return self
 
     @property
     def label(self):
         """Returns the label for this node. The `label_attribute` class
         property can be specified (defaults to 'label') or this can be
-        overridden for custom labels.
+        overridden for a custom label.
         """
-        return self.attrs.get(self.label_attribute, '')
+        return self.attrs.get(self.label_attribute)
 
-    @property
-    def client(self):
-        """Property for accessing the backend client. Nodes can be initialized
-        without a client for programmatically created trees.
-        """
-        if self._client is None:
-            raise OriginsError('Node was initialized without a client')
-        return self._client
+    @cached_property
+    def uri(self):
+        "Returns a unique identifier for this node from the origin."
+        return self.client.uri(path=self.path())
+
+    def path(self, root=None):
+        "Returns the path to this node relative to `root` or the origin."
+        path = self.attrs.get(self.path_attribute or self.label_attribute)
+
+        if root is self:
+            return path
+
+        if self.source:
+            path = PATH_SEPERATOR.join([self.source.path(), path])
+
+        if root:
+            return path[len(root.path()) + len(PATH_SEPERATOR):]
+        return path
 
     def synchronize(self):
-        """Synchronizes the node with the backend updating any attributes that
-        were derived or computed from the backend. For attributes that are
-        expensive, define it as a method and add it as a `lazy_attributes`.
+        """Synchronize is used update the node's attributes with data from
+        the backend such as statistics and new descriptors.
         """
 
-    def serialize(self):
-        """Serializes the node's attributes by making a shallow copy. Set deep
-        to true to perform a deep copy.
+    def serialize(self, label=False, uri=False, source=False):
+        """Serializes the node's attributes. If `source` is true, attributes
+        from the node's ancestors will be serialized and merged into this
+        node's output.
         """
-        attrs = {'id': self.id}
-        for key in self.attrs:
-            attrs[key] = self[key]
+        attrs = self.attrs.copy()
+
+        # Optional attributes
+        if label:
+            attrs['label'] = self.label
+        if uri:
+            attrs['uri'] = self.uri
+        if source and self.source:
+            attrs.update(self.source.serialize(source=True))
+
         return attrs
 
-    def branches(self):
-        "Nodes by default have no branches."
-        return []
-
+    @property
     def elements(self):
-        "Gather up all elements from branches."
-        elements = []
-        for node in self.branches():
-            elements.extend(node.elements())
-        return elements
+        """Generic property for accessing the elements relative to this node.
+        By default elements will be aggregated from the branches of this node."
+        """
+        if self.elements_property:
+            return getattr(self, self.elements_property, None)
+
+        nodes = []
+        for branch in self.branches:
+            nodes.extend(list(branch.elements))
+        return Container(nodes, source=self)
+
+    @property
+    def branches(self):
+        "Generic property to access the branches of this node."
+        if self.branches_property:
+            return getattr(self, self.branches_property, None)
+
+
+class Container(object):
+    """Immutable sequence of nodes. Nodes are ordered in the order they
+    were extracted from the backend. They can be accessed by index or by key,
+    where the key is the path relative `source`.
+    """
+    __slots__ = ('_nodes',)
+
+    def __init__(self, nodes=None, source=None):
+        if nodes is None:
+            nodes = ()
+        self._nodes = OrderedDict([
+            (node.path(source), node) for node in nodes
+        ])
+
+    def __getitem__(self, key):
+        # Return node by key
+        if key in self._nodes:
+            return self._nodes[key]
+        # Return node by index
+        if isinstance(key, int):
+            if key < len(self):
+                return self._nodes[self._nodes.keys()[key]]
+            raise IndexError('collection index out of range')
+        raise KeyError(key)
+
+    def __contains__(self, key):
+        return key in self._nodes
+
+    def __iter__(self):
+        for key in self._nodes:
+            yield self._nodes[key]
+
+    def __len__(self):
+        return len(self._nodes)
+
+    def __repr__(self):
+        return pformat(self._nodes.keys())
+
+    def __unicode__(self):
+        return ', '.join(unicode(n) for n in self)
+
+    def __bytes__(self):
+        return ', '.join(bytes(n) for n in self)

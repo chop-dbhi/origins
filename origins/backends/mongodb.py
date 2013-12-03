@@ -1,111 +1,116 @@
-from __future__ import division, print_function, unicode_literals, \
-    absolute_import
+from __future__ import division, unicode_literals, absolute_import
+from ..utils import cached_property
 from . import base
 
 import pymongo
 from bson.code import Code
 
 
-class Database(base.Node):
-    label_attribute = 'database'
-    branches_property = 'collections'
-
-    def branches(self):
-        names = self.client.db.collection_names()
-        nodes = []
-
-        for name in names:
-            if name == 'system.indexes':
-                continue
-            attrs = {'name': name}
-            node = Collection(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return nodes
-
-    def sychronize(self):
-        self.attrs.update(self.client.db.command('dbstats'))
-        self.attrs['version'] = self.version()
-
-    def version(self):
-        return self.client.connection.server_attrs()['version']
-
-
-class Collection(base.Node):
-    label_attribute = 'name'
-    elements_property = 'fields'
-
-    _map_fields = Code('''
-        function() {
-            for (var key in this) {
-                emit(key, 1);
-            }
+# Map-reduce functions for counting the number of fields across documents
+# in a collection.
+map_fields = Code('''
+    function() {
+        for (var key in this) {
+            emit(key, 1);
         }
-    ''')
+    }
+''')
 
-    _count_fields = Code('''
-        function(key, values) {
-            return Array.sum(values);
-        }
-    ''')
-
-    def elements(self):
-        out = self.client.db[self['name']]\
-            .inline_map_reduce(self._map_fields, self._count_fields,
-                               full_response=True)
-
-        nodes = []
-        inputs = out['counts']['input']
-
-        for result in out['results']:
-            attrs = {'name': result['_id'],
-                     'occurrence': result['value'] / inputs}
-            node = Field(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return nodes
-
-    def sychronize(self):
-        self.attrs['count'] = self.count()
-
-    def count(self):
-        return self.client.db[self['name']].count()
+count_fields = Code('''
+    function(key, values) {
+        return Array.sum(values);
+    }
+''')
 
 
-class Field(base.Node):
-    label_attribute = 'name'
+class Client(base.Client):
+    def __init__(self, database, **kwargs):
+        self.database = database
+        self.host = kwargs.get('host', 'localhost')
+        self.port = kwargs.get('port', 27017)
+        self.connect(user=kwargs.get('user'), password=kwargs.get('password'))
 
-    def synchronize(self):
-        self.attrs['count'] = self.count()
-        self.attrs['unique_count'] = self.unique_count()
+    def connect(self, user=None, password=None):
+        self.connection = pymongo.MongoClient(host=self.host, port=self.port)
 
-    def count(self):
-        return len(self.values())
-
-    def unique_count(self):
-        return len(self.unique_values())
-
-    def values(self):
-        cursor = self.client.db[self.source['name']]\
-            .find({self['name']: {'$exists': True}},
-                  {self['name']: True})
-        return [r[self['name']] for r in cursor]
-
-    def unique_values(self):
-        return self.client.db[self.source['name']].distinct(self['name'])
-
-
-# Export for API
-Origin = Database
-
-
-class Client(object):
-    def __init__(self, **kwargs):
-        settings = {
-            'host': kwargs.get('host'),
-            'port': kwargs.get('port') or 27017,
-        }
-        self.connection = pymongo.MongoClient(**settings)
-        self.database = kwargs['database']
+    def disconnect(self):
+        self.connection.close()
 
     @property
     def db(self):
         return self.connection[self.database]
+
+    def version(self):
+        return self.connection.server_info()
+
+    def database_stats(self):
+        return self.db.command('dbstats')
+
+    def collections(self):
+        return [{
+            'collection_name': n,
+        } for n in self.db.collection_names()
+            if n != 'system.indexes']
+
+    def collection_size(self, collection_name):
+        return self.db[collection_name].count()
+
+    def fields(self, collection_name):
+        output = self.db[collection_name]\
+            .inline_map_reduce(map_fields, count_fields, full_response=True)
+
+        input_count = output['counts']['input']
+
+        fields = []
+        for result in output['results']:
+            fields.append({
+                'field_name': result['_id'],
+                'field_occurrence': result['value'] / input_count
+            })
+        return fields
+
+    def field_values(self, collection_name, field_name):
+        cursor = self.db[collection_name].find({
+            field_name: {'$exists': True}
+        }, {field_name: True})
+        return [r[field_name] for r in cursor]
+
+    def field_unique_values(self, collection_name, field_name):
+        return self.db[collection_name].distinct(field_name)
+
+
+class Database(base.Node):
+    label_attribute = 'database_name'
+    branches_property = 'collections'
+
+    def synchronize(self):
+        self.attrs['database_name'] = self.client.database
+
+    @cached_property
+    def collections(self):
+        nodes = []
+        for attrs in self.client.collections():
+            node = Collection(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
+
+
+class Collection(base.Node):
+    label_attribute = 'collection_name'
+    elements_property = 'fields'
+
+    @cached_property
+    def fields(self):
+        nodes = []
+        for attrs in self.client.fields(self['collection_name']):
+            node = Field(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
+
+
+class Field(base.Node):
+    label_attribute = 'field_name'
+
+
+# Export for API
+Origin = Database

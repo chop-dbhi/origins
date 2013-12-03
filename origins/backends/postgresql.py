@@ -1,177 +1,167 @@
-from __future__ import division, print_function, unicode_literals, \
-    absolute_import
-from . import base
+from __future__ import division, unicode_literals, absolute_import
+from ..utils import cached_property
+from . import base, _database
 
 import psycopg2
 
 
-class Database(base.Node):
-    label_attribute = 'database'
-    branches_property = 'schemas'
+class Client(_database.Client):
+    def __init__(self, database, **kwargs):
+        self.database = database
+        self.host = kwargs.get('host', 'localhost')
+        self.port = kwargs.get('port', 5432)
+        self.connect(user=kwargs.get('user'), password=kwargs.get('password'))
 
-    def branches(self):
+    def connect(self, user=None, password=None):
+        self.connection = psycopg2.connect(database=self.database,
+                                           host=self.host,
+                                           port=self.port,
+                                           user=user,
+                                           password=password)
+
+    def qn(self, name):
+        return '"{}"'.format(name)
+
+    def version(self):
+        return self.fetchvalue('show server_version')
+
+    def schemas(self):
         query = '''
             SELECT schema_name
             FROM information_schema.schemata
             WHERE schema_name <> 'information_schema'
                 AND schema_name NOT LIKE 'pg_%'
+            ORDER BY schema_name
         '''
-        c = self.client.connection.cursor()
-        c.execute(query)
 
-        nodes = []
-        keys = [col.name for col in c.description]
+        keys = ('schema_name',)
+        schemas = []
 
-        for row in c.fetchall():
+        for row in self.fetchall(query):
             attrs = dict(zip(keys, row))
-            node = Schema(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return nodes
+            schemas.append(attrs)
+
+        return schemas
+
+    def tables(self, schema_name):
+        query = '''
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_type = 'BASE TABLE'
+                AND table_schema = %s
+            ORDER BY table_name
+        '''
+
+        keys = ('table_name',)
+        tables = []
+
+        for row in self.fetchall(query, [schema_name]):
+            attrs = dict(zip(keys, row))
+            tables.append(attrs)
+
+        return tables
+
+    def columns(self, schema_name, table_name):
+        query = '''
+            SELECT column_name,
+                ordinal_position,
+                is_nullable,
+                data_type
+            FROM information_schema.columns
+            WHERE table_schema = %s
+                AND table_name = %s
+            ORDER BY ordinal_position
+        '''
+
+        keys = ('column_name', 'column_index', 'nullable', 'data_type')
+        columns = []
+
+        for row in self.fetchall(query, [schema_name, table_name]):
+            attrs = dict(zip(keys, row))
+            attrs['column_index'] -= 1
+            if attrs['nullable'] == 'YES':
+                attrs['nullable'] = True
+            else:
+                attrs['nullable'] = False
+            columns.append(attrs)
+
+        return columns
+
+    def table_count(self, schema_name, table_name):
+        query = '''
+            SELECT COUNT(*) FROM {schema}.{table}
+        '''.format(schema=self.qn(schema_name),
+                   table=self.qn(table_name))
+        return self.one(query)[0]
+
+    def column_unique_count(self, schema_name, table_name, column_name):
+        query = '''
+            SELECT COUNT(DISTINCT {column}) FROM {schema}.{table}
+        '''.format(column=self.qn(column_name),
+                   schema=self.qn(schema_name),
+                   table=self.qn(table_name))
+        return self.one(query)[0]
+
+    def column_unique_values(self, schema_name, table_name, column_name,
+                             ordered=True):
+        query = '''
+            SELECT DISTINCT {column} FROM {schema}.{table}
+        '''.format(column=self.qn(column_name),
+                   schema=self.qn(schema_name),
+                   table=self.qn(table_name))
+        if ordered:
+            query += ' ORDER BY {column}'.format(column=self.qn(column_name))
+
+        for row in self.all(query):
+            yield row[0]
+
+
+class Database(base.Node):
+    label_attribute = 'database_name'
+    branches_property = 'schemas'
 
     def synchronize(self):
-        self.attrs['version'] = self.version()
-        self.attrs['size'] = self.size()
+        self.attrs['database_name'] = self.client.database
 
-    def version(self):
-        return self.client.one('show server_version')[0]
-
-    def size(self):
-        query = "select pg_database_size('{}')".format(self['database'])
-        return self.client.one(query)[0]
+    @cached_property
+    def schemas(self):
+        nodes = []
+        for attrs in self.client.schemas():
+            node = Schema(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
 
 
 class Schema(base.Node):
     branches_property = 'tables'
     label_attribute = 'schema_name'
 
-    def branches(self):
-        query = '''
-            SELECT table_name,
-                table_schema
-            FROM information_schema.tables
-            WHERE table_type = 'BASE TABLE'
-                AND table_schema = %s
-        '''
-        c = self.client.connection.cursor()
-        c.execute(query, (self['schema_name'],))
-
+    @cached_property
+    def tables(self):
         nodes = []
-        keys = [col.name for col in c.description]
-
-        for row in c.fetchall():
-            attrs = dict(zip(keys, row))
+        for attrs in self.client.tables(self['schema_name']):
             node = Table(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
-        return nodes
+        return base.Container(nodes, source=self)
 
 
 class Table(base.Node):
     elements_property = 'columns'
     label_attribute = 'table_name'
 
-    def elements(self):
-        query = '''
-            SELECT table_schema,
-                table_name,
-                column_name,
-                column_default as default,
-                is_nullable as nullable,
-                data_type as type,
-                character_maximum_length,
-                numeric_precision,
-                numeric_scale,
-                datetime_precision
-            FROM information_schema.columns
-            WHERE table_schema = %s
-                AND table_name = %s
-            ORDER BY ordinal_position
-        '''
-        c = self.client.connection.cursor()
-        c.execute(query, (self['table_schema'], self['table_name']))
-
+    @cached_property
+    def columns(self):
         nodes = []
-        keys = [col.name for col in c.description]
-
-        for row in c.fetchall():
-            attrs = dict(zip(keys, row))
+        for attrs in self.client.columns(self.source['schema_name'],
+                                         self['table_name']):
             node = Column(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
-        return nodes
-
-    def synchronize(self):
-        self.attrs['count'] = self.count()
-
-    def count(self):
-        query = '''
-            SELECT COUNT(*) FROM "{}"."{}"
-        '''.format(self['table_schema'], self['table_name'])
-        return self.client.one(query)[0]
+        return base.Container(nodes, source=self)
 
 
 class Column(base.Node):
     label_attribute = 'column_name'
 
-    def count(self):
-        query = '''
-            SELECT COUNT("{schema}"."{table}"."{column}")
-            FROM "{schema}"."{table}"
-        '''.format(column=self['column_name'],
-                   schema=self['table_schema'],
-                   table=self['table_name'])
-        return self.client.one(query)[0]
 
-    def unique_count(self):
-        query = '''
-            SELECT COUNT(DISTINCT "{schema}"."{table}"."{column}")
-            FROM "{schema}"."{table}"
-        '''.format(column=self['column_name'],
-                   schema=self['table_schema'],
-                   table=self['table_name'])
-        return self.client.one(query)[0]
-
-    def values(self):
-        query = '''
-            SELECT "{schema}"."{table}"."{column}"
-            FROM "{schema}"."{table}"
-        '''.format(column=self['column_name'],
-                   schema=self['table_schema'],
-                   table=self['table_name'])
-        return [r[0] for r in self.client.all(query)]
-
-    def unique_values(self):
-        query = '''
-            SELECT DISTINCT "{schema}"."{table}"."{column}"
-            FROM "{schema}"."{table}"
-        '''.format(column=self['column_name'],
-                   schema=self['table_schema'],
-                   table=self['table_name'])
-        return [r[0] for r in self.client.all(query)]
-
-
-# Exported classes for API
+# Export for API
 Origin = Database
-
-
-class Client(object):
-    """Wrapper for Python DB-API compatible connection objects that removes
-    some boilerplate when executing queries.
-    """
-    def __init__(self, **kwargs):
-        settings = {
-            'host': kwargs.get('host'),
-            'port': kwargs.get('port'),
-            'database': kwargs.get('database'),
-            'user': kwargs.get('user'),
-            'password': kwargs.get('password'),
-        }
-        self.connection = psycopg2.connect(**settings)
-
-    def all(self, *args, **kwargs):
-        c = self.connection.cursor()
-        c.execute(*args, **kwargs)
-        return c.fetchall()
-
-    def one(self, *args, **kwargs):
-        c = self.connection.cursor()
-        c.execute(*args, **kwargs)
-        return c.fetchone()

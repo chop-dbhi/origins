@@ -11,28 +11,14 @@ class DelimitedBackendTestCase(BackendTestCase):
         self.client = self.backend.Client(path)
 
     def test_client(self):
-        self.assertEqual(self.client.header, [
-            'TrackId',
-            'Name',
-            'AlbumId',
-            'MediaTypeId',
-            'GenreId',
-            'Composer',
-            'Milliseconds',
-            'Bytes',
-            'UnitPrice'])
         self.assertTrue(self.client.has_header)
         self.assertEqual(self.client.delimiter, ',')
+        self.assertEqual(len(self.client._header_index), 9)
 
-    def test_client_reader(self):
-        row = next(self.client.reader)
-        self.assertEqual(row, [
-            '1',
-            'For Those About To Rock (We Salute You)',
-            '1',
-            '1',
-            '1',
-            'Angus Young, Malcolm Young, Brian Johnson',
-            '343719',
-            '11170334',
-            '0.99'])
+    def test_file(self):
+        self.assertEqual(self.client.file_line_count(), 3503)
+
+    def test_columns(self):
+        columns = self.client.columns()
+        self.assertEqual(len(columns), 9)
+        self.assertTrue('column_name' in columns[0])

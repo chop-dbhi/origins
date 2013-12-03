@@ -1,51 +1,20 @@
 # unicode_literals not imported because it conflicts with the csv module
-from __future__ import division, print_function, absolute_import
-from . import base
+from __future__ import division, absolute_import
+from ..utils import cached_property
+from . import base, _file
 
-import os
 import csv
 
 
-class File(base.Node):
-    elements_property = 'columns'
-
-    @property
-    def label(self):
-        return os.path.basename(self['path'])
-
-    def elements(self):
-        nodes = []
-        for i, name in enumerate(self.client.header):
-            attrs = {'name': name, 'position': i}
-            node = Column(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return nodes
-
-    def synchronize(self):
-        self.attrs['count'] = self.count()
-
-    def count(self):
-        n = 0
-        for _ in self.client.reader:
-            n += 1
-        return n
-
-
-class Column(base.Node):
-    label_attribute = 'name'
-
-
-# Exported classes for API
-Origin = File
-
-
-class Client(object):
+class Client(_file.Client):
     def __init__(self, path, header=None, delimiter=',', sniff=1024,
                  dialect=None, **kwargs):
 
+        super(Client, self).__init__(path, **kwargs)
+
         # Infer various attributes from the file including the dialect,
         # whether the sample
-        with open(path, 'rb') as f:
+        with open(self.file_path, 'rb') as f:
             sniffer = csv.Sniffer()
             sample = '\n'.join(l for l in f.readlines(1024))
             f.seek(0)
@@ -66,7 +35,6 @@ class Client(object):
                     r = csv.reader(f, dialect=dialect, delimiter=delimiter)
                     header = range(len(next(r)))
 
-            self.path = path
             self.header = header
             self.has_header = has_header
             self.dialect = dialect
@@ -76,13 +44,48 @@ class Client(object):
             self._header_index = dict(zip(header, range(len(header))))
 
     @property
-    def _file(self):
-        f = open(self.path, 'rb')
+    def file_handler(self):
+        f = open(self.file_path, 'rb')
         if self.has_header:
             next(f)
         return f
 
     @property
     def reader(self):
-        return csv.reader(self._file, dialect=self.dialect,
+        return csv.reader(self.file_handler, dialect=self.dialect,
                           delimiter=self.delimiter)
+
+    def columns(self):
+        columns = []
+        for i, name in enumerate(self.header):
+            columns.append({
+                'column_name': name,
+                'column_index': i
+            })
+        return columns
+
+    def file_line_count(self):
+        n = 0
+        for _ in self.file_handler:
+            n += 1
+        return n
+
+
+class File(_file.Node):
+    elements_property = 'columns'
+
+    @cached_property
+    def columns(self):
+        nodes = []
+        for attrs in self.client.columns():
+            node = Column(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
+
+
+class Column(base.Node):
+    label_attribute = 'column_name'
+
+
+# Export for API
+Origin = File

@@ -1,142 +1,123 @@
-from __future__ import division
-from . import base
+from __future__ import division, absolute_import
+from ..utils import cached_property
+from . import base, _database
 
 import MySQLdb
 
 
-class Column(base.Node):
-    label_attribute = 'column_name'
+class Client(_database.Client):
+    def __init__(self, database, **kwargs):
+        self.database = database
+        self.host = kwargs.get('host', 'localhost')
+        self.port = kwargs.get('port', 3306)
+        self.connect(user=kwargs.get('user'), password=kwargs.get('password'))
 
-    def count(self):
-        query = '''
-            SELECT COUNT(`{table}`.`{column}`)
-            FROM `{table}`
-        '''.format(column=self['column_name'],
-                   table=self['table_name'])
-        return self.client.one(query)[0]
+    def connect(self, user=None, password=None):
+        self.connection = MySQLdb.connect(db=self.database, host=self.host,
+                                          port=self.port, user=user,
+                                          passwd=password)
 
-    def unique_count(self):
-        query = '''
-            SELECT COUNT(DISTINCT `{table}`.`{column}`)
-            FROM `{table}`
-        '''.format(column=self['column_name'],
-                   table=self['table_name'])
-        return self.client.one(query)[0]
+    def version(self):
+        return self.fetchvalue('SELECT version()')
 
-    def values(self):
-        query = '''
-            SELECT `{table}`.`{column}`
-            FROM `{table}`
-        '''.format(column=self['column_name'],
-                   table=self['table_name'])
-        return [r[0] for r in self.client.all(query)]
+    def qn(self, name):
+        return '"{}"'.format(name)
 
-    def unique_values(self):
+    def tables(self):
         query = '''
-            SELECT DISTINCT `{table}`.`{column}`
-            FROM `{table}`
-        '''.format(column=self['column_name'],
-                   table=self['table_name'])
-        return [r[0] for r in self.client.all(query)]
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = {schema}
+            ORDER BY table_name
+        '''.format(schema=self.qn(self.database))
+
+        keys = ('table_name',)
+
+        tables = []
+        for row in self.fetchall(query):
+            tables.append(dict(zip(keys, row)))
+        return tables
+
+    def columns(self, table_name):
+        query = '''
+            SELECT column_name,
+                ordinal_position,
+                is_nullable,
+                data_type
+            FROM information_schema.columns
+            WHERE table_schema = {schema}
+                AND table_name = {table}
+            ORDER BY table_name, ordinal_position
+        '''.format(schema=self.qn(self.database),
+                   table=self.qn(table_name))
+
+        keys = ('column_name', 'column_index', 'nullable', 'data_type')
+
+        columns = []
+        for row in self.fetchall(query):
+            attrs = dict(zip(keys, row))
+            if attrs['nullable'] == 'YES':
+                attrs['nullable'] = True
+            else:
+                attrs['nullable'] = False
+            columns.append(attrs)
+        return columns
+
+    def table_count(self, table_name):
+        query = '''
+            SELECT COUNT(*) FROM {table}
+        '''.format(table=self.qn(table_name))
+        return self.fetchvalue(query)
+
+    def column_unique_count(self, table_name, column_name):
+        query = '''
+            SELECT COUNT(DISTINCT {column}) FROM {table}
+        '''.format(column=self.qn(column_name),
+                   table=self.qn(table_name))
+        return self.fetchvalue(query)
+
+    def column_unique_values(self, table_name, column_name):
+        query = '''
+            SELECT DISTINCT {column} FROM {table}
+        '''.format(column=self.qn(column_name),
+                   table=self.qn(table_name))
+
+        for row in self.fetchall(query):
+            yield row[0]
+
+
+class Database(base.Node):
+    label_attribute = 'database_name'
+    branches_property = 'tables'
+
+    def synchronize(self):
+        self.attrs['database_name'] = self.client.database
+
+    @cached_property
+    def tables(self):
+        nodes = []
+        for attrs in self.client.tables():
+            node = Table(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
 
 
 class Table(base.Node):
     elements_property = 'columns'
     label_attribute = 'table_name'
-    element_class = Column
 
-    def elements(self):
-        query = '''
-            SELECT table_schema,
-                table_name,
-                column_name,
-                column_default as `default`,
-                is_nullable as `nullable`,
-                data_type as `type`,
-                character_maximum_length,
-                numeric_precision,
-                numeric_scale,
-                datetime_precision
-            FROM information_schema.columns
-            WHERE table_schema = %s
-                AND table_name = %s
-            ORDER BY ordinal_position
-        '''
-        c = self.client.connection.cursor()
-        c.execute(query, (self['table_schema'], self['table_name']))
-
+    @cached_property
+    def columns(self):
         nodes = []
-        keys = [col[0] for col in c.description]
-
-        for row in c.fetchall():
-            attrs = dict(zip(keys, row))
-            node = self.element_class(attrs=attrs, source=self,
-                                      client=self.client)
+        for attrs in self.client.columns(self['table_name']):
+            node = Column(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
-        return nodes
-
-    def synchronize(self):
-        self.attrs['count'] = self.count()
-
-    def count(self):
-        query = 'SELECT COUNT(*) FROM `{}`'.format(self['table_name'])
-        return self.client.one(query)[0]
+        return base.Container(nodes, source=self)
 
 
-class Database(base.Node):
-    label_attribute = 'database'
-    branches_property = 'tables'
-    branch_class = Table
-
-    def branches(self):
-        query = '''
-            SELECT table_schema,
-                table_name,
-                table_rows,
-                create_time,
-                update_time,
-                check_time
-            FROM information_schema.tables
-            WHERE table_schema = %s
-        '''
-        c = self.client.connection.cursor()
-        c.execute(query, (self['database'],))
-
-        nodes = []
-        keys = [col[0] for col in c.description]
-
-        for row in c.fetchall():
-            attrs = dict(zip(keys, row))
-            node = self.branch_class(attrs=attrs, source=self,
-                                     client=self.client)
-            nodes.append(node)
-        return nodes
+class Column(base.Node):
+    label_attribute = 'column_name'
 
 
 # Exported classes for API
 Origin = Database
-
-
-class Client(object):
-    """Wrapper for Python DB-API compatible connection objects that removes
-    some boilerplate when executing queries.
-    """
-    def __init__(self, database, **kwargs):
-        settings = {
-            'db': database,
-            'host': kwargs.get('host', ''),
-            'port': kwargs.get('port', 3306),
-            'user': kwargs.get('user', ''),
-            'passwd': kwargs.get('password', ''),
-        }
-        self.connection = MySQLdb.connect(**settings)
-
-    def all(self, *args, **kwargs):
-        c = self.connection.cursor()
-        c.execute(*args, **kwargs)
-        return c.fetchall()
-
-    def one(self, *args, **kwargs):
-        c = self.connection.cursor()
-        c.execute(*args, **kwargs)
-        return c.fetchone()
