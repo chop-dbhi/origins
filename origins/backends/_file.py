@@ -8,7 +8,7 @@ class Client(base.Client):
 
     @property
     def file_name(self):
-        return os.path.basename(self.path)
+        return os.path.basename(self.file_path)
 
     @property
     def file_handler(self):
