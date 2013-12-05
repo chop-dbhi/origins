@@ -27,11 +27,11 @@ class Client(_database.Client):
 
     def schemas(self):
         query = '''
-            SELECT schema_name
-            FROM information_schema.schemata
-            WHERE schema_name <> 'information_schema'
-                AND schema_name NOT LIKE 'pg_%'
-            ORDER BY schema_name
+            SELECT nspname
+            FROM pg_catalog.pg_namespace
+            WHERE nspname <> 'information_schema'
+                AND nspname NOT LIKE 'pg_%'
+            ORDER BY nspname
         '''
 
         keys = ('schema_name',)
