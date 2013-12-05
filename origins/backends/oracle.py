@@ -107,8 +107,8 @@ class Client(_database.Client):
 
 
 class Database(base.Node):
-    label_attribute = 'database'
     branches_property = 'tables'
+    label_attribute = 'database_name'
 
     def synchronize(self):
         self.attrs['database_name'] = self.client.database
