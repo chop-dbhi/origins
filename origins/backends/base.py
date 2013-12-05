@@ -154,6 +154,18 @@ class Node(object):
         return attrs
 
     @property
+    def isorigin(self):
+        return self.origin is self
+
+    @property
+    def iselement(self):
+        return not self.elements
+
+    @property
+    def isbranch(self):
+        return not self.isorigin and not self.iselement
+
+    @property
     def elements(self):
         """Generic property for accessing the elements relative to this node.
         By default elements will be aggregated from the branches of this node."

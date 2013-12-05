@@ -84,36 +84,21 @@ DEFAULT_URI = 'http://localhost:7474/db/data/'
 TRANSACTION_URI_TMPL = '{}transaction/commit'
 
 
-def export(origin, uri=DEFAULT_URI, include_sources=True, batch_size=100):
+def export(root, uri=DEFAULT_URI, include_sources=True, batch_size=100):
     factory = SyncQueryFactory()
     stmts = []
     size = 0
 
-    for elem in origin.elements:
-        if not factory.hasref(origin.uri):
-            stmts.append(factory.merge_node_statement(origin, label='Origin'))
-        stmts.append(factory.merge_node_statement(elem, label='Element'))
-        stmts.append(factory.merge_rel_statement(origin, 'ORIGIN', elem))
+    if root.iselement:
+        elements = [root]
+    else:
+        elements = root.elements
 
-        # Create the source path by walking up from the element through
-        # the sources.
-        if include_sources:
-            source = elem.source
-            child = elem
+    origin = root.origin
 
-            while True:
-                if not source:
-                    break
-
-                if not factory.hasref(source.uri):
-                    stmts.append(factory.merge_node_statement(source,
-                                                              label='Branch'))
-                stmts.append(factory.merge_rel_statement(source,
-                                                         'BRANCH', child))
-
-                child = source
-                source = child.source
-
+    for elem in elements:
+        stmts.extend(prepare_element(elem, origin=origin, factory=factory,
+                                     include_sources=include_sources))
         size += 1
 
         if batch_size >= size:
@@ -124,6 +109,44 @@ def export(origin, uri=DEFAULT_URI, include_sources=True, batch_size=100):
 
     if size:
         send_request(uri, stmts)
+
+
+def prepare_element(elem, origin=None, factory=None, include_sources=True):
+    if not origin:
+        origin = elem.origin
+
+    if not factory:
+        factory = SyncQueryFactory()
+
+    stmts = []
+
+    stmts.append(factory.merge_node_statement(elem, label='Element'))
+
+    if origin:
+        if not factory.hasref(origin.uri):
+            stmts.append(factory.merge_node_statement(origin, label='Origin'))
+        stmts.append(factory.merge_rel_statement(origin, 'ORIGIN', elem))
+
+    # Create the source path by walking up from the element through
+    # the sources.
+    if include_sources:
+        source = elem.source
+        child = elem
+
+        while True:
+            if not source:
+                break
+
+            if not factory.hasref(source.uri):
+                stmts.append(factory.merge_node_statement(source,
+                                                          label='Branch'))
+            stmts.append(factory.merge_rel_statement(source,
+                                                     'BRANCH', child))
+
+            child = source
+            source = child.source
+
+    return stmts
 
 
 def send_request(uri, stmts):
