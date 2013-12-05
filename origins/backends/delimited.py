@@ -14,7 +14,7 @@ class Client(_file.Client):
 
         # Infer various attributes from the file including the dialect,
         # whether the sample
-        with open(self.file_path, 'rb') as f:
+        with open(self.file_path, 'rU') as f:
             sniffer = csv.Sniffer()
             sample = '\n'.join(l for l in f.readlines(1024))
             f.seek(0)
@@ -45,7 +45,7 @@ class Client(_file.Client):
 
     @property
     def file_handler(self):
-        f = open(self.file_path, 'rb')
+        f = open(self.file_path, 'rU')
         if self.has_header:
             next(f)
         return f
