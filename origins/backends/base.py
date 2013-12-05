@@ -161,10 +161,13 @@ class Node(object):
         if self.elements_property:
             return getattr(self, self.elements_property, None)
 
-        nodes = []
-        for branch in self.branches:
-            nodes.extend(list(branch.elements))
-        return Container(nodes, source=self)
+        branches = self.branches
+
+        if branches:
+            nodes = []
+            for branch in branches:
+                nodes.extend(list(branch.elements))
+            return Container(nodes, source=self)
 
     @property
     def branches(self):
