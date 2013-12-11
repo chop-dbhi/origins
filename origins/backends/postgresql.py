@@ -65,6 +65,50 @@ class Client(_database.Client):
 
         return tables
 
+    def foreign_keys(self, schema_name, table_name, column_name):
+        query = '''
+            SELECT
+                con.conname,
+                ns.nspname,
+                cl.relname,
+                a1.attname
+            FROM (
+                SELECT
+                    con1.conname,
+                    -- pg_constraint stores oids in an array, unnest unpacks
+                    -- the values so they can be joined on
+                    unnest(con1.conkey) AS "origin",
+                    unnest(con1.confkey) AS "target",
+                    con1.confrelid,
+                    con1.conrelid
+                FROM pg_class cl
+                    JOIN pg_namespace ns
+                        ON cl.relnamespace = ns.oid
+                    JOIN pg_constraint con1
+                        ON con1.conrelid = cl.oid
+                WHERE con1.contype = 'f'
+                    AND ns.nspname = %s
+                    AND cl.relname = %s
+            ) con
+            JOIN pg_class cl
+                ON cl.oid = con.confrelid
+            JOIN pg_namespace ns
+                ON cl.relnamespace = ns.oid
+            JOIN pg_attribute a1
+               ON a1.attrelid = con.confrelid AND a1.attnum = con.target
+            JOIN pg_attribute a2
+               ON a2.attrelid = con.conrelid AND a2.attnum = con.origin
+            WHERE a2.attname = %s
+        '''
+
+        keys = ('name', 'schema', 'table', 'column')
+        fks = []
+        for row in self.fetchall(query, [schema_name, table_name,
+                                         column_name]):
+            attrs = dict(zip(keys, row))
+            fks.append(attrs)
+        return fks
+
     def columns(self, schema_name, table_name):
         query = '''
             SELECT column_name,
@@ -150,6 +194,20 @@ class Table(_database.Table):
     def sync(self):
         self._contains(self.client.columns(self.parent['name'], self['name']),
                        _database.Column)
+
+    @cached_property
+    def foreign_keys(self):
+        nodes = []
+        schema_name = self.source.source['schema_name']
+        table_name = self.source['table_name']
+        for attrs in self.client.foreign_keys(schema_name, table_name,
+                                              self['column_name']):
+            node = self.origin\
+                .schemas[attrs['schema']]\
+                .tables[attrs['table']]\
+                .columns[attrs['column']]
+            nodes.append((attrs['name'], node))
+        return nodes
 
 
 # Export for API
