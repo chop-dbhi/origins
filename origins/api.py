@@ -13,6 +13,7 @@ BACKENDS = {
     'mysql': 'origins.backends.mysql',
     'oracle': 'origins.backends.oracle',
     'vcf': 'origins.backends.vcf',
+    'redcap': 'origins.backends.redcap',
 }
 
 BACKEND_ALIASES = {

@@ -132,6 +132,19 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 - `file`
 - `field`
 
+### REDCap
+
+- `redcap` - depends on MySQL backend
+
+**Options**
+
+- `project` - name of the project to access
+- `database` - name of the database (defaults to 'redcap')
+- `host` - host of the server
+- `port` - port of the server
+- `user` - user for authentication
+- `password` - password for authentication
+
 ## Implementation
 
 ### Design
