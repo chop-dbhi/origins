@@ -48,7 +48,21 @@ class Client(_database.Client):
     def qn(self, name):
         return name.upper().replace('%', '%%')
 
-    def columns(self, table_name):
+    def tables(self):
+        query = 'SELECT TABLE_NAME FROM USER_TABLES'
+        tables = []
+        for name, in self.fetchall(query):
+            tables.append({'table_name': name})
+        return tables
+
+    def views(self):
+        query = 'SELECT VIEW_NAME FROM USER_VIEWS'
+        views = []
+        for name, in self.fetchall(query):
+            views.append({'view_name': name})
+        return views
+
+    def table_columns(self, table_name):
         query = '''
             SELECT * FROM {} WHERE ROWNUM < 2
         '''.format(self.qn(table_name))
@@ -70,20 +84,38 @@ class Client(_database.Client):
 
         return columns
 
-    def tables(self):
+    def view_columns(self, view_name):
         query = '''
-            SELECT TABLE_NAME FROM USER_TABLES
-        '''
+            SELECT * FROM {} WHERE ROWNUM < 2
+        '''.format(self.qn(view_name))
 
-        tables = []
-        for name in self.fetchall(query):
-            tables.append({'table_name': name})
-        return tables
+        c = self.connection.cursor()
+        c.execute(query)
+
+        keys = ('column_name', 'data_type', 'display_size', 'internal_size',
+                'precision', 'scale', 'nullable')
+
+        columns = []
+
+        for row in c.description:
+            attrs = dict(zip(keys, row))
+            attrs['data_type'] = DATA_TYPE_NAMES.get(attrs['data_type'])
+            # Lower case table name to make it less burdensome to work with
+            attrs['column_name'] = attrs['column_name'].lower()
+            columns.append(attrs)
+
+        return columns
 
     def table_count(self, table_name):
         query = '''
             SELECT COUNT(*) FROM {table}
         '''.format(table=self.qn(table_name))
+        return self.fetchvalue(query)
+
+    def view_count(self, view_name):
+        query = '''
+            SELECT COUNT(*) FROM {view}
+        '''.format(view=self.qn(view_name))
         return self.fetchvalue(query)
 
     def column_unique_count(self, table_name, column_name):
@@ -121,6 +153,14 @@ class Database(base.Node):
             nodes.append(node)
         return base.Container(nodes, source=self)
 
+    @cached_property
+    def views(self):
+        nodes = []
+        for attrs in self.client.views():
+            node = View(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
+
 
 class Table(base.Node):
     elements_property = 'columns'
@@ -129,7 +169,20 @@ class Table(base.Node):
     @cached_property
     def columns(self):
         nodes = []
-        for attrs in self.client.columns(self['table_name']):
+        for attrs in self.client.table_columns(self['table_name']):
+            node = Column(attrs=attrs, source=self, client=self.client)
+            nodes.append(node)
+        return base.Container(nodes, source=self)
+
+
+class View(base.Node):
+    elements_property = 'columns'
+    label_attribute = 'view_name'
+
+    @cached_property
+    def columns(self):
+        nodes = []
+        for attrs in self.client.view_columns(self['view_name']):
             node = Column(attrs=attrs, source=self, client=self.client)
             nodes.append(node)
         return base.Container(nodes, source=self)
