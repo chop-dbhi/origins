@@ -2,7 +2,13 @@ from __future__ import division, absolute_import
 from ..utils import cached_property
 from . import base, _database
 
-import MySQLdb
+try:
+    import pymysql as mysql
+except ImportError:
+    try:
+        import MySQLdb as mysql
+    except ImportError:
+        raise ImportError('PyMySQL or mysql-python must be installed')
 
 
 class Client(_database.Client):
@@ -13,9 +19,9 @@ class Client(_database.Client):
         self.connect(user=kwargs.get('user'), password=kwargs.get('password'))
 
     def connect(self, user=None, password=None):
-        self.connection = MySQLdb.connect(db=self.database, host=self.host,
-                                          port=self.port, user=user,
-                                          passwd=password)
+        self.connection = mysql.connect(db=self.database, host=self.host,
+                                        port=self.port, user=user,
+                                        passwd=password)
 
     def version(self):
         return self.fetchvalue('SELECT version()')
