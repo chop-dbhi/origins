@@ -40,7 +40,7 @@ class Client(base.Client):
                 'field_note': field['field_note'],
                 'field_type': field['field_type'],
                 'field_choices': field['select_choices_or_calculations'],
-                'field_validation_type': field['text_validation_type_or_show_slider_number'],
+                'field_validation_type': field['text_validation_type_or_show_slider_number'],  # noqa
                 'field_validation_min': field['text_validation_min'],
                 'field_validation_max': field['text_validation_max'],
                 'identifier': identifier,
