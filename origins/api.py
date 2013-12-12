@@ -14,6 +14,7 @@ BACKENDS = {
     'oracle': 'origins.backends.oracle',
     'vcf': 'origins.backends.vcf',
     'redcap': 'origins.backends.redcap_mysql',
+    'redcap-api': 'origins.backends.redcap_api',
 }
 
 BACKEND_ALIASES = {

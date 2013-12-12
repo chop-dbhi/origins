@@ -134,6 +134,8 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 
 ### REDCap
 
+#### via MySQL
+
 - `redcap` - depends on MySQL backend
 
 **Options**
@@ -144,6 +146,16 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 - `port` - port of the server
 - `user` - user for authentication
 - `password` - password for authentication
+
+#### via API
+
+- `redcap-api` - depends on [PyCap](https://pypi.python.org/pypi/PyCap)
+
+**Options**
+
+- `url` - API URL
+- `token` - API token for the project
+- `name` - Name of the project being accessed (this is merely an identifier)
 
 ## Implementation
 
