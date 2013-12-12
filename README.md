@@ -104,7 +104,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 - `path` - Path to the file
 - `headers` - If `True`, the first row on each sheet will be assume to be the header. If `False` the column indices will be used. If a list/tuple, the columns will apply to the first sheet. If a dict, keys are the sheet names and the values are a list/tuple of column names for the sheet.
 
-#### Directory
+### Directory
 
 - `directory`
     - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Directory%2520Example.ipynb)
