@@ -270,3 +270,34 @@ MATCH (n:Origin) RETURN n
 ```
 
 This will render a single node (assuming this is your first time doing this) that corresponds to the chinook database. Double-click on the node to expand all the tables within the database and then each table can be double-clicked to expand the columns.
+
+
+## Random Notes
+
+### Installing cx-Oracle on Mac OS X
+
+_Note: an account on Oracle's website is required to downloaded the client libraries._
+
+Download `instantclient-basic-macos.x64-11.2.0.3.0.zip` and `instantclient-sdk-macos.x64-11.2.0.3.0.zip` from the [Oracle Mac OS downloads page](http://www.oracle.com/technetwork/topics/intel-macsoft-096467.html) (the point version may be different from the one's listed here). Move the two files to the same directory (`/usr/local/lib` is a good spot).
+
+```
+cd /usr/local/lib
+unzip instantclient-basic-macos.x64-11.2.0.3.0.zip
+unzip instantclient-sdk-macos.x64-11.2.0.3.0.zip
+cd instantclient_11_2
+ln -s libclntsh.dylib.11.1 libclntsh.dylib
+```
+
+Put these environment variables exports in your `~/.bash_profile`:
+
+```
+export ORACLE_HOME=/usr/local/lib/instantclient_11_2
+export LD_LIBRARY_PATH=$ORACLE_HOME:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$ORACLE_HOME:$DYLD_LIBRARY_PATH
+```
+
+Then run `source ~/.bash_profile` to ensure they are set. _Now_ you can install cx-Oracle:
+
+```
+pip install cx-Oracle
+```
