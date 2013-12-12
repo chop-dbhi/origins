@@ -174,7 +174,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 
 - The API is dynamic to allow the backend to be exposed with familiar names, while still maintaing a consistent API for generic manipulation.
 - The top-level entity (as exposed by the backend) is known as the _origin_.
-- Except for the origin, nodes are contained in a _branch_ of the origin. For example, relational databases do not have columns defined directly on the database, but rather on separate _tables_. Therefore each table would be considered a branch containing a subset of all elements (columns) in the database.
+- Except for the origin, nodes are contained in a _branch_ from the origin. For example, relational databases do not have columns defined directly on the database, but rather on separate _tables_. Therefore each table would be considered a branch containing a subset of all elements (columns) in the database.
 
 ### Attribute Names
 
@@ -187,6 +187,18 @@ Standardizing on a set of attribute names makes the API more consistent and port
 #### Pending Additions
 
 - `*_type` - The _type_ of the structure. Most applicable elements which define the data type of the data it contains, e.g. `column_type`
+
+### Node Attributes
+
+Nodes have an internal dict of attributes that are initially populated by the backend. Attributes can be freely modified and will be reflected on export. For convenience attributes of ancestor nodes (e.g. the table of a column) by prepending the node type's prefix. For example, the following will print `Album`:
+
+```python
+db = origins.connect('sqlite', path='tests/data/chinook.sqlite')
+e = db.tables['Album'].columns['Title']
+print(e['table_name'])
+```
+
+Likewise, `e['database_name']` will result in `chinook.sqlite`. This makes it convenient to get/set/delete attributes of ancestor nodes.
 
 ## Graph Representation
 
@@ -233,7 +245,8 @@ Standardizing on a set of attribute names makes the API more consistent and port
 - `foreign_keys()` - Returns a list of foreign key relationships.
 
  _*Note, the `schema` argument only applies to PostgreSQL_
-## Examples
+
+## Example Uses
 
 ### Export to Neo4j
 

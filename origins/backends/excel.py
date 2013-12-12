@@ -1,5 +1,4 @@
 from __future__ import division, unicode_literals, absolute_import
-from ..utils import cached_property
 from . import base, _file
 
 import openpyxl
@@ -27,8 +26,8 @@ class Client(_file.Client):
 
     def sheets(self):
         return [{
-            'sheet_name': name,
-            'sheet_index': i,
+            'name': name,
+            'index': i,
         } for i, name in enumerate(self.workbook.get_sheet_names())]
 
     def columns(self, sheet_name):
@@ -46,39 +45,33 @@ class Client(_file.Client):
         columns = []
         for i, name in enumerate(column_names):
             columns.append({
-                'column_name': name,
-                'column_index': i
+                'name': name,
+                'index': i
             })
         return columns
 
 
-class Workbook(_file.Node):
-    branches_property = 'sheets'
+class Workbook(_file.File):
+    def sync(self):
+        super(Workbook, self).sync()
+        self._contains(self.client.sheets(), Sheet)
 
-    @cached_property
+    @property
     def sheets(self):
-        nodes = []
-        for attrs in self.client.sheets():
-            node = Sheet(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('sheet')
 
 
 class Sheet(base.Node):
-    label_attribute = 'sheet_name'
-    elements_property = 'columns'
+    def sync(self):
+        self._contains(self.client.columns(self['name']), Column)
 
-    @cached_property
+    @property
     def columns(self):
-        nodes = []
-        for attrs in self.client.columns(self['sheet_name']):
-            node = Column(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('column')
 
 
 class Column(base.Node):
-    label_attribute = 'column_name'
+    pass
 
 
 # Export for API

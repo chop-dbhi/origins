@@ -1,4 +1,7 @@
 from __future__ import division, unicode_literals
+import urllib
+
+PATH_SEPERATOR = '/'
 
 
 class cached_property(object):
@@ -25,3 +28,25 @@ def res(instance, attrname, *args, **kwargs):
         if callable(attr):
             return attr(*args, **kwargs)
         return attr
+
+
+def build_uri(scheme, host=None, port=None, path=None):
+    """Builds an Origins-based URI which acts as a unique identifier
+    for external use.
+    """
+    if not scheme:
+        raise ValueError('cannot have an empty scheme')
+
+    host = host or ''
+
+    if not path:
+        path = PATH_SEPERATOR
+    elif not path.startswith(PATH_SEPERATOR):
+        path = PATH_SEPERATOR + path
+
+    if port:
+        netloc = '{}:{}'.format(host, port)
+    else:
+        netloc = host
+
+    return '{}://{}{}'.format(scheme, netloc, urllib.quote(path))

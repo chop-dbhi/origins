@@ -1,6 +1,5 @@
 # unicode_literals not imported because it conflicts with the csv module
 from __future__ import division, absolute_import
-from ..utils import cached_property
 from . import base, _file
 
 import csv
@@ -55,12 +54,19 @@ class Client(_file.Client):
         return csv.reader(self.file_handler, dialect=self.dialect,
                           delimiter=self.delimiter)
 
+    def file(self):
+        return {
+            'path': self.file_path,
+            'name': self.file_name,
+            'delimiter': self.delimiter,
+        }
+
     def columns(self):
         columns = []
         for i, name in enumerate(self.header):
             columns.append({
-                'column_name': name,
-                'column_index': i
+                'name': name,
+                'index': i
             })
         return columns
 
@@ -71,20 +77,18 @@ class Client(_file.Client):
         return n
 
 
-class File(_file.Node):
-    elements_property = 'columns'
+class File(_file.File):
+    def sync(self):
+        super(File, self).sync()
+        self._contains(self.client.columns(), Column)
 
-    @cached_property
+    @property
     def columns(self):
-        nodes = []
-        for attrs in self.client.columns():
-            node = Column(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('column')
 
 
 class Column(base.Node):
-    label_attribute = 'column_name'
+    pass
 
 
 # Export for API

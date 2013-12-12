@@ -1,5 +1,4 @@
 from __future__ import division, unicode_literals, absolute_import
-from ..utils import cached_property
 from . import base, _file
 
 import vcf
@@ -21,10 +20,18 @@ class Client(_file.Client):
     def reader(self):
         return vcf.Reader(self.file_handler)
 
+    def file(self):
+        attrs = {
+            'path': self.file_path,
+            'name': self.file_name,
+        }
+        attrs.update(self.reader.metadata)
+        return attrs
+
     def fields(self):
         r = self.reader
 
-        keys = ('field_name', 'possible_values', 'data_type', 'description')
+        keys = ('name', 'num_values', 'type', 'description')
         fields = []
 
         # Fixed fields
@@ -46,23 +53,18 @@ class Client(_file.Client):
 
 
 class File(base.Node):
-    elements_property = 'fields'
+    def sync(self):
+        self.update(self.client.file())
+        self._contains(self.client.fields(), Field)
 
-    def synchronize(self):
-        super(File, self).synchronize()
-        self.attrs.update(self.client.reader.metadata)
-
-    @cached_property
+    @property
     def fields(self):
-        nodes = []
-        for attrs in self.client.fields():
-            node = Field(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('field')
 
 
 class Field(base.Node):
-    label_attribute = 'field_name'
+    pass
 
 
+# Export for API
 Origin = File

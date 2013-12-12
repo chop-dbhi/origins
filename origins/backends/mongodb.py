@@ -1,5 +1,4 @@
 from __future__ import division, unicode_literals, absolute_import
-from ..utils import cached_property
 from . import base
 
 import pymongo
@@ -25,7 +24,7 @@ count_fields = Code('''
 
 class Client(base.Client):
     def __init__(self, database, **kwargs):
-        self.database = database
+        self.name = database
         self.host = kwargs.get('host', 'localhost')
         self.port = kwargs.get('port', 27017)
         self.connect(user=kwargs.get('user'), password=kwargs.get('password'))
@@ -38,17 +37,23 @@ class Client(base.Client):
 
     @property
     def db(self):
-        return self.connection[self.database]
+        return self.connection[self.name]
 
     def version(self):
-        return self.connection.server_info()
+        return self.connection.server_info()['version']
 
     def database_stats(self):
         return self.db.command('dbstats')
 
+    def database(self):
+        attrs = self.database_stats()
+        attrs['version'] = self.version()
+        attrs['name'] = self.name
+        return attrs
+
     def collections(self):
         return [{
-            'collection_name': n,
+            'name': n,
         } for n in self.db.collection_names()
             if n != 'system.indexes']
 
@@ -64,8 +69,8 @@ class Client(base.Client):
         fields = []
         for result in output['results']:
             fields.append({
-                'field_name': result['_id'],
-                'field_occurrence': result['value'] / input_count
+                'name': result['_id'],
+                'occurrence': result['value'] / input_count
             })
         return fields
 
@@ -80,36 +85,26 @@ class Client(base.Client):
 
 
 class Database(base.Node):
-    label_attribute = 'database_name'
-    branches_property = 'collections'
+    def sync(self):
+        self.update(self.client.database())
+        self._contains(self.client.collections(), Collection)
 
-    def synchronize(self):
-        self.attrs['database_name'] = self.client.database
-
-    @cached_property
+    @property
     def collections(self):
-        nodes = []
-        for attrs in self.client.collections():
-            node = Collection(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('collection')
 
 
 class Collection(base.Node):
-    label_attribute = 'collection_name'
-    elements_property = 'fields'
+    def sync(self):
+        self._contains(self.client.fields(self['name']), Field)
 
-    @cached_property
+    @property
     def fields(self):
-        nodes = []
-        for attrs in self.client.fields(self['collection_name']):
-            node = Field(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('field')
 
 
 class Field(base.Node):
-    label_attribute = 'field_name'
+    pass
 
 
 # Export for API

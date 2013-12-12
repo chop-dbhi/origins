@@ -62,8 +62,7 @@ def connect(backend, **options):
 
     `options` are passed to the backend's `Client` which sets up the necessary
     components for the backend to work (database connections, opening file
-    handlers, etc.) It can optionally contain an `attrs` argument that will be
-    passed to the `Origin` node on initialization.
+    handlers, etc.).
     """
     if backend in BACKEND_ALIASES:
         alias = BACKEND_ALIASES[backend]
@@ -72,8 +71,5 @@ def connect(backend, **options):
             options.update(alias['options'])
 
     module = import_backend(backend)
-
-    # Pop out the attributes for the origin
-    attrs = options.pop('attrs', None)
     client = module.Client(**options)
-    return module.Origin(attrs=attrs, client=client)
+    return module.Origin(client=client)

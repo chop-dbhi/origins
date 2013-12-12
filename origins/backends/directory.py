@@ -1,6 +1,5 @@
 from __future__ import division, unicode_literals
 from ..constants import DATETIME_FORMAT
-from ..utils import cached_property
 from . import base, _file
 
 import os
@@ -19,6 +18,12 @@ class Client(base.Client):
 
         # TODO support regexp or glob syntax for matching a subset of files
         # self.regexp = kwargs.get('regexp')
+
+    def directory(self):
+        return {
+            'path': self.directory_path,
+            'name': os.path.basename(self.directory_path),
+        }
 
     def files(self):
         _files = []
@@ -39,40 +44,33 @@ class Client(base.Client):
             for f in files:
                 path = os.path.join(root, f)
                 _files.append({
-                    'file_path': path,
-                    'file_name': os.path.relpath(path, self.directory_path),
+                    'name': os.path.relpath(path, self.directory_path),
+                    'path': path,
                 })
 
         return _files
 
 
 class Directory(base.Node):
-    label_attribute = 'directory_path'
-    elements_property = 'files'
+    def sync(self):
+        self.update(self.client.directory())
+        self._contains(self.client.files(), File)
 
-    def synchronize(self):
-        self['directory_path'] = self.client.directory_path
-        self['directory_name'] = os.path.basename(self['directory_path'])
-
-    @cached_property
+    @property
     def files(self):
-        nodes = []
-        for attrs in self.client.files():
-            node = File(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('file')
 
 
-class File(_file.Node):
-    def synchronize(self):
-        stats = os.stat(self['file_path'])
+class File(_file.File):
+    def sync(self):
+        stats = os.stat(self['path'])
 
         # Convert into datetime from timestamp floats
         atime = datetime.fromtimestamp(stats.st_atime)
         mtime = datetime.fromtimestamp(stats.st_mtime)
         ctime = datetime.fromtimestamp(stats.st_birthtime or stats.st_ctime)
 
-        self.attrs.update({
+        self.update({
             'mode': stats.st_mode,
             'uid': stats.st_uid,
             'gid': stats.st_gid,

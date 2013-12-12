@@ -17,7 +17,7 @@ class SqliteTestBase(BackendTestCase):
     def test_tables(self):
         tables = self.client.tables()
         self.assertEqual(len(tables), 11)
-        self.assertTrue('table_name' in tables[0])
+        self.assertTrue('name' in tables[0])
         self.assertEqual(sorted(tables), tables)
 
         self.assertEqual(self.client.table_count('Album'), 347)
@@ -25,9 +25,9 @@ class SqliteTestBase(BackendTestCase):
     def test_columns(self):
         columns = self.client.columns('Album')
         self.assertEqual(len(columns), 3)
-        self.assertTrue('column_name' in columns[0])
+        self.assertTrue('name' in columns[0])
 
-        sorted_columns = sorted(columns, key=lambda x: x['column_index'])
+        sorted_columns = sorted(columns, key=lambda x: x['index'])
         self.assertEqual(sorted_columns, columns)
 
         count = self.client.column_unique_count('Album', 'ArtistId')

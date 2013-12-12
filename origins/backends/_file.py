@@ -14,11 +14,13 @@ class Client(base.Client):
     def file_handler(self):
         return open(self.file_path)
 
+    def file(self):
+        return {
+            'path': self.file_path,
+            'name': self.file_name,
+        }
 
-class Node(base.Node):
-    label_attribute = 'file_name'
-    path_attribute = 'file_path'
 
-    def synchronize(self):
-        self.attrs['file_path'] = self.client.file_path
-        self.attrs['file_name'] = self.client.file_name
+class File(base.Node):
+    def sync(self):
+        self.update(self.client.file())

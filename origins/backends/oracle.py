@@ -1,6 +1,5 @@
 from __future__ import division, print_function, unicode_literals
-from ..utils import cached_property
-from . import base, _database
+from . import _database
 
 import cx_Oracle
 
@@ -30,7 +29,7 @@ DATA_TYPE_NAMES = {
 
 class Client(_database.Client):
     def __init__(self, database, **kwargs):
-        self.database = database
+        self.name = database
         self.host = kwargs.get('host', 'localhost')
         self.port = kwargs.get('port', 1521)
 
@@ -48,18 +47,25 @@ class Client(_database.Client):
     def qn(self, name):
         return name.upper().replace('%', '%%')
 
+    def database(self):
+        return {
+            'name': self.name,
+            'host': self.host,
+            'port': self.port,
+        }
+
     def tables(self):
         query = 'SELECT TABLE_NAME FROM USER_TABLES'
         tables = []
         for name, in self.fetchall(query):
-            tables.append({'table_name': name})
+            tables.append({'name': name.lower()})
         return tables
 
     def views(self):
         query = 'SELECT VIEW_NAME FROM USER_VIEWS'
         views = []
         for name, in self.fetchall(query):
-            views.append({'view_name': name})
+            views.append({'name': name})
         return views
 
     def table_columns(self, table_name):
@@ -70,16 +76,17 @@ class Client(_database.Client):
         c = self.connection.cursor()
         c.execute(query)
 
-        keys = ('column_name', 'data_type', 'display_size', 'internal_size',
+        keys = ('name', 'type', 'display_size', 'internal_size',
                 'precision', 'scale', 'nullable')
 
         columns = []
 
         for row in c.description:
             attrs = dict(zip(keys, row))
-            attrs['data_type'] = DATA_TYPE_NAMES.get(attrs['data_type'])
+            attrs['type'] = DATA_TYPE_NAMES.get(attrs['type'])
+            attrs['nullable'] = bool(attrs['nullable'])
             # Lower case table name to make it less burdensome to work with
-            attrs['column_name'] = attrs['column_name'].lower()
+            attrs['name'] = attrs['name'].lower()
             columns.append(attrs)
 
         return columns
@@ -92,16 +99,17 @@ class Client(_database.Client):
         c = self.connection.cursor()
         c.execute(query)
 
-        keys = ('column_name', 'data_type', 'display_size', 'internal_size',
+        keys = ('name', 'type', 'display_size', 'internal_size',
                 'precision', 'scale', 'nullable')
 
         columns = []
 
         for row in c.description:
             attrs = dict(zip(keys, row))
-            attrs['data_type'] = DATA_TYPE_NAMES.get(attrs['data_type'])
+            attrs['type'] = DATA_TYPE_NAMES.get(attrs['type'])
+            attrs['nullable'] = bool(attrs['nullable'])
             # Lower case table name to make it less burdensome to work with
-            attrs['column_name'] = attrs['column_name'].lower()
+            attrs['name'] = attrs['name'].lower()
             columns.append(attrs)
 
         return columns
@@ -138,58 +146,27 @@ class Client(_database.Client):
             yield row[0]
 
 
-class Database(base.Node):
-    branches_property = 'tables'
-    label_attribute = 'database_name'
+class Database(_database.Database):
+    def sync(self):
+        self.update(self.client.database())
+        self._contains(self.client.tables(), Table)
+        self._contains(self.client.views(), View)
 
-    def synchronize(self):
-        self.attrs['database_name'] = self.client.database
-
-    @cached_property
-    def tables(self):
-        nodes = []
-        for attrs in self.client.tables():
-            node = Table(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
-
-    @cached_property
+    @property
     def views(self):
-        nodes = []
-        for attrs in self.client.views():
-            node = View(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('view')
 
 
-class Table(base.Node):
-    elements_property = 'columns'
-    label_attribute = 'table_name'
-
-    @cached_property
-    def columns(self):
-        nodes = []
-        for attrs in self.client.table_columns(self['table_name']):
-            node = Column(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+class Table(_database.Table):
+    def sync(self):
+        self._contains(self.client.table_columns(self['name']),
+                       _database.Column)
 
 
-class View(base.Node):
-    elements_property = 'columns'
-    label_attribute = 'view_name'
-
-    @cached_property
-    def columns(self):
-        nodes = []
-        for attrs in self.client.view_columns(self['view_name']):
-            node = Column(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
-
-
-class Column(base.Node):
-    label_attribute = 'column_name'
+class View(_database.Table):
+    def sync(self):
+        self._contains(self.client.view_columns(self['name']),
+                       _database.Column)
 
 
 # Export for API

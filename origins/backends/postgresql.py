@@ -1,5 +1,4 @@
 from __future__ import division, unicode_literals, absolute_import
-from ..utils import cached_property
 from . import base, _database
 
 import psycopg2
@@ -7,23 +6,28 @@ import psycopg2
 
 class Client(_database.Client):
     def __init__(self, database, **kwargs):
-        self.database = database
+        self.name = database
         self.host = kwargs.get('host', 'localhost')
         self.port = kwargs.get('port', 5432)
         self.connect(user=kwargs.get('user'), password=kwargs.get('password'))
 
     def connect(self, user=None, password=None):
-        self.connection = psycopg2.connect(database=self.database,
+        self.connection = psycopg2.connect(database=self.name,
                                            host=self.host,
                                            port=self.port,
                                            user=user,
                                            password=password)
 
-    def qn(self, name):
-        return '"{}"'.format(name)
-
     def version(self):
         return self.fetchvalue('show server_version')
+
+    def database(self):
+        return {
+            'name': self.name,
+            'host': self.host,
+            'port': self.port,
+            'version': self.version(),
+        }
 
     def schemas(self):
         query = '''
@@ -34,7 +38,7 @@ class Client(_database.Client):
             ORDER BY nspname
         '''
 
-        keys = ('schema_name',)
+        keys = ('name',)
         schemas = []
 
         for row in self.fetchall(query):
@@ -52,7 +56,7 @@ class Client(_database.Client):
             ORDER BY table_name
         '''
 
-        keys = ('table_name',)
+        keys = ('name',)
         tables = []
 
         for row in self.fetchall(query, [schema_name]):
@@ -73,12 +77,13 @@ class Client(_database.Client):
             ORDER BY ordinal_position
         '''
 
-        keys = ('column_name', 'column_index', 'nullable', 'data_type')
+        keys = ('name', 'index', 'nullable', 'type')
         columns = []
 
         for row in self.fetchall(query, [schema_name, table_name]):
             attrs = dict(zip(keys, row))
-            attrs['column_index'] -= 1
+            # Postgres column index are 1-based; this changes to 0-based
+            attrs['index'] -= 1
             if attrs['nullable'] == 'YES':
                 attrs['nullable'] = True
             else:
@@ -117,50 +122,34 @@ class Client(_database.Client):
 
 
 class Database(base.Node):
-    label_attribute = 'database_name'
-    branches_property = 'schemas'
+    def sync(self):
+        self.update(self.client.database())
+        self._contains(self.client.schemas(), Schema)
 
-    def synchronize(self):
-        self.attrs['database_name'] = self.client.database
-
-    @cached_property
+    @property
     def schemas(self):
-        nodes = []
-        for attrs in self.client.schemas():
-            node = Schema(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('schema')
+
+    @property
+    def tables(self):
+        # TODO, should this look up the user's search path?
+        default_schema = self.schemas['public']
+        return default_schema._containers('table')
 
 
 class Schema(base.Node):
-    branches_property = 'tables'
-    label_attribute = 'schema_name'
+    def sync(self):
+        self._contains(self.client.tables(self['name']), Table)
 
-    @cached_property
+    @property
     def tables(self):
-        nodes = []
-        for attrs in self.client.tables(self['schema_name']):
-            node = Table(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
+        return self._containers('table')
 
 
-class Table(base.Node):
-    elements_property = 'columns'
-    label_attribute = 'table_name'
-
-    @cached_property
-    def columns(self):
-        nodes = []
-        for attrs in self.client.columns(self.source['schema_name'],
-                                         self['table_name']):
-            node = Column(attrs=attrs, source=self, client=self.client)
-            nodes.append(node)
-        return base.Container(nodes, source=self)
-
-
-class Column(base.Node):
-    label_attribute = 'column_name'
+class Table(_database.Table):
+    def sync(self):
+        self._contains(self.client.columns(self.parent['name'], self['name']),
+                       _database.Column)
 
 
 # Export for API

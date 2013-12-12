@@ -11,6 +11,9 @@ class Client(base.Client):
     def disconnect(self):
         self.connection.close()
 
+    def qn(self, name):
+        return '"{}"'.format(name)
+
     def fetchall(self, *args, **kwargs):
         "Returns all rows."
         c = self.connection.cursor()
@@ -28,3 +31,26 @@ class Client(base.Client):
         row = self.fetchone(*args, **kwargs)
         if row:
             return row[0]
+
+
+class Database(base.Node):
+    def sync(self):
+        self.update(self.client.database())
+        self._contains(self.client.tables(), Table)
+
+    @property
+    def tables(self):
+        return self._containers('table')
+
+
+class Table(base.Node):
+    def sync(self):
+        self._contains(self.client.columns(self['name']), Column)
+
+    @property
+    def columns(self):
+        return self._containers('column')
+
+
+class Column(base.Node):
+    pass
