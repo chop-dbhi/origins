@@ -136,7 +136,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 
 #### via MySQL
 
-- `redcap` - depends on MySQL backend
+- `redcap-mysql` - depends on MySQL backend
 
 **Options**
 

@@ -13,12 +13,15 @@ BACKENDS = {
     'mysql': 'origins.backends.mysql',
     'oracle': 'origins.backends.oracle',
     'vcf': 'origins.backends.vcf',
-    'redcap': 'origins.backends.redcap_mysql',
+    'redcap-mysql': 'origins.backends.redcap_mysql',
     'redcap-api': 'origins.backends.redcap_api',
     'redcap-csv': 'origins.backends.redcap_csv',
 }
 
 BACKEND_ALIASES = {
+    'redcap': {
+        'backend': 'redcap-mysql',
+    },
     'csv': {
         'backend': 'delimited',
         'options': {
@@ -65,7 +68,8 @@ def connect(backend, **options):
     if backend in BACKEND_ALIASES:
         alias = BACKEND_ALIASES[backend]
         backend = alias['backend']
-        options.update(alias['options'])
+        if 'options' in alias:
+            options.update(alias['options'])
 
     module = import_backend(backend)
 
