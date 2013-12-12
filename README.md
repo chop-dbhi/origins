@@ -137,6 +137,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 #### via MySQL
 
 - `redcap-mysql` - depends on MySQL backend
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/REDCap%2520MySQL%2520Example.ipynb)
 
 **Options**
 
@@ -150,6 +151,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 #### via API
 
 - `redcap-api` - depends on [PyCap](https://pypi.python.org/pypi/PyCap)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/REDCap%2520API%2520Example.ipynb)
 
 **Options**
 
@@ -160,6 +162,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 #### via CSV
 
 - `redcap-csv`
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/REDCap%2520CSV%2520Example.ipynb)
 
 **Options**
 
