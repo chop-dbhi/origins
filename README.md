@@ -233,3 +233,40 @@ Standardizing on a set of attribute names makes the API more consistent and port
 - `foreign_keys()` - Returns a list of foreign key relationships.
 
  _*Note, the `schema` argument only applies to PostgreSQL_
+## Examples
+
+### Export to Neo4j
+
+#### Download & Setup Neo4j
+
+Download Neo4j (2.0+ required) from the website: http://www.neo4j.org/download. On Mac OS X or Linux, uncompress, `cd` into the directory, then run:
+
+```
+./bin/neo4j start
+```
+
+to start the server.
+
+_Mac OS X and Linux requires [Java JDK 7.0+](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html), the Windows installer includes it._
+
+#### Extract metadata using Origins
+
+We will use the chinook SQLite database (which is included in the source code) or download it [here](https://github.com/cbmi/origins/blob/master/tests/data/chinook.sqlite?raw=true):
+
+```python
+import origins
+from origins.io import neo4j
+
+db = origins.connect('sqlite', path='chinook.sqlite')
+neo4j.export(db)
+```
+
+#### View the graph
+
+Open up a modern browser to http://localhost:7474/browser/ and enter the following statement and hit enter in the query prompt bar:
+
+```
+MATCH (n:Origin) RETURN n
+```
+
+This will render a single node (assuming this is your first time doing this) that corresponds to the chinook database. Double-click on the node to expand all the tables within the database and then each table can be double-clicked to expand the columns.
