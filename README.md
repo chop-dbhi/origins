@@ -157,6 +157,14 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 - `token` - API token for the project
 - `name` - Name of the project being accessed (this is merely an identifier)
 
+#### via CSV
+
+- `redcap-csv`
+
+**Options**
+
+- `path` - Path to the file
+
 ## Implementation
 
 ### Design

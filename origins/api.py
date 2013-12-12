@@ -15,6 +15,7 @@ BACKENDS = {
     'vcf': 'origins.backends.vcf',
     'redcap': 'origins.backends.redcap_mysql',
     'redcap-api': 'origins.backends.redcap_api',
+    'redcap-csv': 'origins.backends.redcap_csv',
 }
 
 BACKEND_ALIASES = {
