@@ -246,6 +246,167 @@ Likewise, `e['database_name']` will result in `chinook.sqlite`. This makes it co
 
  _*Note, the `schema` argument only applies to PostgreSQL_
 
+## Graphs
+
+The Origins API builds upon a simple and flexible graph data structure located in the `origins.graph` module. As a quick introduction, [graphs](http://en.wikipedia.org/wiki/Graph_(data_structure)) are composed of vertices and arcs, but more commonly referred to as nodes and edges. In this context, however, we are going to refer to edges as "relationships".
+
+Nodes are connected to other nodes via relationships. The connections and relationship types are arbitrary which makes a graph structure incredibly flexible, but prone to high complexity. There are [many types of graphs](http://en.wikipedia.org/wiki/Graph_(mathematics)#Types_of_graphs), each define with their own set of constraints. Origins supports directed property graphs with at most a single relationship between two nodes of the same type (but can have multiple relationships of other types). Both nodes and relationships can have properties which makes it suitable for storing data _about_ the relationship itself.
+
+Origins backend API builds on this foundation and utilizes a _tree graph_ for representing the structure of a backend. For example, a database contains tables each of which contains columns. This is directed and _acyclic_ since descedent nodes never loop back to themselves nor to any ancestor. This parent-child relationship makes it very convenient when incrementally exposing more detail about the structure of the backend.
+
+However, non-structural relationships such as foreign keys, aliases, sibling, etc. require the flexibility of the underlying API and may result in circular relationships in the graph.
+
+## Implementing a Backend
+
+The two requirements for writing a backend is to define a client class and the _origin_ node class. The backend module must have these names defined for the backend to be used correctly. For example, this is a perfectly valid backend:
+
+```python
+from origins.backends import base
+
+class Client(base.Client):
+    pass
+
+class Origin(base.Node):
+    pass
+```
+
+In fact Origins contains this backend:
+
+```python
+import origins
+node = origins.connect('noop')
+```
+
+It does not synchronize with backend, but provides the same API for manually constructing relationships and adding properties if there is a need for that.
+
+### Fetch & Sync
+
+Unlike above, a useful backend requires connecting to a data store, reading a file, or sending web requests in order to fetch data from the backend. When the origin node is initialized, it synchronizes with the backend (via the client) and fetches and stores data as properties and relationships. For example, when the MongoDB backend's database synchronizes, it fetchs a bunch of stats from the backend and sets them as it's initial properties.
+
+```python
+db = origins.connect('mongodb', 'chinook')
+print(db.props)
+
+{u'avgObjSize': 116.24218400358033,
+ u'collections': 13,
+ u'dataFileVersion': {u'major': 4, u'minor': 5},
+ u'dataSize': 1818144,
+ u'db': u'chinook',
+ u'fileSize': 201326592,
+ u'indexSize': 596848,
+ u'indexes': 11,
+ u'name': 'chinook',
+ u'nsSizeMB': 16,
+ u'numExtents': 28,
+ u'objects': 15641,
+ u'ok': 1.0,
+ u'storageSize': 4026368,
+ u'version': u'2.4.8'}
+```
+
+The `origins.base.Node` base class has `sync` method and calls it when an instance is initialized. Subclasses should override this method to contain the logic for communicating with it's client:
+
+```python
+class Database(base.Node):
+    def sync(self):
+        self.update(self.client.get_database_props())
+```
+
+The _initial sync phase_ is also generally the time to initialize and sync related nodes such as intermediate structures including tables, views, scheets, and collections as well as the data elements themselves including fields and columns. One way of this doing is to setup the descendent nodes in `sync`:
+
+```python
+class Database(base.Node):
+    def sync(self):
+        self.update(self.client.get_database_props())
+
+        for props in self.client.get_tables():
+            # Ensure to pass the parent and client!
+            table = Table(props, parent=self, client=self.client)
+            # Create a relationship to table, e.g. database CONTAINS table
+            self.relate(table, 'CONTAINS', {'container': 'table'})
+
+
+class Table(base.Node):
+    def sync(self):
+        # setup columns..
+```
+
+The `sync` method now creates relationships to the tables that are contained in the database. These tables can now be referenced from `database` like this:
+
+```
+# Filter on container type in case the database contains of structures
+# such as views.
+tables = db.rels(type='CONTAINS').filter('containter', 'table').nodes()
+```
+
+This looks quite verbose, so we typically wrap this as a property:
+
+```python
+class Database(base.Node):
+    # ... sync method
+
+    @property
+    def tables(self):
+        return self.rels(type='CONTAINS').filter('container', 'table').nodes()
+```
+
+Now you can simply do `db.tables` to access the underlying tables.
+
+### Lazy Syncing
+
+One potential issue when syncing is that it could take a long time depending on the backend, how deep the relatioships go, and/or how much metadata is being retrieved. A keen eye would notice that if the above `Table` class would also implement the `sync` method to setup relationships with columns, syncing is recursive since it occurs on initialization. If only a portion of the structure is needed to be accessed (just the database or tables, or the columns in a single table), this overhead is wasted.
+
+Separate sync methods can be defined that are called on demand when a corresponding method or property requires it. This pattern looks as follows:
+
+```python
+from origins.utils import synced_property
+
+class Database(base.Node):
+    def sync(self):
+        self.update(self.client.get_database_props())
+
+    def sync_tables(self):
+        for props in self.client.get_tables():
+            # Ensure to pass the parent and client!
+            table = Table(props, parent=self, client=self.client)
+            # Create a relationship to table, e.g. database CONTAINS table
+            self.relate(table, 'CONTAINS', {'container': 'table'})
+
+    @synced_property
+    def tables(self):
+        return self.rels(type='CONTAINS').filter('container': 'table'}).nodes()
+```
+
+The `sync` method on the class will still be called on initialization, but now it only updates the properties and does not immediately fetch the related data. The `synced_property` decorator will ensure that the corresponding `sync_*` method is called _once_ prior returning the result. The sequence looks like this:
+
+```python
+db = Database()
+# -> sync() called
+
+tables = db.tables
+# -> synced? no
+#   -> sync_tables() called
+#   -> flag as synced
+# <- return result
+
+tables = db.tables
+# -> synced? yes
+# <- return result
+```
+
+By default, the sync method is assumed to be named `sync_FOO` where `FOO` is the name of the wrapped method. If you prefer or require a different sync method, the name can be passed into the decorator.
+
+```python
+def other_sync_func(self):
+    # sync..
+
+@synced_property('other_sync_func')
+def tables(self):
+    # ...
+```
+
+Using this approach will incrementally sync data as it is needed.
+
 ## Example Uses
 
 ### Export to Neo4j
