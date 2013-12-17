@@ -1,4 +1,5 @@
 from __future__ import unicode_literals, absolute_import
+import warnings
 from importlib import import_module
 from .exceptions import UnknownBackend, BackendNotSupported
 
@@ -16,6 +17,7 @@ BACKENDS = {
     'redcap-mysql': 'origins.backends.redcap_mysql',
     'redcap-api': 'origins.backends.redcap_api',
     'redcap-csv': 'origins.backends.redcap_csv',
+    'noop': 'origins.backends.noop',
 }
 
 BACKEND_ALIASES = {
