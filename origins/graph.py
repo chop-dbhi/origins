@@ -178,11 +178,16 @@ class Node(object):
         return count
 
     def relate(self, node, type, props=None):
-        "Adds a relationship to node."
+        "Adds a relationship to node if it does not already exist."
         assert isinstance(node, Node), 'end node must be a Node instance'
         assert isinstance(type, (str, unicode)), 'type must be a string'
-        rel = Rel(self, node, type, props)
-        self._add_rel(rel)
+        if type in self._types and node.id in self._types[type]:
+            rel = self._rels[node.id][type]
+            if props:
+                rel.update(props)
+        else:
+            rel = Rel(self, node, type, props)
+            self._add_rel(rel)
         return rel
 
     def unrelate(self, node=None, type=None):
