@@ -232,6 +232,21 @@ exporter.export()
 exporter.export(uri='http://localhost:7476/db/data/')
 ```
 
+## Data Access Layer (DAL)
+
+View the [example using SQLite](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/DAL.ipynb)
+
+Accessing data consists of selecting which data to be returned and what conditions, if any, the data must satisfy to be returned. Each backend has zero or more capabilities supporting these methods, such as:
+
+- selecting all values (in native order)
+- selecting a subset of values
+- selecting values in an arbitrary order
+- filtering values given one or more conditions
+- aggregating values
+- aggregating records into groups
+
+- `select([names])` - Returns an iterable of the data. For non-element nodes (e.g. tables, documents, files), an optional argument `names` may be supplied which is a list of element names to be returned in the data. If elements have a fixed order, `names` can also be a list of 0-based indexes.
+
 ---
 
 ## Implementation

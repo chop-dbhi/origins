@@ -160,37 +160,6 @@ class Client(_database.Client):
             fks.append(attrs)
         return fks
 
-    def table_count(self, table_name):
-        query = '''
-            SELECT COUNT(*) FROM {table}
-        '''.format(table=self.qn(table_name))
-        return self.fetchvalue(query)
-
-    def view_count(self, view_name):
-        query = '''
-            SELECT COUNT(*) FROM {view}
-        '''.format(view=self.qn(view_name))
-        return self.fetchvalue(query)
-
-    def column_unique_count(self, table_name, column_name):
-        query = '''
-            SELECT COUNT(DISTINCT {column}) FROM {table}
-        '''.format(column=self.qn(column_name),
-                   table=self.qn(table_name))
-        return self.fetchvalue(query)
-
-    def column_unique_values(self, table_name, column_name, ordered=True):
-        query = '''
-            SELECT DISTINCT {column} FROM {table}
-        '''.format(column=self.qn(column_name),
-                   table=self.qn(table_name))
-
-        if ordered:
-            query += ' ORDER BY {column}'.format(column=self.qn(column_name))
-
-        for row in self.fetchall(query):
-            yield row[0]
-
 
 class Database(_database.Database):
     def sync(self):

@@ -136,34 +136,6 @@ class Client(_database.Client):
 
         return columns
 
-    def table_count(self, schema_name, table_name):
-        query = '''
-            SELECT COUNT(*) FROM {schema}.{table}
-        '''.format(schema=self.qn(schema_name),
-                   table=self.qn(table_name))
-        return self.one(query)[0]
-
-    def column_unique_count(self, schema_name, table_name, column_name):
-        query = '''
-            SELECT COUNT(DISTINCT {column}) FROM {schema}.{table}
-        '''.format(column=self.qn(column_name),
-                   schema=self.qn(schema_name),
-                   table=self.qn(table_name))
-        return self.one(query)[0]
-
-    def column_unique_values(self, schema_name, table_name, column_name,
-                             ordered=True):
-        query = '''
-            SELECT DISTINCT {column} FROM {schema}.{table}
-        '''.format(column=self.qn(column_name),
-                   schema=self.qn(schema_name),
-                   table=self.qn(table_name))
-        if ordered:
-            query += ' ORDER BY {column}'.format(column=self.qn(column_name))
-
-        for row in self.all(query):
-            yield row[0]
-
 
 class Database(base.Node):
     def sync(self):
