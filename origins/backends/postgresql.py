@@ -193,21 +193,31 @@ class Schema(base.Node):
 class Table(_database.Table):
     def sync(self):
         self._contains(self.client.columns(self.parent['name'], self['name']),
-                       _database.Column)
+                       Column)
 
-    @cached_property
-    def foreign_keys(self):
-        nodes = []
-        schema_name = self.source.source['schema_name']
-        table_name = self.source['table_name']
+
+class Column(_database.Column):
+    def sync(self):
+        root = self.root
+        schema_name = self.parent.parent['name']
+        table_name = self.parent['name']
+
         for attrs in self.client.foreign_keys(schema_name, table_name,
-                                              self['column_name']):
-            node = self.origin\
+                                              self['name']):
+            # Find referenced node
+            node = root\
                 .schemas[attrs['schema']]\
                 .tables[attrs['table']]\
                 .columns[attrs['column']]
-            nodes.append((attrs['name'], node))
-        return nodes
+
+            self.relate(node, 'RELATES', {
+                'name': attrs['name'],
+                'type': 'foreignkey',
+            })
+
+    @property
+    def foreign_keys(self):
+        return self.rels(type='RELATES').filter('type', 'foreignkey').nodes()
 
 
 # Export for API
