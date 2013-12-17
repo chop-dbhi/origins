@@ -1,4 +1,5 @@
 from __future__ import unicode_literals, absolute_import
+import re
 import inspect
 from collections import defaultdict
 
@@ -267,3 +268,8 @@ class Nodes(tuple):
         if key not in self._map:
             raise KeyError(key)
         return self[self._map[key]]
+
+    def match(self, regexp, flags=re.I):
+        "Returns one or more nodes that match the regexp on the key."
+        r = re.compile(regexp, flags)
+        return Nodes(self[key] for key in self._map if r.match(key))
