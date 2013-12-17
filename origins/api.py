@@ -38,6 +38,8 @@ BACKEND_ALIASES = {
 
 
 def register_backend(name, module):
+    if name in BACKENDS:
+        warnings.warn('Registering over an existing backend.', UserWarning)
     BACKENDS[name] = module
 
 
