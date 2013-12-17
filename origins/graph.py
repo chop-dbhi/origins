@@ -257,6 +257,8 @@ class Nodes(tuple):
 
     def __getitem__(self, key):
         "Index and key-based access."
-        if key in self._map:
-            return self[self._map[key]]
-        return tuple.__getitem__(self, key)
+        if isinstance(key, (int, slice)):
+            return tuple.__getitem__(self, key)
+        if key not in self._map:
+            raise KeyError(key)
+        return self[self._map[key]]
