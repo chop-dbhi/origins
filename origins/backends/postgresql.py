@@ -178,7 +178,7 @@ class Database(base.Node):
     def tables(self):
         # TODO, should this look up the user's search path?
         default_schema = self.schemas['public']
-        return default_schema._containers('table')
+        return default_schema.tables
 
 
 class Schema(base.Node):
