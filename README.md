@@ -195,6 +195,45 @@ _Note: Sheets are assumed to be fixed width based on the first row._
 - `forms`
 - `fields`
 
+## Exporting
+
+The data parsed and structured by Origins can be exported to various backends available in the `origins.io` package. The internal [graph](#graph-model) structure makes it very natural to support exporting to graph databases or hierarchical-based structures like JSON or XML.
+
+Due to immediate needs by the project author, the first exporter is for [Neo4j](http://www.neo4j.org) which is an open source graph database. As a quick example, it's as easy as doing:
+
+```python
+import origins
+from origins.io import neo4j
+
+db = origins.connect('sqlite', path='chinook.sqlite')
+neo4j.export(db)
+```
+
+This exports the entire structure of the Chinook test database into Neo4j (as represented in Origins). Read the section [Export to Neo4j](#export-to-neo4j) for steps on how to setup a Neo4j server.
+
+To export specific elements, a single element or a list of elements can be passed into the `export` method:
+
+```python
+# Exports the Artist table and it's columns
+neo4j.export(db.tables['Artist'])
+```
+
+By default relationships that start from any nodes being exported will be traversed recursively (reverse relationships are not). For more fine grain control of the behavior of exporting certain elements, an `Exporter` instance can be created which allows for incrementally preparing nodes and relationships for export.
+
+```python
+# Initialize
+exporter = neo4j.Exporter()
+
+# Prepare some nodes and relationships
+exporter.prepare(node1)
+exporter.prepare([node2, node3], traverse=False)
+
+# Commit the export
+exporter.commit()
+```
+
+---
+
 ## Implementation
 
 ### Graph Model
