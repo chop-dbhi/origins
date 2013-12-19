@@ -2,14 +2,14 @@
 
 [![Build Status](https://travis-ci.org/cbmi/origins.png?branch=master)](https://travis-ci.org/cbmi/origins) [![Coverage Status](https://coveralls.io/repos/cbmi/origins/badge.png)](https://coveralls.io/r/cbmi/origins)
 
-**Origins is a data introspecter.** It provides a uniform structure and access layer for inspecting data elements.
+**Origins is a data introspecter.** It provides a uniform access layer for inspecting data elements that are defined in data stores.
 
 **Use Cases**
 
 - Discovery of related elements
 - Query based on relationships
 
-## Usage
+## Quick Usage
 
 Import `origins` and connect to a data source. This example uses a SQLite database that comes with the respository.
 
@@ -24,7 +24,7 @@ For a more thorough example, step through the [Origins Introduction example](htt
 
 Backends are grouped by type. The first section lists the backend name and any dependencies that must be installed for the backend.
 
-One or more **options** can be passed to the backend. **Hierarchy** lists the path from the origin to the elements, for example `database.tables` will access the table nodes. `database.tables['foo'].columns` will access all the columns on the `foo` table. The **Attributes** section lists the attributes for each type that are captured by the backend. Attributes that are not captured by all backends will be denoted.
+One or more **options** can be passed to the backend. **Hierarchy** lists the path from the origin to the elements, for example `database.tables` will access the table nodes. `database.tables['foo'].columns` will access all the columns on the `foo` table.
 
 ### Relational Databases
 
@@ -48,9 +48,11 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 **Hierarchy**
 
 - `database`
-- `schemas` (PostgreSQL only)
+- `schemas` (PostgreSQL only)*
 - `tables`
 - `columns`
+
+*Note: In addition to the PostgreSQL backend supporting schemas, it also provides direct access to the tables under the `public` schema via the `tables` property.*
 
 ### Document Stores
 
@@ -73,13 +75,12 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 
 *Note: the fields of nested documents are not indexed, however this could be implemented as an option if a use case presents itself.*
 
+### Files
 
-### Delimited Files
-
-- `delimited`
+- `delimited` - General backed for acessing fixed width delimited files.
     - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Delimited%2520Example.ipynb)
-- `csv` - alias for using the `,` delimiter
-- `tab` - alias for using the `\t` delimiter
+- `csv` - Alias for the `,` delimiter
+- `tab` - Alias for the `\t` delimiter
 
 **Options**
 
@@ -104,6 +105,14 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 - `path` - Path to the file
 - `headers` - If `True`, the first row on each sheet will be assume to be the header. If `False` the column indices will be used. If a list/tuple, the columns will apply to the first sheet. If a dict, keys are the sheet names and the values are a list/tuple of column names for the sheet.
 
+**Hierarchy**
+
+- `workbook`
+- `sheets`
+- `columns`
+
+_Note: Sheets are assumed to be fixed width based on the first row._
+
 ### Directory
 
 - `directory`
@@ -118,7 +127,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 - `directory`
 - `files`
 
-### VCF Files
+### Variant Call Format (VCF) Files
 
 - `vcf` - requires [PyVCF](https://pypi.python.org/pypi/PyVCF)
     - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/VCF%2520Example.ipynb)
@@ -148,6 +157,12 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 - `user` - user for authentication
 - `password` - password for authentication
 
+**Hierarchy**
+
+- `project`
+- `forms`
+- `fields`
+
 #### via API
 
 - `redcap-api` - depends on [PyCap](https://pypi.python.org/pypi/PyCap)
@@ -155,9 +170,15 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 
 **Options**
 
-- `url` - API URL
-- `token` - API token for the project
-- `name` - Name of the project being accessed (this is merely an identifier)
+- `url` - REDCap API URL
+- `token` - REDCap API token for the project
+- `name` - Name of the project being accessed (this is merely an identifier). _Note, this is required since PyCap does not currently export the name of the project itself through it's APIs._
+
+**Hierarchy**
+
+- `project`
+- `forms`
+- `fields`
 
 #### via CSV
 
@@ -166,95 +187,41 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 
 **Options**
 
-- `path` - Path to the file
+- `path` - Path to the REDCap data dictionary CSV file
+
+**Hierarchy**
+
+- `project`
+- `forms`
+- `fields`
 
 ## Implementation
 
-### Design
+### Graph Model
 
-- The API is dynamic to allow the backend to be exposed with familiar names, while still maintaing a consistent API for generic manipulation.
-- The top-level entity (as exposed by the backend) is known as the _origin_.
-- Except for the origin, nodes are contained in a _branch_ from the origin. For example, relational databases do not have columns defined directly on the database, but rather on separate _tables_. Therefore each table would be considered a branch containing a subset of all elements (columns) in the database.
+The Origins API builds upon a simple and flexible graph data structure located in the `origins.graph` module. As a quick introduction, [graphs](http://en.wikipedia.org/wiki/Graph_(data_structure)) are composed of vertices and arcs, but more commonly referred to as nodes and edges. In this context, however, we are going to refer to edges as "relationships".
 
-### Attribute Names
+Nodes are connected to other nodes via relationships. Relationships and their types are arbitrary which makes a graph structure incredibly flexible, but prone to high complexity. There are [many types of graphs](http://en.wikipedia.org/wiki/Graph_(mathematics)#Types_of_graphs); each of which define their own set of constraints.
 
-Standardizing on a set of attribute names makes the API more consistent and portable.
+The structures defined in `origins.graph` support defining _directed property graphs_ with at most a single relationship between two nodes of the same type (but can have multiple relationships of other types). Both nodes and relationships can have properties which makes it suitable for storing data _about_ the relationship itself.
 
-- `*_name` - Bare name of the structure, e.g. `table_name`, `column_name`
-- `*_label` - Verbose names of the structure. These are intended to be more readable than the `*_name` version.
-- `*_index` - The index of the structure if ordered such as columns in a CSV or Excel file, e.g. `column_index`, `sheet_index`
+Origins backend API builds on this foundation and utilizes a _tree graph_ for representing the structure of a backend (located in `origins.backends.base`). For example, a database contains tables each of which contains columns. This is directed and _acyclic_ since descedent nodes never loop back to themselves nor to any ancestor. This parent-child relationship makes it very convenient when incrementally exposing more detail about the structure of the backend.
 
-#### Pending Additions
+However, non-structural relationships such as foreign keys, aliases, sibling, etc. require the flexibility of creating arbitrary relationships which is why the more flexible underlying graph API exists.
 
-- `*_type` - The _type_ of the structure. Most applicable elements which define the data type of the data it contains, e.g. `column_type`
+### Relationship Types
 
-### Node Attributes
+- `CONTAINS` - denotes the target node is contained in the source node, e.g. table X contains column Y.
 
-Nodes have an internal dict of attributes that are initially populated by the backend. Attributes can be freely modified and will be reflected on export. For convenience attributes of ancestor nodes (e.g. the table of a column) by prepending the node type's prefix. For example, the following will print `Album`:
-
-```python
-db = origins.connect('sqlite', path='tests/data/chinook.sqlite')
-e = db.tables['Album'].columns['Title']
-print(e['table_name'])
-```
-
-Likewise, `e['database_name']` will result in `chinook.sqlite`. This makes it convenient to get/set/delete attributes of ancestor nodes.
-
-## Graph Representation
-
-### Entities
-
-- Origin - entry point of a backend source such as a database or CSV file
-- Branch - intermediate containers of elements such as tables and collections
-- Element - the data elements themselves
-
-### Relationships
-
-**Operational**
-
-- `BRANCH` (uni) - operational relationship for signifying an entity is a branch of the other
-    - Valid for Origin &rarr; Branch, Branch &rarr; Branch and Branch &rarr; Element
-- `ORIGIN` (uni) - direct operational relationship between the origin and a containing element
-    - Valid for Origin &rarr; Element
-
-**Relatedness**
-
-- `SIBLING` (bi) - two elements that share the same immediate parent either origin or branch
+- `SIBLING` - two elements that share the same immediate parent either origin or branch
     - Used for knowing which elements can be represented together at a record level (e.g. columns on a table, fields in a document)
     - Valid between elements
     - Implicit relationship by default
 
-- `ALIAS` (bi) - two elements are semantically the same, have the same properties, and share the same underlying data
+- `ALIAS` - two elements are semantically the same, have the same properties, and share the same underlying data
     - In database terms, this would be a foreign key relationship either explicit or implicit
     - The directionality of the relationship determines which element contains only a subset of the data
     - TODO: It may be better have explicit relationship for each type
-
-
-## Client Methods/Properties
-
-- `version()` - Returns the backend version if applicable, e.g. the database version.
-- `connect(user=None, password=None)` - Connects the client to the backend. If applicable and required, the `user` and `password` may be passed here to for backends that require authentication. Note, on client initialization, these arguments are passed through for establishing the initial connection. This generally does not need to be called explicitly when using the API.
-- `disconnect()` - Disconnects the client from the backend. This generally does not need to be called explicitly when using the API.
-
-**Database**
-
-- `qn(name)` - For database backends (or any backend using a query language), this method should be implemented to properly quote `name` for use in the query statement.
-- `schemas()` - Returns a list of schema attributes. _*PostgreSQL only_
-- `tables([schema_name])` - Returns a list of table attributes.
-- `columns([schema_name], table_name)` - Returns a list of column attributes.
-- `foreign_keys()` - Returns a list of foreign key relationships.
-
- _*Note, the `schema` argument only applies to PostgreSQL_
-
-## Graphs
-
-The Origins API builds upon a simple and flexible graph data structure located in the `origins.graph` module. As a quick introduction, [graphs](http://en.wikipedia.org/wiki/Graph_(data_structure)) are composed of vertices and arcs, but more commonly referred to as nodes and edges. In this context, however, we are going to refer to edges as "relationships".
-
-Nodes are connected to other nodes via relationships. The connections and relationship types are arbitrary which makes a graph structure incredibly flexible, but prone to high complexity. There are [many types of graphs](http://en.wikipedia.org/wiki/Graph_(mathematics)#Types_of_graphs), each define with their own set of constraints. Origins supports directed property graphs with at most a single relationship between two nodes of the same type (but can have multiple relationships of other types). Both nodes and relationships can have properties which makes it suitable for storing data _about_ the relationship itself.
-
-Origins backend API builds on this foundation and utilizes a _tree graph_ for representing the structure of a backend. For example, a database contains tables each of which contains columns. This is directed and _acyclic_ since descedent nodes never loop back to themselves nor to any ancestor. This parent-child relationship makes it very convenient when incrementally exposing more detail about the structure of the backend.
-
-However, non-structural relationships such as foreign keys, aliases, sibling, etc. require the flexibility of the underlying API and may result in circular relationships in the graph.
 
 ## Implementing a Backend
 
@@ -444,7 +411,6 @@ MATCH (n:Origin) RETURN n
 ```
 
 This will render a single node (assuming this is your first time doing this) that corresponds to the chinook database. Double-click on the node to expand all the tables within the database and then each table can be double-clicked to expand the columns.
-
 
 ## Random Notes
 
