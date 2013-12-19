@@ -319,61 +319,6 @@ class Database(base.Node):
 
 Now you can simply do `db.tables` to access the underlying tables.
 
-### Lazy Syncing
-
-One potential issue when syncing is that it could take a long time depending on the backend, how deep the relatioships go, and/or how much metadata is being retrieved. A keen eye would notice that if the above `Table` class would also implement the `sync` method to setup relationships with columns, syncing is recursive since it occurs on initialization. If only a portion of the structure is needed to be accessed (just the database or tables, or the columns in a single table), this overhead is wasted.
-
-Separate sync methods can be defined that are called on demand when a corresponding method or property requires it. This pattern looks as follows:
-
-```python
-from origins.utils import synced_property
-
-class Database(base.Node):
-    def sync(self):
-        self.update(self.client.get_database_props())
-
-    def sync_tables(self):
-        for props in self.client.get_tables():
-            # Ensure to pass the parent and client!
-            table = Table(props, parent=self, client=self.client)
-            # Create a relationship to table, e.g. database CONTAINS table
-            self.relate(table, 'CONTAINS', {'container': 'table'})
-
-    @synced_property
-    def tables(self):
-        return self.rels(type='CONTAINS').filter('container': 'table'}).nodes()
-```
-
-The `sync` method on the class will still be called on initialization, but now it only updates the properties and does not immediately fetch the related data. The `synced_property` decorator will ensure that the corresponding `sync_*` method is called _once_ prior returning the result. The sequence looks like this:
-
-```python
-db = Database()
-# -> sync() called
-
-tables = db.tables
-# -> synced? no
-#   -> sync_tables() called
-#   -> flag as synced
-# <- return result
-
-tables = db.tables
-# -> synced? yes
-# <- return result
-```
-
-By default, the sync method is assumed to be named `sync_FOO` where `FOO` is the name of the wrapped method. If you prefer or require a different sync method, the name can be passed into the decorator.
-
-```python
-def other_sync_func(self):
-    # sync..
-
-@synced_property('other_sync_func')
-def tables(self):
-    # ...
-```
-
-Using this approach will incrementally sync data as it is needed.
-
 ## Example Uses
 
 ### Export to Neo4j
