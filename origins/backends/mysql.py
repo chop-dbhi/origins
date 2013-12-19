@@ -74,6 +74,29 @@ class Client(_database.Client):
             columns.append(attrs)
         return columns
 
+    def foreign_keys(self, table_name, column_name):
+        try:
+            self.connection.select_db('information_schema')
+            query = '''
+                SELECT
+                    constraint_name,
+                    referenced_table_name,
+                    referenced_column_name
+                FROM
+                    key_column_usage
+                WHERE
+                    table_name = %s
+                    AND column_name = %s
+            '''
+            keys = ('name', 'table', 'column')
+            fks = []
+            for row in self.fetchall(query, [table_name, column_name]):
+                attrs = dict(zip(keys, row))
+                fks.append(attrs)
+            return fks
+        finally:
+            self.connection.select_db(self.name)
+
 
 # Export class for API
 Origin = _database.Database
