@@ -114,6 +114,39 @@ class Client(_database.Client):
 
         return columns
 
+    def foreign_keys(self, table_name, column_name):
+        query = '''
+            SELECT
+                lower(user_constraints.constraint_name),
+                lower(tb.table_name),
+                lower(tb.column_name)
+            FROM
+                user_constraints,
+                user_cons_columns ca,
+                user_cons_columns cb,
+                user_tab_cols ta,
+                user_tab_cols tb
+            WHERE
+                ta.table_name = user_constraints.table_name
+                AND ta.column_name = ca.column_name
+                AND ca.table_name = ta.table_name
+                AND user_constraints.constraint_name = ca.constraint_name
+                AND user_constraints.r_constraint_name = cb.constraint_name
+                AND cb.table_name = tb.table_name
+                AND cb.column_name = tb.column_name
+                AND ca.position = cb.position
+                AND user_constraints.table_name = :1
+                AND ta.column_name = :2
+        '''
+
+        keys = ('name', 'table', 'column')
+        fks = []
+        for row in self.fetchall(query, [table_name.upper(),
+                                         column_name.upper()]):
+            attrs = dict(zip(keys, row))
+            fks.append(attrs)
+        return fks
+
     def table_count(self, table_name):
         query = '''
             SELECT COUNT(*) FROM {table}
