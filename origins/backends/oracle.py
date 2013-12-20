@@ -30,6 +30,7 @@ DATA_TYPE_NAMES = {
 class Client(_database.Client):
     def __init__(self, database, **kwargs):
         self.name = database
+        self.schema = kwargs.get('schema')
         self.host = kwargs.get('host', 'localhost')
         self.port = kwargs.get('port', 1521)
 
@@ -55,16 +56,28 @@ class Client(_database.Client):
         }
 
     def tables(self):
-        query = 'SELECT TABLE_NAME FROM USER_TABLES'
+        if self.schema:
+            query = 'SELECT TABLE_NAME FROM ALL_TABLES WHERE OWNER = :1'
+            params = [self.schema.upper()]
+        else:
+            query = 'SELECT TABLE_NAME FROM USER_TABLES'
+            params = []
+
         tables = []
-        for name, in self.fetchall(query):
+        for name, in self.fetchall(query, params):
             tables.append({'name': name.lower()})
         return tables
 
     def views(self):
-        query = 'SELECT VIEW_NAME FROM USER_VIEWS'
+        if self.schema:
+            query = 'SELECT VIEW_NAME FROM ALL_VIEWS WHERE OWNER = :1'
+            params = [self.schema.upper()]
+        else:
+            query = 'SELECT VIEW_NAME FROM USER_VIEWS'
+            params = []
+
         views = []
-        for name, in self.fetchall(query):
+        for name, in self.fetchall(query, params):
             views.append({'name': name})
         return views
 
