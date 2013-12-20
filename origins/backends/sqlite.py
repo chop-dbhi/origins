@@ -1,4 +1,5 @@
 from __future__ import division, unicode_literals, absolute_import
+from collections import defaultdict
 from . import _database
 
 import os
@@ -12,6 +13,9 @@ class Client(_database.Client):
 
     def connect(self, user=None, password=None):
         self.connection = sqlite3.connect(self.path)
+
+    def foreign_keys_supported(self):
+        return bool(self.fetchvalue('PRAGMA foreign_keys'))
 
     def database_version(self):
         return self.fetchvalue('PRAGMA schema_version')
@@ -60,6 +64,38 @@ class Client(_database.Client):
             columns.append(attrs)
 
         return columns
+
+    def _table_foreign_keys(self, table_name):
+        return self.fetchall('PRAGMA foreign_key_list({})'
+                             .format(self.qn(table_name)))
+
+    def _foreign_key_index(self):
+        query = '''
+            SELECT name
+            FROM sqlite_master
+            WHERE type='table'
+        '''
+
+        column_fks = defaultdict(lambda: defaultdict(list))
+
+        for target, in self.fetchall(query):
+            for values in self._table_foreign_keys(target):
+                table, _from, to = values[2:5]
+                column_fks[target][to].append({
+                    'table': table,
+                    'column': _from,
+                })
+
+        return column_fks
+
+    def foreign_keys(self, table_name, column_name):
+        index = self._foreign_key_index()
+
+        return [{
+            'name': 'fk_{}_{}'.format(attrs['table'], attrs['column']),
+            'table': attrs['table'],
+            'column': attrs['column'],
+        } for attrs in index[table_name][column_name]]
 
 
 # Export for API
