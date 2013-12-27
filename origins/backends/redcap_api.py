@@ -33,12 +33,30 @@ class Client(base.Client):
                 unique.add(name)
         return forms
 
-    def fields(self, form_name):
+    def sections(self, form_name):
+        sections = [{'name': 'default'}]
+        unique = set()
+        for field in self._project.metdata:
+            # Filter by form_name
+            if field['form_name'] != form_name:
+                continue
+            name = field['section_header']
+            if name not in unique:
+                sections.append({'name': name})
+                unique.add(name)
+        return sections
+
+    def fields(self, form_name, section_name):
         fields = []
+        current_section = 'default'
 
         for field in self._project.metadata:
             # Filter by form_name
             if field['form_name'] != form_name:
+                continue
+            # Filter by section_name
+            current_section = field['section_header'] or current_section
+            if current_section != section_name:
                 continue
 
             identifier = field['identifier'].lower() == 'y' and True or False

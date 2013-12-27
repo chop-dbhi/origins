@@ -59,7 +59,27 @@ class Client(mysql.Client):
             forms.append(attrs)
         return forms
 
-    def fields(self, form_name):
+    def sections(self, form_name):
+        query = '''
+            SELECT DISTINCT
+                element_preceding_header
+            FROM redcap_metadata JOIN redcap_projects
+                ON (redcap_metadata.project_id = redcap_projects.project_id)
+            WHERE redcap_projects.project_name = %s
+                AND form_name = %s
+                AND element_preceding_header IS NOT NULL
+            ORDER BY field_order
+        '''
+
+        keys = ('name',)
+
+        sections = [{'name': 'default'}]
+        for row in self.fetchall(query, [self.project_name, form_name]):
+            attrs = dict(zip(keys, row))
+            sections.append(attrs)
+        return sections
+
+    def fields(self, form_name, section_name):
         query = '''
             SELECT
                 field_name,
@@ -90,10 +110,15 @@ class Client(mysql.Client):
                 'matrix')
 
         fields = []
+        current_section = 'default'
         for row in self.fetchall(query, [self.project_name, form_name]):
             attrs = dict(zip(keys, row))
             attrs['required'] = bool(attrs['required'])
             attrs['identifier'] = bool(attrs['identifier'])
+            # Filter by section_name
+            current_section = attrs['header'] or current_section
+            if current_section != section_name:
+                continue
             fields.append(attrs)
         return fields
 
