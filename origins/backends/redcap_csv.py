@@ -54,7 +54,7 @@ class Client(_file.Client):
         unique = set()
         for row in reader:
             # Filter by form_name
-            if row['form_name'] != form_name:
+            if row['form_name'] != form_name or not row['section_header']:
                 continue
             name = row['section_header']
             if name not in unique:

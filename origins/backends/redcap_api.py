@@ -36,9 +36,9 @@ class Client(base.Client):
     def sections(self, form_name):
         sections = [{'name': 'default'}]
         unique = set()
-        for field in self._project.metdata:
+        for field in self._project.metadata:
             # Filter by form_name
-            if field['form_name'] != form_name:
+            if field['form_name'] != form_name or not field['section_header']:
                 continue
             name = field['section_header']
             if name not in unique:
