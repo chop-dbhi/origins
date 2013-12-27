@@ -64,16 +64,19 @@ class Client(mysql.Client):
             SELECT
                 field_name,
                 element_label,
-                field_order,
                 element_type,
                 element_note,
                 element_enum,
-                field_units,
+                branching_logic,
                 element_validation_type,
                 element_validation_min,
                 element_validation_max,
+                field_phi,
                 field_req,
-                field_phi
+                element_preceding_header,
+                custom_alignment,
+                question_num,
+                grid_name
             FROM redcap_metadata JOIN redcap_projects
                 ON (redcap_metadata.project_id = redcap_projects.project_id)
             WHERE redcap_projects.project_name = %s
@@ -81,9 +84,10 @@ class Client(mysql.Client):
             ORDER BY field_order
         '''
 
-        keys = ('name', 'label', 'order', 'type', 'note', 'choices', 'units',
+        keys = ('name', 'label', 'type', 'note', 'choices', 'display_logic', 
                 'validation_type', 'validation_min', 'validation_max',
-                'required', 'identifier')
+                'identifier', 'required', 'header', 'alignment', 'survey_num', 
+                'matrix')
 
         fields = []
         for row in self.fetchall(query, [self.project_name, form_name]):

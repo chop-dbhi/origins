@@ -66,11 +66,16 @@ class Client(_file.Client):
                 'type': row['field_type'],
                 'note': row['field_note'],
                 'choices': row['choices'].replace(' | ', ' \\n '),
+                'display_logic': row['branching_logic'],
                 'validation_type': row['text_validation_type'],
                 'validation_min': row['text_validation_min'],
                 'validation_max': row['text_validation_max'],
                 'identifier': identifier,
                 'required': required,
+                'header': row['section_header'],
+                'alignment': row['custom_alignment'],
+                'survey_num': row['question_number'],
+                'matrix': row['matrix_group_name'],
             })
         return fields
 
