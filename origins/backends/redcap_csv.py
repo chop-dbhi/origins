@@ -48,13 +48,32 @@ class Client(_file.Client):
                 unique.add(form_name)
         return forms
 
-    def fields(self, form_name):
+    def sections(self, form_name):
+        reader = self.reader
+        sections = [{'name': 'default'}]
+        unique = set()
+        for row in reader:
+            # Filter by form_name
+            if row['form_name'] != form_name:
+                continue
+            name = row['section_header']
+            if name not in unique:
+                sections.append({'name': name})
+                unique.add(name)
+        return sections
+
+    def fields(self, form_name, section_name):
         reader = self.reader
         fields = []
+        current_section = 'default'
 
         for row in reader:
             # Filter by form_name
             if row['form_name'] != form_name:
+                continue
+            # Filter by section_name
+            current_section = row['section_header'] or current_section
+            if current_section != section_name:
                 continue
 
             identifier = row['identifier'].lower() == 'y' and True or False

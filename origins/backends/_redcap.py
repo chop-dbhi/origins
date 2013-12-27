@@ -1,5 +1,6 @@
 from __future__ import division, absolute_import
 from ..utils import cached_property
+from ..graph import Nodes
 from . import base
 
 
@@ -15,7 +16,24 @@ class Project(base.Node):
 
 class Form(base.Node):
     def sync(self):
-        self._contains(self.client.fields(self['name']), Field)
+        self._contains(self.client.sections(self['name']), Section)
+
+    @property
+    def sections(self):
+        return self._containers('section')
+
+    @property
+    def fields(self):
+        fields = []
+        for section in self.sections:
+            fields.extend(section.fields)
+        return Nodes(fields)
+
+
+class Section(base.Node):
+    def sync(self):
+        form_name = self.parent['name']
+        self._contains(self.client.fields(form_name, self['name']), Field)
 
     @property
     def fields(self):
