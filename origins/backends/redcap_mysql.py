@@ -84,9 +84,9 @@ class Client(mysql.Client):
             ORDER BY field_order
         '''
 
-        keys = ('name', 'label', 'type', 'note', 'choices', 'display_logic', 
+        keys = ('name', 'label', 'type', 'note', 'choices', 'display_logic',
                 'validation_type', 'validation_min', 'validation_max',
-                'identifier', 'required', 'header', 'alignment', 'survey_num', 
+                'identifier', 'required', 'header', 'alignment', 'survey_num',
                 'matrix')
 
         fields = []
