@@ -18,22 +18,15 @@ class Uid(object):
 uid = Uid()
 
 
-class Rel(object):
-    __slots__ = ('id', 'start', 'end', 'type', 'props')
+class Props(object):
+    __slots__ = ('id', 'props')
 
-    def __init__(self, start, end, type, props=None):
-        self.id = uid()
-        self.start = start
-        self.end = end
-        self.type = type
+    def __init__(self, props=None):
         if props is None:
             self.props = {}
         else:
             self.props = dict(props)
-
-    def __repr__(self):
-        return '{}({}-{}-{})'.format(self.__class__.__name__, self.start,
-                                     self.type, self.end)
+        self.id = uid()
 
     def __getitem__(self, key):
         return self.props[key]
@@ -52,6 +45,20 @@ class Rel(object):
 
     def update(self, props):
         self.props.update(props)
+
+
+class Rel(Props):
+    __slots__ = ('id', 'start', 'end', 'type', 'props')
+
+    def __init__(self, start, end, type, props=None):
+        super(Rel, self).__init__(props)
+        self.start = start
+        self.end = end
+        self.type = type
+
+    def __repr__(self):
+        return '{}({}-{}-{})'.format(self.__class__.__name__, self.start,
+                                     self.type, self.end)
 
     def related(self):
         "Returns true if this relationship is currently related."
@@ -66,15 +73,11 @@ class Rel(object):
         self.start._add_rel(self)
 
 
-class Node(object):
+class Node(Props):
     __slots__ = ('id', 'props', '_rels', '_types')
 
     def __init__(self, props=None):
-        self.id = uid()
-        if props is None:
-            self.props = {}
-        else:
-            self.props = dict(props)
+        super(Node, self).__init__(props)
         # Nested hash of relationships by node id then type. Currently a
         # only a single relationship of the same type can be defined between
         # the same two nodes.
@@ -84,24 +87,6 @@ class Node(object):
 
     def __repr__(self):
         return "{}('{}')".format(self.__class__.__name__, self)
-
-    def __getitem__(self, key):
-        return self.props[key]
-
-    def __setitem__(self, key, value):
-        self.props[key] = value
-
-    def __delitem__(self, key):
-        del self.props[key]
-
-    def __contains__(self, key):
-        return key in self.props
-
-    def __iter__(self):
-        return iter(self.props)
-
-    def update(self, props):
-        self.props.update(props)
 
     def _get_rels_for_type(self, type):
         rels = []
