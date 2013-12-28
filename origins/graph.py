@@ -211,6 +211,17 @@ class Node(Props):
 
 class Rels(tuple):
     "Tuple of relationships that supports filtering and node extraction."
+    def __eq__(self, other):
+        "Equality based on the the sequence of nodes."
+        if not hasattr(other, '__iter__'):
+            return False
+        if len(self) != len(other):
+            return False
+        for i, x in enumerate(self):
+            if other[i] != x:
+                return False
+        return True
+
     def filter(self, key, value=None):
         """Filters the node in this container and returns a new container.
         The most common filtering is by property, so a key and value can be
@@ -239,10 +250,12 @@ class Nodes(tuple):
 
     def __eq__(self, other):
         "Equality based on the the sequence of nodes."
+        if not hasattr(other, '__iter__'):
+            return False
         if len(self) != len(other):
             return False
-        for i in xrange(len(self)):
-            if self[i] != other[i]:
+        for i, x in enumerate(self):
+            if other[i] != x:
                 return False
         return True
 
