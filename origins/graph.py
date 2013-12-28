@@ -237,7 +237,7 @@ class Rels(tuple):
         return self.__class__(filter(func, self))
 
     def nodes(self):
-        return Nodes(rel.end for rel in self)
+        return Nodes(sorted({rel.end for rel in self}))
 
 
 class Nodes(tuple):
