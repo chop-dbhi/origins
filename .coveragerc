@@ -1,0 +1,15 @@
+[run]
+branch = True
+source = origins
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    def __bytes__
+    def __unicode__
+    raise AssertionError
+    raise NotImplemented(Error)?
+    if 0:
+    if __name__ == .__main__.:
