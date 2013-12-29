@@ -396,6 +396,19 @@ MATCH (n:Origin) RETURN n
 
 This will render a single node (assuming this is your first time doing this) that corresponds to the chinook database. Double-click on the node to expand all the tables within the database and then each table can be double-clicked to expand the columns.
 
+#### Additional Notes
+
+Neo4j has support constraints and indexes. The `uri` property on an Origins node is intended to be a unique since it is constructed relative to the origin node. Although `MERGE` statements are used during export (which ensures no duplicates are created with the same `uri`), Neo4j will happily allow a `CREATE` statement with a node containing the same `uri`. To prevent this, a constraint can be added to the database:
+
+```
+CREATE CONSTRAINT ON (n:Origins) ASSERT n.uri IS UNIQUE
+```
+
+All nodes exported by Origins have a `Origins` label to differentiate themselves from other nodes in the graph. Using it here will ensure the constraint is only applied to these nodes and not all nodes in the graph.
+
+A secondary benefit to applying a constraint is getting an index on `uri` for free which makes lookups an O(1) operation.
+
+
 ## Random Notes
 
 ### Installing cx-Oracle on Mac OS X

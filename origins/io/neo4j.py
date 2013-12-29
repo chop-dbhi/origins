@@ -21,7 +21,8 @@ MERGE_REL_STMT = 'MERGE ({r1})-[{r}:{type}]->({r2}) {oncreate} {onmatch}'
 
 
 def node_labels(node):
-    labels = []
+    # Default label for all nodes exported via Origins
+    labels = ['Origins']
     if node.isleaf:
         labels.append('Element')
     if node.isroot:
