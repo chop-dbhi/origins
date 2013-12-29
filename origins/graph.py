@@ -134,7 +134,7 @@ class Node(Props):
     def _del_rels_for_type(self, type):
         "Deletes all relationships of type."
         count = 0
-        for id in self._types[type].keys():
+        for id in tuple(self._types[type]):
             self._del_rel(id, type)
             count += 1
         return count
