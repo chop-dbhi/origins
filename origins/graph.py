@@ -28,6 +28,22 @@ class Props(object):
             self.props = dict(props)
         self.id = uid()
 
+    def __bytes__(self):
+        return bytes(self.id)
+
+    __str__ = __bytes__
+
+    def __unicode__(self):
+        return unicode(self.id)
+
+    def __cmp__(self, other):
+        if type(other) != type(self):
+            raise TypeError('Cannot compare with other types')
+        return cmp(self.id, other.id)
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.id)
+
     def __getitem__(self, key):
         return self.props[key]
 
