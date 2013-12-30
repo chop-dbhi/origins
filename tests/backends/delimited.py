@@ -3,7 +3,7 @@ import origins
 from .base import BackendTestCase, TEST_DATA_DIR
 
 
-class DelimitedBackendClientTestCase(BackendTestCase):
+class DelimitedClientTestCase(BackendTestCase):
     backend_path = 'origins.backends.delimited'
 
     def setUp(self):
@@ -33,14 +33,29 @@ class DelimitedBackendClientTestCase(BackendTestCase):
         self.assertTrue('name' in columns[0])
 
 
-class DelimitedBackendTestCase(BackendTestCase):
+class DelimitedApiTestCase(BackendTestCase):
     backend_path = 'origins.backends.delimited'
 
     def setUp(self):
-        self.load_backend()
-        path = os.path.join(TEST_DATA_DIR, 'chinook_tracks.csv')
-        self.origin = origins.connect('delimited', path=path)
+        self.path = os.path.join(TEST_DATA_DIR, 'chinook_tracks.csv')
+        self.f = origins.connect('delimited', path=self.path)
 
-    def test_sync(self):
-        self.assertTrue(self.origin.props)
-        self.assertTrue(self.origin.columns)
+    def test_file(self):
+        self.assertEqual(self.f.label, 'chinook_tracks.csv')
+        self.assertEqual(self.f.name, 'chinook_tracks.csv')
+        self.assertEqual(self.f.path, 'chinook_tracks.csv')
+        self.assertEqual(self.f.uri, 'delimited:///chinook_tracks.csv')
+        self.assertEqual(self.f.relpath, [])
+        self.assertTrue(self.f.isroot)
+        self.assertFalse(self.f.isleaf)
+        self.assertTrue('uri' in self.f.serialize())
+
+    def test_column(self):
+        column = self.f.columns[0]
+
+        self.assertEqual(column.label, 'TrackId')
+        self.assertEqual(column.name, 'TrackId')
+        self.assertEqual(column.path, 'chinook_tracks.csv/TrackId')
+        self.assertEqual(len(column.relpath), 1)
+        self.assertFalse(column.isroot)
+        self.assertTrue(column.isleaf)
