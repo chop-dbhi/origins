@@ -3,6 +3,10 @@ language: python
 python:
     - "2.7"
 
+env:
+    - MYSQL_USER=travis
+    - POSTGRESQL_USER=postgres
+
 services:
     - mongodb
 
@@ -13,9 +17,9 @@ install:
 
 before_script:
     - flake8 origins
-    - mysql -u travis < tests/data/chinook_mysql.sql > /dev/null
-    - psql -U postgres -c 'create database chinook' > /dev/null
-    - psql -U postgres -d chinook < tests/data/chinook_postgresql.sql > /dev/null
+    - mysql -u $MYSQL_USER < tests/data/chinook_mysql.sql > /dev/null
+    - psql -U $POSTGRESQL_USER -c 'create database chinook' > /dev/null
+    - psql -U $POSTGRESQL_USER -d chinook < tests/data/chinook_postgresql.sql > /dev/null
     - mongorestore --db chinook tests/data/mongodb > /dev/null
 
 script:
