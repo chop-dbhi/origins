@@ -73,7 +73,11 @@ class File(_file.File):
         # Convert into datetime from timestamp floats
         atime = datetime.fromtimestamp(stats.st_atime)
         mtime = datetime.fromtimestamp(stats.st_mtime)
-        ctime = datetime.fromtimestamp(stats.st_birthtime or stats.st_ctime)
+        if hasattr(stats, 'st_birthtime'):
+            create_time = stats.st_birthtime
+        else:
+            create_time = stats.st_ctime
+        ctime = datetime.fromtimestamp(create_time)
 
         self.update({
             'mode': stats.st_mode,
