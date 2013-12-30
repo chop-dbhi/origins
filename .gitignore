@@ -3,5 +3,6 @@
 *.egg-info
 .coverage
 dist
+htmlcov
 MANIFEST
 .ipynb_checkpoints
