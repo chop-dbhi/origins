@@ -3,7 +3,7 @@ import origins
 from .base import BackendTestCase, TEST_DATA_DIR
 
 
-class ExcelBackendClientTestCase(BackendTestCase):
+class ExcelClientTestCase(BackendTestCase):
     backend_path = 'origins.backends.excel'
 
     def setUp(self):
@@ -47,14 +47,39 @@ class ExcelBackendClientTestCase(BackendTestCase):
                           self.path, headers=10)
 
 
-class ExcelBackendTestCase(BackendTestCase):
+class ExcelApiTestCase(BackendTestCase):
     backend_path = 'origins.backends.excel'
 
     def setUp(self):
         self.path = os.path.join(TEST_DATA_DIR, 'chinook.xlsx')
+        self.wb = origins.connect('excel', path=self.path)
 
-    def test_default(self):
-        node = origins.connect('excel', path=self.path)
-        self.assertTrue(node.props)
-        self.assertTrue(node.sheets)
-        self.assertTrue(node.sheets[0].columns)
+    def test_wb(self):
+        self.assertEqual(self.wb.label, 'chinook.xlsx')
+        self.assertEqual(self.wb.name, 'chinook.xlsx')
+        self.assertEqual(self.wb.path, 'chinook.xlsx')
+        self.assertEqual(self.wb.uri, 'excel:///chinook.xlsx')
+        self.assertEqual(self.wb.relpath, [])
+        self.assertTrue(self.wb.isroot)
+        self.assertFalse(self.wb.isleaf)
+        self.assertTrue('uri' in self.wb.serialize())
+
+    def test_sheet(self):
+        sheet = self.wb.sheets[0]
+
+        self.assertEqual(sheet.label, 'Albums')
+        self.assertEqual(sheet.name, 'Albums')
+        self.assertEqual(sheet.path, 'chinook.xlsx/Albums')
+        self.assertEqual(len(sheet.relpath), 1)
+        self.assertFalse(sheet.isroot)
+        self.assertFalse(sheet.isleaf)
+
+    def test_column(self):
+        column = self.wb.sheets[0].columns[0]
+
+        self.assertEqual(column.label, 'AlbumId')
+        self.assertEqual(column.name, 'AlbumId')
+        self.assertEqual(column.path, 'chinook.xlsx/Albums/AlbumId')
+        self.assertEqual(len(column.relpath), 2)
+        self.assertFalse(column.isroot)
+        self.assertTrue(column.isleaf)
