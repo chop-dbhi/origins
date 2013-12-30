@@ -4,6 +4,11 @@ from ..utils import res, build_uri, PATH_SEPERATOR
 
 
 class Client(object):
+    """The client is an interface to the underlying backend whether it
+    be a database, file, Web API, etc. The intent of the client is to
+    abstract away the mechanisms used to interface with the backend and
+    provide a simpler access layer.
+    """
     def scheme(self):
         return self.__module__.split('.')[-1]
 
@@ -21,8 +26,8 @@ class Node(graph.Node):
     """
     __slots__ = ('id', '_rels', '_types', 'props', 'parent', 'client')
 
-    name_attribute = ('name', 'label')
-    label_attribute = ('label', 'name')
+    name_attribute = 'name'
+    label_attribute = 'label'
 
     def __init__(self, props=None, parent=None, client=None):
         super(Node, self).__init__(props)
@@ -96,30 +101,20 @@ class Node(graph.Node):
     @property
     def name(self):
         """Returns the name for this node. The `name_attribute` class
-        property can be specified as a list or single attribute name.
+        property can be set to an alternate property key.
         """
-        if isinstance(self.name_attribute, (str, unicode)):
-            return self.props.get(self.name_attribute)
-        value = None
-        for attr in self.name_attribute:
-            value = self.props.get(attr)
-            if value:
-                break
-        return value
+        return self.props.get(self.name_attribute)
 
     @property
     def label(self):
         """Returns the label for this node. The `label_attribute` class
-        property can be specified as a list or single attribute name.
+        property can be set to an alternate property key. Falls back to
+        this node's `name`.
         """
-        if isinstance(self.label_attribute, (str, unicode)):
-            return self.props.get(self.label_attribute)
-        value = None
-        for attr in self.label_attribute:
-            value = self.props.get(attr)
-            if value:
-                break
-        return value
+        label = self.props.get(self.label_attribute)
+        if label is None or label == '':
+            label = self.name
+        return label
 
     def serialize(self, uri=True, name=True, label=True):
         "Serializes node properties."
