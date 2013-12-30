@@ -8,7 +8,9 @@ env:
 
 services:
     - mongodb
-    - neo4j
+
+before_install:
+    - sh tests/start-neo4j-2.0.0.sh
 
 install:
     - pip install -q coveralls --use-mirrors
