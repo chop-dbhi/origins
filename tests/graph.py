@@ -72,7 +72,7 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(rels.filter('container', 'column'), [r1])
 
         # Arbitrary filter function
-        self.assertEqual(rels.filter(lambda r: r.id % 2 == 0), [r0])
+        self.assertEqual(rels.filter(lambda r: r.id == r0.id), [r0])
 
         # Only functions and strings
         self.assertRaises(TypeError, rels.filter, 10)
@@ -91,6 +91,7 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(nodes, [self.n1, self.n2, self.n3])
 
         # Indexed by their bytes representation
-        self.assertEqual(nodes['1'], self.n1)
+        self.assertEqual(nodes[bytes(self.n1)], self.n1)
 
-        self.assertEqual(nodes.match(r'1|2'), [self.n1, self.n2])
+        regexp = r'|'.join([bytes(self.n1), bytes(self.n2)])
+        self.assertEqual(nodes.match(regexp), [self.n1, self.n2])
