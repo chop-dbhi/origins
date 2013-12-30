@@ -11,6 +11,7 @@ class Client(base.Client):
         self.directory_path = os.path.abspath(path)
         self.recurse = kwargs.get('recurse', True)
 
+        # Explictly set depth to 0. A None depth implies no limit
         if not self.recurse:
             self.depth = 0
         else:
@@ -32,14 +33,18 @@ class Client(base.Client):
             if self.depth is not None:
                 curpath = os.path.relpath(root, self.directory_path)
 
-                if curpath != '.':
+                if curpath == '.':
                     depth = 0
                 else:
                     depth = len(curpath.split(os.path.sep))
 
-                # Remove all subdirectories from traversal
+                # Remove all subdirectories from traversal once the
+                # desired depth has been reached. Note a `break` does
+                # not work since this would stop processing sibling
+                # directories as well.
                 if depth >= self.depth:
-                    [dirs.pop() for _ in xrange(len(dirs))]
+                    for _ in dirs[:]:
+                        dirs.pop()
 
             for f in files:
                 path = os.path.join(root, f)
