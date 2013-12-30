@@ -51,7 +51,7 @@ class DelimitedApiTestCase(BackendTestCase):
         self.assertTrue('uri' in self.f.serialize())
 
     def test_column(self):
-        column = self.f.columns[0]
+        column = self.f.columns['TrackId']
 
         self.assertEqual(column.label, 'TrackId')
         self.assertEqual(column.name, 'TrackId')

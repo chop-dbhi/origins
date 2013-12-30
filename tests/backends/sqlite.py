@@ -56,7 +56,7 @@ class SqliteApiTestCase(BackendTestCase):
         self.assertTrue('uri' in self.db.serialize())
 
     def test_table(self):
-        table = self.db.tables[0]
+        table = self.db.tables['Album']
 
         self.assertEqual(table.label, 'Album')
         self.assertEqual(table.name, 'Album')
@@ -66,7 +66,7 @@ class SqliteApiTestCase(BackendTestCase):
         self.assertFalse(table.isleaf)
 
     def test_column(self):
-        column = self.db.tables[0].columns[0]
+        column = self.db.tables['Album'].columns['AlbumId']
 
         self.assertEqual(column.label, 'AlbumId')
         self.assertEqual(column.name, 'AlbumId')

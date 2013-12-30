@@ -65,7 +65,7 @@ class ExcelApiTestCase(BackendTestCase):
         self.assertTrue('uri' in self.wb.serialize())
 
     def test_sheet(self):
-        sheet = self.wb.sheets[0]
+        sheet = self.wb.sheets['Albums']
 
         self.assertEqual(sheet.label, 'Albums')
         self.assertEqual(sheet.name, 'Albums')
@@ -75,7 +75,7 @@ class ExcelApiTestCase(BackendTestCase):
         self.assertFalse(sheet.isleaf)
 
     def test_column(self):
-        column = self.wb.sheets[0].columns[0]
+        column = self.wb.sheets['Albums'].columns['AlbumId']
 
         self.assertEqual(column.label, 'AlbumId')
         self.assertEqual(column.name, 'AlbumId')

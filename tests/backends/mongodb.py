@@ -42,7 +42,7 @@ class MongodbApiTestCase(BackendTestCase):
         self.assertTrue('uri' in self.db.serialize())
 
     def test_collection(self):
-        collection = self.db.collections[0]
+        collection = self.db.collections['album']
 
         self.assertEqual(collection.label, 'album')
         self.assertEqual(collection.name, 'album')
@@ -52,7 +52,7 @@ class MongodbApiTestCase(BackendTestCase):
         self.assertFalse(collection.isleaf)
 
     def test_field(self):
-        field = self.db.collections[0].fields[0]
+        field = self.db.collections['album'].fields['AlbumId']
 
         self.assertEqual(field.label, 'AlbumId')
         self.assertEqual(field.name, 'AlbumId')
