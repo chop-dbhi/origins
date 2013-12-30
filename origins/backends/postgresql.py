@@ -197,26 +197,27 @@ class Table(_database.Table):
 
 
 class Column(_database.Column):
-    def sync(self):
-        root = self.root
-        schema_name = self.parent.parent['name']
-        table_name = self.parent['name']
-
-        for attrs in self.client.foreign_keys(schema_name, table_name,
-                                              self['name']):
-            # Find referenced node
-            node = root\
-                .schemas[attrs['schema']]\
-                .tables[attrs['table']]\
-                .columns[attrs['column']]
-
-            self.relate(node, 'RELATES', {
-                'name': attrs['name'],
-                'type': 'foreignkey',
-            })
-
     @property
     def foreign_keys(self):
+        if not self._foreign_keys_synced:
+            root = self.root
+            schema_name = self.parent.parent['name']
+            table_name = self.parent['name']
+
+            for attrs in self.client.foreign_keys(schema_name, table_name,
+                                                  self['name']):
+                # Find referenced node
+                node = root\
+                    .schemas[attrs['schema']]\
+                    .tables[attrs['table']]\
+                    .columns[attrs['column']]
+
+                self.relate(node, 'RELATES', {
+                    'name': attrs['name'],
+                    'type': 'foreignkey',
+                })
+
+            self._foreign_keys_synced = True
         return self.rels(type='RELATES').filter('type', 'foreignkey').nodes()
 
 

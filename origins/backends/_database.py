@@ -53,4 +53,23 @@ class Table(base.Node):
 
 
 class Column(base.Node):
-    pass
+    def sync(self):
+        self._foreign_keys_synced = False
+
+    @property
+    def foreign_keys(self):
+        if not self._foreign_keys_synced:
+            root = self.root
+            table_name = self.parent['name']
+
+            for attrs in self.client.foreign_keys(table_name, self['name']):
+                # Get referenced node
+                node = root.tables[attrs['table']].columns[attrs['column']]
+
+                self.relate(node, 'RELATES', {
+                    'name': attrs['name'],
+                    'type': 'foreignkey',
+                })
+
+            self._foreign_keys_synced = True
+        return self.rels(type='RELATES').filter('type', 'foreignkey').nodes()

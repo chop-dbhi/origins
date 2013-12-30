@@ -74,3 +74,7 @@ class MysqlApiTestCase(BackendTestCase):
         self.assertEqual(len(column.relpath), 2)
         self.assertFalse(column.isroot)
         self.assertTrue(column.isleaf)
+
+    def test_foreign_keys(self):
+        fks = self.db.tables['Album'].columns['ArtistId'].foreign_keys
+        self.assertEqual(len(fks), 1)
