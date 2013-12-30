@@ -17,8 +17,10 @@ class Client(_file.Client):
             first_sheet = self.workbook.get_sheet_names()[0]
             if isinstance(headers, (list, tuple)):
                 self._sheet_columns[first_sheet] = headers
-            elif headers:
+            elif isinstance(headers, dict):
                 self._sheet_columns = headers
+            else:
+                raise TypeError('headers must be a bool, list or dict')
 
     @property
     def workbook(self):
