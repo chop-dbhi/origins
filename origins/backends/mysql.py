@@ -20,7 +20,7 @@ class Client(_database.Client):
     def connect(self, user=None, password=None):
         self.connection = mysql.connect(db=self.name, host=self.host,
                                         port=self.port, user=user,
-                                        passwd=password)
+                                        passwd=password or '')
 
     def version(self):
         return self.fetchvalue('SELECT version()')
