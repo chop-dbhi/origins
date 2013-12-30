@@ -1,4 +1,5 @@
 import os
+import origins
 from .base import BackendTestCase, TEST_DATA_DIR
 
 
@@ -35,3 +36,17 @@ class SqliteClientTestCase(BackendTestCase):
     def test_foreign_keys(self):
         fks = self.client.foreign_keys('Album', 'ArtistId')
         self.assertEqual(len(fks), 1)
+
+
+class SqliteTestCase(BackendTestCase):
+    backend_path = 'origins.backends.sqlite'
+
+    def setUp(self):
+        self.load_backend()
+        path = os.path.join(TEST_DATA_DIR, 'chinook.sqlite')
+        self.origin = origins.connect('sqlite', path=path)
+
+    def test_sync(self):
+        self.assertTrue(self.origin.props)
+        self.assertTrue(self.origin.tables)
+        self.assertTrue(self.origin.tables[0].columns)
