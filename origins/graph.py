@@ -222,7 +222,7 @@ class Node(Props):
             rels = self._get_rels_for_type(type)
         else:
             rels = self._get_rels()
-        return Rels(rels)
+        return Rels(sorted(rels))
 
 
 class Rels(tuple):
