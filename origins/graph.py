@@ -286,4 +286,4 @@ class Nodes(tuple):
     def match(self, regexp, flags=re.I):
         "Returns one or more nodes that match the regexp on the key."
         r = re.compile(regexp, flags)
-        return Nodes(self[key] for key in self._map if r.match(key))
+        return Nodes(sorted(self[key] for key in self._map if r.match(key)))
