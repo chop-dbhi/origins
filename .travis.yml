@@ -4,8 +4,7 @@ python:
     - "2.7"
 
 env:
-    - MYSQL_USER=travis
-    - POSTGRESQL_USER=postgres
+    - MYSQL_USER=travis POSTGRESQL_USER=postgres
 
 services:
     - mongodb
