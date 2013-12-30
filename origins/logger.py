@@ -8,6 +8,8 @@ logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(handler)
 
+setLevel = logger.setLevel
+
 debug = logger.debug
 info = logger.info
 warning = logger.warning
