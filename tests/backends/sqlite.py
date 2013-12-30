@@ -38,15 +38,41 @@ class SqliteClientTestCase(BackendTestCase):
         self.assertEqual(len(fks), 1)
 
 
-class SqliteTestCase(BackendTestCase):
+class SqliteApiTestCase(BackendTestCase):
     backend_path = 'origins.backends.sqlite'
 
     def setUp(self):
-        self.load_backend()
-        path = os.path.join(TEST_DATA_DIR, 'chinook.sqlite')
-        self.origin = origins.connect('sqlite', path=path)
+        self.path = os.path.join(TEST_DATA_DIR, 'chinook.sqlite')
+        self.db = origins.connect('sqlite', path=self.path)
 
-    def test_sync(self):
-        self.assertTrue(self.origin.props)
-        self.assertTrue(self.origin.tables)
-        self.assertTrue(self.origin.tables[0].columns)
+    def test_db(self):
+        self.assertEqual(self.db.label, 'chinook.sqlite')
+        self.assertEqual(self.db.name, 'chinook.sqlite')
+        self.assertEqual(self.db.path, 'chinook.sqlite')
+        self.assertEqual(self.db.relpath, [])
+        self.assertEqual(self.db.uri, 'sqlite:///chinook.sqlite')
+        self.assertTrue(self.db.isroot)
+        self.assertFalse(self.db.isleaf)
+        self.assertTrue('uri' in self.db.serialize())
+
+    def test_table(self):
+        table = self.db.tables[0]
+
+        self.assertEqual(table.label, 'Album')
+        self.assertEqual(table.name, 'Album')
+        self.assertEqual(table.path, 'chinook.sqlite/Album')
+        self.assertEqual(len(table.relpath), 1)
+        self.assertEqual(table.uri, 'sqlite:///chinook.sqlite/Album')
+        self.assertFalse(table.isroot)
+        self.assertFalse(table.isleaf)
+
+    def test_column(self):
+        column = self.db.tables[0].columns[0]
+
+        self.assertEqual(column.label, 'AlbumId')
+        self.assertEqual(column.name, 'AlbumId')
+        self.assertEqual(column.path, 'chinook.sqlite/Album/AlbumId')
+        self.assertEqual(len(column.relpath), 2)
+        self.assertEqual(column.uri, 'sqlite:///chinook.sqlite/Album/AlbumId')
+        self.assertFalse(column.isroot)
+        self.assertTrue(column.isleaf)
