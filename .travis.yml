@@ -8,6 +8,7 @@ env:
 
 services:
     - mongodb
+    - neo4j
 
 install:
     - pip install -q coveralls --use-mirrors
