@@ -2,6 +2,7 @@ import os
 import origins
 from .base import BackendTestCase
 
+HOST = os.environ.get('MYSQL_HOST', 'localhost')
 USER = os.environ.get('MYSQL_USER')
 PASSWORD = os.environ.get('MYSQL_PASSWORD')
 
@@ -11,7 +12,7 @@ class MysqlClientTestCase(BackendTestCase):
 
     def setUp(self):
         self.load_backend()
-        self.client = self.backend.Client('chinook', user=USER,
+        self.client = self.backend.Client('chinook', host=HOST, user=USER,
                                           password=PASSWORD)
 
     def test_database(self):
@@ -41,14 +42,14 @@ class MysqlApiTestCase(BackendTestCase):
     backend_path = 'origins.backends.mysql'
 
     def setUp(self):
-        self.db = origins.connect('mysql', database='chinook', user=USER,
-                                  password=PASSWORD)
+        self.db = origins.connect('mysql', database='chinook', host=HOST,
+                                  user=USER, password=PASSWORD)
 
     def test_db(self):
         self.assertEqual(self.db.label, 'chinook')
         self.assertEqual(self.db.name, 'chinook')
         self.assertEqual(self.db.path, 'chinook')
-        self.assertEqual(self.db.uri, 'mysql://localhost:3306/chinook')
+        self.assertEqual(self.db.uri, 'mysql://' + HOST + ':3306/chinook')
         self.assertEqual(self.db.relpath, [])
         self.assertTrue(self.db.isroot)
         self.assertFalse(self.db.isleaf)
