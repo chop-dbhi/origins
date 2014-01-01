@@ -110,7 +110,7 @@ class Client(base.Client):
         if subquery:
             select = 'SELECT DISTINCT' if distinct else 'SELECT'
             query = '''
-                SELECT COUNT(*) FROM ({subquery})
+                SELECT COUNT(*) FROM ({subquery}) T
             '''.format(subquery=self._select_query(select, columns, table))
         else:
             distinct = 'DISTINCT ' if distinct else ''
