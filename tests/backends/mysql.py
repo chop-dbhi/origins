@@ -78,3 +78,32 @@ class MysqlApiTestCase(BackendTestCase):
     def test_foreign_keys(self):
         fks = self.db.tables['Album'].columns['ArtistId'].foreign_keys
         self.assertEqual(len(fks), 1)
+
+
+class MysqlDalTestCase(BackendTestCase):
+    backend_path = 'origins.backends.mysql'
+
+    def setUp(self):
+        self.load_backend()
+        self.db = origins.connect('mysql', database='chinook', host=HOST,
+                                  user=USER, password=PASSWORD)
+
+    def test_table_count(self):
+        table = self.db.tables['Employee']
+        self.assertEqual(table.count(), 8)
+
+    def test_table_select(self):
+        table = self.db.tables['Employee']
+        records = table.select(['FirstName', 'LastName'], iterator=False)
+        self.assertTrue(records)
+        self.assertEqual(records[0], ('Andrew', 'Adams'))
+
+    def test_column_count(self):
+        column = self.db.tables['Employee'].columns['Title']
+        self.assertEqual(column.count(), 5)
+        self.assertEqual(column.count(distinct=False), 8)
+
+    def test_column_select(self):
+        column = self.db.tables['Employee'].columns['Title']
+        records = column.select(iterator=False)
+        self.assertTrue(records)

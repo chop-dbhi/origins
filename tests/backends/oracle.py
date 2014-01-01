@@ -79,3 +79,32 @@ class OracleApiTestCase(BackendTestCase):
         db = origins.connect('oracle', database='xe', user='chinook',
                              password='p4ssw0rd', schema='chinook')
         self.assertTrue(db.tables)
+
+
+class OracleDalTestCase(BackendTestCase):
+    backend_path = 'origins.backends.oracle'
+
+    def setUp(self):
+        self.load_backend()
+        self.db = origins.connect('oracle', database='xe', user='chinook',
+                                  password='p4ssw0rd')
+
+    def test_table_count(self):
+        table = self.db.tables['employee']
+        self.assertEqual(table.count(), 8)
+
+    def test_table_select(self):
+        table = self.db.tables['employee']
+        records = table.select(['firstname', 'lastname'], iterator=False)
+        self.assertTrue(records)
+        self.assertEqual(records[0], ('Andrew', 'Adams'))
+
+    def test_column_count(self):
+        column = self.db.tables['employee'].columns['title']
+        self.assertEqual(column.count(), 5)
+        self.assertEqual(column.count(distinct=False), 8)
+
+    def test_column_select(self):
+        column = self.db.tables['employee'].columns['title']
+        records = column.select(iterator=False)
+        self.assertTrue(records)
