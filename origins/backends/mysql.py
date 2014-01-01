@@ -40,14 +40,14 @@ class Client(_database.Client):
         query = '''
             SELECT table_name
             FROM information_schema.tables
-            WHERE table_schema = {schema}
+            WHERE table_schema = %s
             ORDER BY table_name
-        '''.format(schema=self.qn(self.name))
+        '''
 
         keys = ('name',)
 
         tables = []
-        for row in self.fetchall(query):
+        for row in self.fetchall(query, [self.name]):
             tables.append(dict(zip(keys, row)))
         return tables
 
@@ -58,16 +58,15 @@ class Client(_database.Client):
                 is_nullable,
                 data_type
             FROM information_schema.columns
-            WHERE table_schema = {schema}
-                AND table_name = {table}
+            WHERE table_schema = %s
+                AND table_name = %s
             ORDER BY table_name, ordinal_position
-        '''.format(schema=self.qn(self.name),
-                   table=self.qn(table_name))
+        '''
 
         keys = ('name', 'index', 'nullable', 'type')
 
         columns = []
-        for row in self.fetchall(query):
+        for row in self.fetchall(query, [self.name, table_name]):
             attrs = dict(zip(keys, row))
             attrs['index'] -= 1
             if attrs['nullable'] == 'YES':
