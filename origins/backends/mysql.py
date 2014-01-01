@@ -22,6 +22,9 @@ class Client(_database.Client):
                                         port=self.port, user=user,
                                         passwd=password or '')
 
+    def qn(self, name):
+        return '`{}`'.format(name)
+
     def version(self):
         return self.fetchvalue('SELECT version()')
 
