@@ -46,7 +46,7 @@ class Client(_database.Client):
         self.connection = cx_Oracle.connect(cnx)
 
     def qn(self, name):
-        return name.upper().replace('%', '%%')
+        return '"{}"'.format(name.upper().replace('%', '%%'))
 
     def database(self):
         return {
