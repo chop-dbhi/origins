@@ -92,31 +92,28 @@ class StatementFactory(object):
         props = self._dict_props(props)
         return 'ON CREATE SET {} = {}'.format(ref, props)
 
-    def _onmatch_stmt(self, ref, props, replace):
+    def _onmatch_stmt(self, ref, props):
         if not props:
             return ''
-        if replace:
-            props = self._dict_props(props)
-            return 'ON MATCH SET {} = {}'.format(ref, props)
         props = self._keyword_props(ref, props)
         return 'ON MATCH SET {}'.format(props)
 
-    def merge_node(self, node, replace=False):
+    def merge_node(self, node):
         _props = node.serialize()
         ref = self.getref(node.id)
         labels = self._labels_stmt(node_labels(node))
         props = self._dict_props({'uri': _props['uri']})
         oncreate = self._oncreate_stmt(ref, _props)
-        onmatch = self._onmatch_stmt(ref, _props, replace)
+        onmatch = self._onmatch_stmt(ref, _props)
         return MERGE_NODE_STMT.format(r=ref, labels=labels, props=props,
                                       oncreate=oncreate, onmatch=onmatch)
 
-    def merge_rel(self, rel, replace=False):
+    def merge_rel(self, rel):
         ref = self.getref(rel.id)
         ref1 = self.getref(rel.start.id)
         ref2 = self.getref(rel.end.id)
         oncreate = self._oncreate_stmt(ref, rel.props)
-        onmatch = self._onmatch_stmt(ref, rel.props, replace)
+        onmatch = self._onmatch_stmt(ref, rel.props)
         return MERGE_REL_STMT.format(r=ref, r1=ref1, r2=ref2, type=rel.type,
                                      oncreate=oncreate, onmatch=onmatch)
 
