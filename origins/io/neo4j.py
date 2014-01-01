@@ -38,22 +38,17 @@ class StatementFactory(object):
     subsequent lookups which is optimized for bulk imports.
     """
     def __init__(self):
-        self.rc = 0
-        self.rm = {}
+        self.refs = {}
 
-    def getref(self, key):
-        if key not in self.rm:
-            ref = 'x{}'.format(self.rc)
-            self.rc += 1
-            self.rm[key] = ref
-        return self.rm[key]
+    def ref(self, key):
+        self.refs[key] = True
+        return 'x{}'.format(key)
 
     def hasref(self, key):
-        return key in self.rm
+        return key in self.refs
 
     def deref(self):
-        self.rm = {}
-        self.rc = 0
+        self.refs = {}
 
     def _dict_props(self, props):
         "Converts a dict into a valid properties object in Cypher syntax."
@@ -100,7 +95,7 @@ class StatementFactory(object):
 
     def merge_node(self, node):
         _props = node.serialize()
-        ref = self.getref(node.id)
+        ref = self.ref(node.id)
         labels = self._labels_stmt(node_labels(node))
         props = self._dict_props({'uri': _props['uri']})
         oncreate = self._oncreate_stmt(ref, _props)
@@ -109,9 +104,9 @@ class StatementFactory(object):
                                       oncreate=oncreate, onmatch=onmatch)
 
     def merge_rel(self, rel):
-        ref = self.getref(rel.id)
-        ref1 = self.getref(rel.start.id)
-        ref2 = self.getref(rel.end.id)
+        ref = self.ref(rel.id)
+        ref1 = self.ref(rel.start.id)
+        ref2 = self.ref(rel.end.id)
         oncreate = self._oncreate_stmt(ref, rel.props)
         onmatch = self._onmatch_stmt(ref, rel.props)
         return MERGE_REL_STMT.format(r=ref, r1=ref1, r2=ref2, type=rel.type,
