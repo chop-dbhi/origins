@@ -260,9 +260,11 @@ class Nodes(tuple):
     """Immutable sequence of nodes which supports dict-like access. Nodes are
     ordered in the order they were provided. They can be accessed by index
     or by key, where the key is the `unicode` representation of the node.
+
+    Key-based accessed is case-insensitive.
     """
     def __init__(self, *args, **kwargs):
-        self._map = {bytes(n): i for i, n in enumerate(self)}
+        self._map = {bytes(n).lower(): i for i, n in enumerate(self)}
 
     def __eq__(self, other):
         "Equality based on the the sequence of nodes."
@@ -279,8 +281,8 @@ class Nodes(tuple):
         "Index and key-based access."
         if isinstance(key, (int, slice)):
             return tuple.__getitem__(self, key)
-        if key not in self._map:
-            raise KeyError(key)
+        if isinstance(key, (str, unicode)):
+            key = key.lower()
         return self[self._map[key]]
 
     def match(self, regexp, flags=re.I):
