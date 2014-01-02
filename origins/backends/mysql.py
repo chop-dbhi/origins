@@ -11,6 +11,43 @@ except ImportError:
 
 
 class Client(_database.Client):
+    NUMERIC_TYPES = set([
+        'bigint',
+        'decimal',
+        'double',
+        'fixed',
+        'float',
+        'int',
+        'integer',
+        'mediumint',
+        'numeric',
+        'smallint',
+        'tinyint',
+    ])
+
+    STRING_TYPES = set([
+        'char',
+        'longtext',
+        'mediumtext',
+        'nchar',
+        'nvarchar',
+        'text',
+        'tinytext',
+        'varchar',
+    ])
+
+    TIME_TYPES = set([
+        'date',
+        'datetime',
+        'time',
+        'timestamp',
+        'year',
+    ])
+
+    BOOL_TYPES = set([
+        'boolean',
+    ])
+
     def __init__(self, database, **kwargs):
         self.name = database
         self.host = kwargs.get('host', 'localhost')

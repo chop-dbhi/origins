@@ -28,6 +28,29 @@ DATA_TYPE_NAMES = {
 
 
 class Client(_database.Client):
+    STRING_TYPES = set([
+        'fixed_char',
+        'fixed_unicode',
+        'long_string',
+        'long_unicode',
+        'string',
+        'unicode',
+        'nclob',
+        'clob',
+    ])
+
+    NUMERIC_TYPES = set([
+        'number',
+        'native_float',
+    ])
+
+    TIME_TYPES = set([
+        'datetime',
+        'timestamp',
+    ])
+
+    BOOL_TYPES = set()
+
     def __init__(self, database, **kwargs):
         self.name = database
         self.schema = kwargs.get('schema')

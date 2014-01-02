@@ -7,6 +7,36 @@ import sqlite3
 
 
 class Client(_database.Client):
+    NUMERIC_TYPES = set([
+        'BIGINT',
+        'DECIMAL',
+        'INT',
+        'INTEGER',
+        'NUMERIC',
+        'REAL',
+        'SMALLINT',
+    ])
+
+    STRING_TYPES = set([
+        'CHAR',
+        'TEXT',
+        'VARCHAR',
+        'NVARCHAR',
+        'NCHAR',
+    ])
+
+    TIME_TYPES = set([
+        'DATE',
+        'DATETIME',
+        'TIME',
+        'TIMESTAMP',
+    ])
+
+    BOOL_TYPES = set([
+        'BOOL',
+        'BOOLEAN',
+    ])
+
     def __init__(self, path, **kwargs):
         self.path = os.path.abspath(path)
         self.connect(user=kwargs.get('user'), password=kwargs.get('password'))

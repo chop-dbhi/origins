@@ -5,6 +5,39 @@ import psycopg2
 
 
 class Client(_database.Client):
+    NUMERIC_TYPES = set([
+        'integer',
+        'bigint',
+        'smallint',
+        'numeric',
+        'float',
+        'real',
+        'double precision',
+    ])
+
+    STRING_TYPES = set([
+        'character varying',
+        'character',
+        'char',
+        'name',
+        'text',
+    ])
+
+    TIME_TYPES = set([
+        'timestamp',
+        'timestamp with time zone',
+        'timestamp without time zone',
+        'date',
+        'time',
+        'interval',
+        'interval year to month',
+        'interval day to second',
+    ])
+
+    BOOL_TYPES = set([
+        'boolean',
+    ])
+
     def __init__(self, database, **kwargs):
         self.name = database
         self.host = kwargs.get('host', 'localhost')

@@ -2,6 +2,8 @@ import os
 import origins
 from .base import BackendTestCase, TEST_DATA_DIR
 
+import sqlite3
+
 
 class SqliteClientTestCase(BackendTestCase):
     backend_path = 'origins.backends.sqlite'
@@ -107,3 +109,38 @@ class SqliteDalTestCase(BackendTestCase):
         column = self.db.tables['Employee'].columns['Title']
         records = column.select(iterator=False)
         self.assertTrue(records)
+
+    def test_column_sum(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.sum(), 0)
+
+    def test_column_avg(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.avg(), 0)
+
+    def test_column_min(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.min(), 0)
+
+    def test_column_max(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.max(), 0)
+
+    # SQLite does not have built-in functions for STDDEV nor VARIANCE, however
+    # they are available in a C-extension: http://www.sqlite.org/contrib
+    # therefore it _may_ work.
+    def test_column_stddev(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertRaises(sqlite3.OperationalError, column.stddev)
+
+    def test_column_variance(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertRaises(sqlite3.OperationalError, column.variance)
+
+    def test_column_longest(self):
+        column = self.db.tables['track'].columns['name']
+        self.assertGreater(len(column.longest()), 0)
+
+    def test_column_shortest(self):
+        column = self.db.tables['track'].columns['name']
+        self.assertGreater(len(column.shortest()), 0)

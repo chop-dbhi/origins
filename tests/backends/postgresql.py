@@ -122,3 +122,35 @@ class PostgresqlDalTestCase(BackendTestCase):
         column = self.db.tables['Employee'].columns['Title']
         records = column.select(iterator=False)
         self.assertTrue(records)
+
+    def test_column_sum(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.sum(), 0)
+
+    def test_column_avg(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.avg(), 0)
+
+    def test_column_min(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.min(), 0)
+
+    def test_column_max(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.max(), 0)
+
+    def test_column_stddev(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.stddev(), 0)
+
+    def test_column_variance(self):
+        column = self.db.tables['track'].columns['milliseconds']
+        self.assertGreater(column.variance(), 0)
+
+    def test_column_longest(self):
+        column = self.db.tables['track'].columns['name']
+        self.assertGreater(len(column.longest()), 0)
+
+    def test_column_shortest(self):
+        column = self.db.tables['track'].columns['name']
+        self.assertGreater(len(column.shortest()), 0)

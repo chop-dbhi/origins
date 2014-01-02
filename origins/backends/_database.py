@@ -1,3 +1,4 @@
+import re
 from ..dal import recordtuple
 from .. import logger
 from . import base
@@ -10,6 +11,11 @@ class Client(base.Client):
     The `connect` method must set the `connection` property which is a
     connection to the database.
     """
+    STRING_TYPES = set()
+    NUMERIC_TYPES = set()
+    TIME_TYPES = set()
+    BOOL_TYPES = set()
+
     def disconnect(self):
         self.connection.close()
 
@@ -58,6 +64,31 @@ class Client(base.Client):
                     yield record(*row)
 
             batch = c.fetchmany()
+
+    def _parse_dtype(self, dtype):
+        match = re.match(r'^([a-z]+)', dtype, re.I)
+        if match:
+            return match.group()
+
+    def is_string_type(self, dtype):
+        "Returns true if the type is a string type."
+        dtype = self._parse_dtype(dtype)
+        return dtype in self.STRING_TYPES
+
+    def is_time_type(self, dtype):
+        "Returns true if the type is a date or time type."
+        dtype = self._parse_dtype(dtype)
+        return dtype in self.TIME_TYPES
+
+    def is_numeric_type(self, dtype):
+        "Returns true if the type is a numeric type."
+        dtype = self._parse_dtype(dtype)
+        return dtype in self.NUMERIC_TYPES
+
+    def is_bool_type(self, dtype):
+        "Returns true if the type is a boolean type."
+        dtype = self._parse_dtype(dtype)
+        return dtype in self.BOOL_TYPES
 
     def select(self, table_name, column_names, distinct=False,
                sort=None, unpack=False, iterator=False):
@@ -121,6 +152,81 @@ class Client(base.Client):
 
         logger.debug(query)
         return self.fetchvalue(query)
+
+    def _aggregate(self, function, table_name, column_name):
+        table = self.qn(table_name)
+        column = self.qn(column_name)
+
+        query = '''
+            SELECT {function}({column})
+            FROM {table}
+        '''.format(function=function, column=column, table=table)
+
+        logger.debug(query)
+
+        return self.fetchvalue(query)
+
+    def min(self, table_name, column_name, dtype):
+        "Returns the minimum (lexicographic) value in the values."
+        if (self.is_numeric_type(dtype) or self.is_time_type(dtype) or
+                self.is_string_type(dtype)):
+            return self._aggregate('MIN', table_name, column_name)
+
+    def max(self, table_name, column_name, dtype):
+        "Returns the maximum (lexicographic) value in the values."
+        if (self.is_numeric_type(dtype) or self.is_time_type(dtype) or
+                self.is_string_type(dtype)):
+            return self._aggregate('MAX', table_name, column_name)
+
+    def avg(self, table_name, column_name, dtype):
+        "Returns the average of the values."
+        if self.is_numeric_type(dtype) or self.is_time_type(dtype):
+            return self._aggregate('AVG', table_name, column_name)
+
+    def sum(self, table_name, column_name, dtype):
+        "Returns the sum of values."
+        if self.is_numeric_type(dtype) or self.is_time_type(dtype):
+            return self._aggregate('SUM', table_name, column_name)
+
+    def stddev(self, table_name, column_name, dtype):
+        "Returns the standard deviation of values."
+        if self.is_numeric_type(dtype) or self.is_time_type(dtype):
+            return self._aggregate('STDDEV', table_name, column_name)
+
+    def variance(self, table_name, column_name, dtype):
+        "Returns the variance of values."
+        if self.is_numeric_type(dtype) or self.is_time_type(dtype):
+            return self._aggregate('VARIANCE', table_name, column_name)
+
+    def longest(self, table_name, column_name, dtype):
+        "Returns the longest string."
+        if self.is_string_type(dtype):
+            table = self.qn(table_name)
+            column = self.qn(column_name)
+
+            query = '''
+                SELECT {column}, MAX(length({column}))
+                FROM {table}
+                GROUP BY {column}
+                ORDER BY MAX(length({column})) DESC
+            '''.format(column=column, table=table)
+
+            return self.fetchvalue(query)
+
+    def shortest(self, table_name, column_name, dtype):
+        "Returns the shortest string."
+        if self.is_string_type(dtype):
+            table = self.qn(table_name)
+            column = self.qn(column_name)
+
+            query = '''
+                SELECT {column}, MIN(length({column}))
+                FROM {table}
+                GROUP BY {column}
+                ORDER BY MIN(length({column})) ASC
+            '''.format(column=column, table=table)
+
+            return self.fetchvalue(query)
 
 
 class Database(base.Node):
@@ -200,3 +306,35 @@ class Column(base.Node):
         return self.client.select(self.parent['name'], [self['name']],
                                   distinct=distinct, sort=sort,
                                   iterator=iterator, unpack=unpack)
+
+    def min(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.min(table, column, dtype)
+
+    def max(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.max(table, column, dtype)
+
+    def sum(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.sum(table, column, dtype)
+
+    def avg(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.avg(table, column, dtype)
+
+    def stddev(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.stddev(table, column, dtype)
+
+    def variance(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.variance(table, column, dtype)
+
+    def longest(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.longest(table, column, dtype)
+
+    def shortest(self):
+        table, column, dtype = self.parent['name'], self['name'], self['type']
+        return self.client.shortest(table, column, dtype)
