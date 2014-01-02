@@ -65,7 +65,7 @@ class Client(_database.Client):
 
         tables = []
         for name, in self.fetchall(query, params):
-            tables.append({'name': name.lower()})
+            tables.append({'name': name})
         return tables
 
     def views(self):
@@ -98,8 +98,6 @@ class Client(_database.Client):
             attrs = dict(zip(keys, row))
             attrs['type'] = DATA_TYPE_NAMES.get(attrs['type'])
             attrs['nullable'] = bool(attrs['nullable'])
-            # Lower case table name to make it less burdensome to work with
-            attrs['name'] = attrs['name'].lower()
             columns.append(attrs)
 
         return columns
@@ -121,8 +119,6 @@ class Client(_database.Client):
             attrs = dict(zip(keys, row))
             attrs['type'] = DATA_TYPE_NAMES.get(attrs['type'])
             attrs['nullable'] = bool(attrs['nullable'])
-            # Lower case table name to make it less burdensome to work with
-            attrs['name'] = attrs['name'].lower()
             columns.append(attrs)
 
         return columns
@@ -130,9 +126,9 @@ class Client(_database.Client):
     def foreign_keys(self, table_name, column_name):
         query = '''
             SELECT
-                lower(user_constraints.constraint_name),
-                lower(tb.table_name),
-                lower(tb.column_name)
+                user_constraints.constraint_name,
+                tb.table_name,
+                tb.column_name
             FROM
                 user_constraints,
                 user_cons_columns ca,

@@ -54,9 +54,9 @@ class OracleApiTestCase(BackendTestCase):
     def test_table(self):
         table = self.db.tables['album']
 
-        self.assertEqual(table.label, 'album')
-        self.assertEqual(table.name, 'album')
-        self.assertEqual(table.path, 'xe/album')
+        self.assertEqual(table.label, 'ALBUM')
+        self.assertEqual(table.name, 'ALBUM')
+        self.assertEqual(table.path, 'xe/ALBUM')
         self.assertEqual(len(table.relpath), 1)
         self.assertFalse(table.isroot)
         self.assertFalse(table.isleaf)
@@ -64,9 +64,9 @@ class OracleApiTestCase(BackendTestCase):
     def test_column(self):
         column = self.db.tables['album'].columns['albumid']
 
-        self.assertEqual(column.label, 'albumid')
-        self.assertEqual(column.name, 'albumid')
-        self.assertEqual(column.path, 'xe/album/albumid')
+        self.assertEqual(column.label, 'ALBUMID')
+        self.assertEqual(column.name, 'ALBUMID')
+        self.assertEqual(column.path, 'xe/ALBUM/ALBUMID')
         self.assertEqual(len(column.relpath), 2)
         self.assertFalse(column.isroot)
         self.assertTrue(column.isleaf)
