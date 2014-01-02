@@ -205,13 +205,13 @@ class Client(base.Client):
             column = self.qn(column_name)
 
             query = '''
-                SELECT {column}, MAX(length({column}))
-                FROM {table}
-                GROUP BY {column}
-                ORDER BY MAX(length({column})) DESC
+                SELECT DISTINCT {column}
+                FROM {table},
+                ( SELECT MAX(length({column})) AS L FROM {table} ) T
+                WHERE length({column}) = T.L
             '''.format(column=column, table=table)
 
-            return self.fetchvalue(query)
+            return tuple(row[0] for row in self.fetchall(query))
 
     def shortest(self, table_name, column_name, dtype):
         "Returns the shortest string."
@@ -220,13 +220,13 @@ class Client(base.Client):
             column = self.qn(column_name)
 
             query = '''
-                SELECT {column}, MIN(length({column}))
-                FROM {table}
-                GROUP BY {column}
-                ORDER BY MIN(length({column})) ASC
+                SELECT DISTINCT {column}
+                FROM {table},
+                ( SELECT MIN(length({column})) AS L FROM {table} ) T
+                WHERE length({column}) = T.L
             '''.format(column=column, table=table)
 
-            return self.fetchvalue(query)
+            return tuple(row[0] for row in self.fetchall(query))
 
 
 class Database(base.Node):
