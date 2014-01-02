@@ -1,4 +1,5 @@
 from __future__ import division, absolute_import
+from urlparse import urlparse
 from ..utils import cached_property
 from . import base, _redcap
 
@@ -11,6 +12,8 @@ class Client(base.Client):
         self.url = url
         self.token = token
         self.verify_ssl = kwargs.get('verify_ssl', True)
+        # Parsed for constructing the URI
+        self.host = urlparse(url).hostname
 
     @cached_property
     def _project(self):
