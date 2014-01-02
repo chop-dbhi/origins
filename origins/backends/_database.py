@@ -185,7 +185,7 @@ class Client(base.Client):
 
     def sum(self, table_name, column_name, dtype):
         "Returns the sum of values."
-        if self.is_numeric_type(dtype) or self.is_time_type(dtype):
+        if self.is_numeric_type(dtype):
             return self._aggregate('SUM', table_name, column_name)
 
     def stddev(self, table_name, column_name, dtype):
