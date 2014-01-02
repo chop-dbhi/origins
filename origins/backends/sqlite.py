@@ -67,14 +67,14 @@ class Client(_database.Client):
         query = '''
             SELECT name
             FROM sqlite_master
-            WHERE type='table'
+            WHERE type = ?
             ORDER BY name
         '''
 
         keys = ('name',)
         tables = []
 
-        for row in self.fetchall(query):
+        for row in self.fetchall(query, ['table']):
             attrs = dict(zip(keys, row))
             tables.append(attrs)
 
@@ -103,12 +103,12 @@ class Client(_database.Client):
         query = '''
             SELECT name
             FROM sqlite_master
-            WHERE type='table'
+            WHERE type = ?
         '''
 
         column_fks = defaultdict(lambda: defaultdict(list))
 
-        for target, in self.fetchall(query):
+        for target, in self.fetchall(query, ['table']):
             for values in self._table_foreign_keys(target):
                 table, _from, to = values[2:5]
                 column_fks[target][to].append({
