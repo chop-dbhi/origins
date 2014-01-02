@@ -252,20 +252,6 @@ Origins backend API builds on this foundation and utilizes a _tree graph_ for re
 
 However, non-structural relationships such as foreign keys, aliases, sibling, etc. require the flexibility of creating arbitrary relationships which is why the more flexible underlying graph API exists.
 
-### Relationship Types
-
-- `CONTAINS` - denotes the target node is contained in the source node, e.g. table X contains column Y.
-
-- `SIBLING` - two elements that share the same immediate parent either origin or branch
-    - Used for knowing which elements can be represented together at a record level (e.g. columns on a table, fields in a document)
-    - Valid between elements
-    - Implicit relationship by default
-
-- `ALIAS` - two elements are semantically the same, have the same properties, and share the same underlying data
-    - In database terms, this would be a foreign key relationship either explicit or implicit
-    - The directionality of the relationship determines which element contains only a subset of the data
-    - TODO: It may be better have explicit relationship for each type
-
 ## Implementing a Backend
 
 The two requirements for writing a backend is to define a client class and the _origin_ node class. The backend module must have these names defined for the backend to be used correctly. For example, this is a perfectly valid backend:
