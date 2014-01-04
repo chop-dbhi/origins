@@ -278,9 +278,13 @@ class Nodes(tuple):
         return True
 
     def __getitem__(self, key):
-        "Index and key-based access."
+        """Supports standard index/slice access, key-based access by name
+        and multi-item access via passing an non-string iterable.
+        """
         if isinstance(key, (int, slice)):
             return tuple.__getitem__(self, key)
+        elif hasattr(key, '__iter__'):
+            return Nodes(self[_key] for _key in key)
         if isinstance(key, (str, unicode)):
             key = key.lower()
         return self[self._map[key]]

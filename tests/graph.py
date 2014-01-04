@@ -95,3 +95,6 @@ class GraphTestCase(unittest.TestCase):
 
         regexp = r'|'.join([bytes(self.n1), bytes(self.n2)])
         self.assertEqual(nodes.match(regexp), [self.n1, self.n2])
+
+        self.assertEqual(nodes[bytes(self.n1), bytes(self.n2)],
+                         [self.n1, self.n2])
