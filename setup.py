@@ -1,7 +1,8 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
+
 
 kwargs = {
-    'packages': find_packages(),
+    'packages': ['origins'],
     'test_suite': 'test_suite',
     'name': 'origins',
     'version': __import__('origins').get_version(),
