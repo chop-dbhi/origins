@@ -5,6 +5,7 @@ kwargs = {
     'test_suite': 'test_suite',
     'name': 'origins',
     'version': __import__('origins').get_version(),
+    'install_requires': ['graphlib>=0.9.1'],
     'author': 'Byron Ruth',
     'author_email': 'b@devel.io',
     'description': 'Data introspection, indexer, and semantic analyzer',

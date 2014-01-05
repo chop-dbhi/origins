@@ -1,6 +1,6 @@
 from __future__ import division, absolute_import
+from graphlib import Nodes
 from ..utils import cached_property
-from ..graph import Nodes
 from . import base
 
 

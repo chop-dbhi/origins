@@ -3,8 +3,8 @@ from __future__ import unicode_literals, absolute_import
 import json
 import requests
 from requests import exceptions
+from graphlib import Node, Rel
 from origins import logger
-from origins.graph import Node, Rel
 from . import base
 
 # Default URI to Neo4j REST endpoint

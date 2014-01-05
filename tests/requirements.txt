@@ -1,3 +1,4 @@
+graphlib>=0.9.1
 psycopg2
 pymongo
 pymysql

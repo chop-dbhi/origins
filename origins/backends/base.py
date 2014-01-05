@@ -1,5 +1,5 @@
 from __future__ import unicode_literals, absolute_import
-from .. import graph
+import graphlib
 from ..utils import res, build_uri, PATH_SEPERATOR
 
 
@@ -19,15 +19,19 @@ class Client(object):
         return build_uri(scheme=scheme, host=host, port=port, path=path)
 
 
-class Node(graph.Node):
+class Rel(graphlib.Rel):
+    merge_props = ('uri',)
+
+
+class Node(graphlib.Node):
     """A node contains attributes and a parent (if not the origin).
     It implements a dict-like interface for accessing the attributes of the
     node.
     """
-    __slots__ = ('id', '_rels', '_types', 'props', 'parent', 'client')
-
     name_attribute = 'name'
     label_attribute = 'label'
+    merge_props = ('uri',)
+    reltype = Rel
 
     def __init__(self, props=None, parent=None, client=None):
         super(Node, self).__init__(props)
@@ -85,7 +89,7 @@ class Node(graph.Node):
             current = parent
             parent = current.parent
         path.reverse()
-        return graph.Rels(path)
+        return graphlib.Rels(path)
 
     @property
     def path(self):
