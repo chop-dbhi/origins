@@ -62,7 +62,7 @@ class RedcapApiApiTestCase(BackendTestCase):
 
         # Sections are not required in a form. This is direct access to the
         # fields.
-        self.assertGreater(form.fields, 0)
+        self.assertTrue(form.fields)
 
     def test_section(self):
         section = self.project.forms['demographics'].sections['default']

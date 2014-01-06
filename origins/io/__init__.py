@@ -1,7 +1,13 @@
 from __future__ import unicode_literals, absolute_import
+
 import warnings
 from importlib import import_module
 from ..exceptions import OriginsError
+
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class UnknownExporter(OriginsError):
@@ -37,7 +43,7 @@ def import_exporter(name):
     try:
         return import_module(module)
     except ImportError as e:
-        raise ExporterNotSupported(unicode(e))
+        raise ExporterNotSupported(str(e))
 
 
 def export(name, node, *args, **kwargs):

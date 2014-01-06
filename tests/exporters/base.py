@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, absolute_import
+
 import os
 import unittest
 import origins
@@ -15,7 +17,7 @@ class ExporterTestCase(unittest.TestCase):
         try:
             self.exporter = import_module(self.exporter_path)
         except ImportError as e:
-            self.skipTest(unicode(e))
+            self.skipTest(str(e))
 
     def load_test_node(self):
         node = origins.connect('sqlite', path=os.path.join(TEST_DATA_DIR,

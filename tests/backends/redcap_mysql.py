@@ -24,17 +24,17 @@ class RedcapMysqlClientTestCase(BackendTestCase):
 
     def test_forms(self):
         forms = self.client.forms()
-        self.assertGreater(len(forms), 0)
+        self.assertTrue(forms)
         self.assertTrue('name' in forms[0])
 
     def test_sections(self):
         sections = self.client.sections('demographics')
-        self.assertGreater(len(sections), 0)
+        self.assertTrue(sections)
         self.assertTrue('name' in sections[0])
 
     def test_fields(self):
         fields = self.client.fields('demographics', 'default')
-        self.assertGreater(len(fields), 0)
+        self.assertTrue(fields)
         self.assertTrue('name' in fields[0])
 
 
@@ -70,7 +70,7 @@ class RedcapMysqlApiTestCase(BackendTestCase):
 
         # Sections are not required in a form. This is direct access to the
         # fields.
-        self.assertGreater(form.fields, 0)
+        self.assertTrue(form.fields)
 
     def test_section(self):
         section = self.project.forms['demographics'].sections['default']

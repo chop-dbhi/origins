@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, absolute_import
+
 import os
 import unittest
 from importlib import import_module
@@ -14,7 +16,7 @@ class BackendTestCase(unittest.TestCase):
         try:
             self.backend = import_module(self.backend_path)
         except ImportError as e:
-            self.skipTest(unicode(e))
+            self.skipTest(str(e))
 
     def setUp(self):
         self.load_backend()

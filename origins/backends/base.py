@@ -1,6 +1,11 @@
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals
+
 import graphlib
 from ..utils import res, build_uri, PATH_SEPERATOR
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class Client(object):
@@ -39,14 +44,11 @@ class Node(graphlib.Node):
         self.client = client
         self.sync()
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return str(self.name)
 
     def __bytes__(self):
         return bytes(self.name)
-
-    def __str__(self):
-        return str(self.name)
 
     # TODO rename these methods
     def _contains(self, iterable, klass, type='CONTAINS', relprops=None):

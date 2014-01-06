@@ -1,5 +1,9 @@
-from __future__ import division, unicode_literals
-import urllib
+from __future__ import unicode_literals, absolute_import
+
+try:
+    from urllib import quote as urlquote
+except ImportError:
+    from urllib.parse import quote as urlquote
 
 PATH_SEPERATOR = '/'
 
@@ -49,4 +53,4 @@ def build_uri(scheme, host=None, port=None, path=None):
     else:
         netloc = host
 
-    return '{}://{}{}'.format(scheme, netloc, urllib.quote(path))
+    return '{}://{}{}'.format(scheme, netloc, urlquote(path))

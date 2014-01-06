@@ -1,4 +1,5 @@
-from __future__ import division, absolute_import
+from __future__ import unicode_literals, absolute_import
+
 from graphlib import Nodes
 from ..utils import cached_property
 from . import base

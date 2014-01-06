@@ -7,6 +7,11 @@ from graphlib import Node, Rel
 from origins import logger
 from . import base
 
+try:
+    str = unicode
+except NameError:
+    pass
+
 # Default URI to Neo4j REST endpoint
 DEFAULT_URI = 'http://localhost:7474/db/data/'
 
@@ -53,10 +58,10 @@ class StatementFactory(object):
     def _dict_props(self, props):
         "Converts a dict into a valid properties object in Cypher syntax."
         toks = []
-        for key, value in props.iteritems():
+        for key, value in props.items():
             if value is None:
                 continue
-            if isinstance(value, (str, unicode)):
+            if isinstance(value, (str, bytes)):
                 s = "{}: '{}'"
             else:
                 s = '{}: {}'
@@ -66,10 +71,10 @@ class StatementFactory(object):
     def _keyword_props(self, ref, props):
         "Converts a dict into an array of valid assignments in Cypher syntax."
         toks = []
-        for key, value in props.iteritems():
+        for key, value in props.items():
             if value is None:
                 continue
-            if isinstance(value, (str, unicode)):
+            if isinstance(value, (str, bytes)):
                 s = "{}.{} = '{}'"
             else:
                 s = '{}.{} = {}'

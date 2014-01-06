@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, absolute_import
+
 from collections import OrderedDict
 
 
@@ -25,7 +27,7 @@ def recordtuple(fields=None):
 
         def __repr__(self):
             fields = ', '.join(['{}={!r}'.format(self._fields[i], self[i])
-                     for i in xrange(self._len)])
+                     for i in range(self._len)])
             return 'record({})'.format(fields)
 
         def __getitem__(self, i):

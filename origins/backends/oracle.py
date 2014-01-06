@@ -12,19 +12,23 @@ DATA_TYPE_NAMES = {
     cx_Oracle.CURSOR: 'cursor',
     cx_Oracle.DATETIME: 'datetime',
     cx_Oracle.FIXED_CHAR: 'fixed_char',
-    cx_Oracle.FIXED_UNICODE: 'fixed_unicode',
     cx_Oracle.INTERVAL: 'interval',
     cx_Oracle.LONG_BINARY: 'long_binary',
     cx_Oracle.LONG_STRING: 'long_string',
-    cx_Oracle.LONG_UNICODE: 'long_unicode',
     cx_Oracle.NATIVE_FLOAT: 'native_float',
     cx_Oracle.NCLOB: 'nclob',
     cx_Oracle.NUMBER: 'number',
     cx_Oracle.OBJECT: 'object',
     cx_Oracle.STRING: 'string',
     cx_Oracle.TIMESTAMP: 'timestamp',
-    cx_Oracle.UNICODE: 'unicode',
 }
+
+try:
+    DATA_TYPE_NAMES[cx_Oracle.UNICODE] = 'unicode'
+    DATA_TYPE_NAMES[cx_Oracle.LONG_UNICODE] = 'long_unicode'
+    DATA_TYPE_NAMES[cx_Oracle.FIXED_UNICODE] = 'fixed_unicode'
+except AttributeError:
+    pass
 
 
 class Client(_database.Client):

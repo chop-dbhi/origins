@@ -1,5 +1,9 @@
 from __future__ import division, absolute_import
-from urlparse import urlparse
+
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 from ..utils import cached_property
 from . import base, _redcap
 

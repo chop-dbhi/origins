@@ -1,5 +1,6 @@
 "Pre-defined logger for Origins."
 from __future__ import unicode_literals, absolute_import
+
 import sys
 import logging
 

@@ -23,7 +23,6 @@ class MysqlClientTestCase(BackendTestCase):
         tables = self.client.tables()
         self.assertEqual(len(tables), 11)
         self.assertTrue('name' in tables[0])
-        self.assertEqual(sorted(tables), tables)
 
     def test_columns(self):
         columns = self.client.columns('Album')

@@ -18,7 +18,7 @@ class DirectoryClientTestCase(BackendTestCase):
 
     def test_files(self):
         files = self.client.files()
-        self.assertGreater(files, 0)
+        self.assertTrue(files)
 
 
 class DirectoryApiTestCase(BackendTestCase):

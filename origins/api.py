@@ -1,7 +1,13 @@
 from __future__ import unicode_literals, absolute_import
+
 import warnings
 from importlib import import_module
 from .exceptions import OriginsError
+
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 class UnknownBackend(OriginsError):
@@ -70,7 +76,7 @@ def import_backend(name):
     try:
         return import_module(module)
     except ImportError as e:
-        raise BackendNotSupported(unicode(e))
+        raise BackendNotSupported(str(e))
 
 
 def connect(backend, **options):
