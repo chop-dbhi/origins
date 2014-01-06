@@ -36,7 +36,7 @@ class Node(graphlib.Node):
     name_attribute = 'name'
     label_attribute = 'label'
     merge_props = ('uri',)
-    reltype = Rel
+    relclass = Rel
 
     def __init__(self, props=None, parent=None, client=None):
         super(Node, self).__init__(props)
