@@ -25,7 +25,7 @@ class Client(object):
 
 
 class Rel(graphlib.Rel):
-    merge_props = ('uri',)
+    pass
 
 
 class Node(graphlib.Node):
@@ -35,13 +35,13 @@ class Node(graphlib.Node):
     """
     name_attribute = 'name'
     label_attribute = 'label'
-    merge_props = ('uri',)
+    match_props = ('uri',)
     relclass = Rel
 
-    def __init__(self, props=None, parent=None, client=None):
-        super(Node, self).__init__(props)
-        self.parent = parent
-        self.client = client
+    def __init__(self, *args, **kwargs):
+        self.parent = kwargs.pop('parent', None)
+        self.client = kwargs.pop('client', None)
+        super(Node, self).__init__(*args, **kwargs)
         self.sync()
 
     def __str__(self):
