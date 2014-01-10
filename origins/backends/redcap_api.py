@@ -81,7 +81,6 @@ class Client(base.Client):
                 'validation_max': field['text_validation_max'],
                 'identifier': identifier,
                 'required': required,
-                'header': field['section_header'],
                 'alignment': field['custom_alignment'],
                 'survey_num': field['question_number'],
                 'matrix': field['matrix_group_name'],
