@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import graphlib
 from ..utils import res, build_uri, PATH_SEPERATOR
+
 try:
     str = unicode
 except NameError:
@@ -59,7 +60,7 @@ class Node(graphlib.Node):
             self.relate(instance, type, relprops)
 
     def _containers(self, container):
-        return self.rels(type='CONTAINS')\
+        return self.rels(type='CONTAINS', outgoing=True)\
             .filter('container', container).nodes()
 
     # Hierarchy-based properties relative to the CONTAINS relationship
@@ -78,7 +79,7 @@ class Node(graphlib.Node):
     @property
     def isleaf(self):
         "Returns true if this node is a leaf."
-        return len(self.rels(type='CONTAINS')) == 0
+        return len(self.rels(type='CONTAINS', outgoing=True)) == 0
 
     @property
     def relpath(self):
@@ -87,7 +88,8 @@ class Node(graphlib.Node):
         parent = self.parent
         current = self
         while parent:
-            path.append(parent.rels(node=current, type='CONTAINS')[0])
+            path.append(parent.rels(node=current, type='CONTAINS',
+                                    outgoing=True)[0])
             current = parent
             parent = current.parent
         path.reverse()

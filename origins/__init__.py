@@ -20,4 +20,3 @@ __version__ = get_version()
 
 
 from .api import BACKENDS, connect  # noqa
-from .io import EXPORTERS, export, exporter  # noqa
