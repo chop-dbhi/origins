@@ -92,7 +92,6 @@ class Client(_file.Client):
                 'validation_max': row['text_validation_max'],
                 'identifier': identifier,
                 'required': required,
-                'header': row['section_header'],
                 'alignment': row['custom_alignment'],
                 'survey_num': row['question_number'],
                 'matrix': row['matrix_group_name'],

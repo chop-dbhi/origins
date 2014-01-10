@@ -94,7 +94,6 @@ class Client(mysql.Client):
                 element_validation_max,
                 field_phi,
                 field_req,
-                element_preceding_header,
                 custom_alignment,
                 question_num,
                 grid_name
@@ -107,7 +106,7 @@ class Client(mysql.Client):
 
         keys = ('name', 'label', 'type', 'note', 'choices', 'display_logic',
                 'validation_type', 'validation_min', 'validation_max',
-                'identifier', 'required', 'header', 'alignment', 'survey_num',
+                'identifier', 'required', 'alignment', 'survey_num',
                 'matrix')
 
         fields = []
