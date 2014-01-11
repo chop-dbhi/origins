@@ -94,6 +94,7 @@ class Client(mysql.Client):
                 element_validation_max,
                 field_phi,
                 field_req,
+                element_preceding_header,
                 custom_alignment,
                 question_num,
                 grid_name
@@ -106,7 +107,7 @@ class Client(mysql.Client):
 
         keys = ('name', 'label', 'type', 'note', 'choices', 'display_logic',
                 'validation_type', 'validation_min', 'validation_max',
-                'identifier', 'required', 'alignment', 'survey_num',
+                'identifier', 'required', 'header', 'alignment', 'survey_num',
                 'matrix')
 
         fields = []
@@ -119,6 +120,9 @@ class Client(mysql.Client):
             current_section = attrs['header'] or current_section
             if current_section != section_name:
                 continue
+            # Remove header attribute since it is redundant with respect to
+            # the parent node.
+            attrs.pop('header')
             fields.append(attrs)
         return fields
 
