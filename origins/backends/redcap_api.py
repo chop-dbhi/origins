@@ -31,29 +31,45 @@ class Client(base.Client):
         }
 
     def forms(self):
+        order = 0
         forms = []
         unique = set()
+
         for field in self._project.metadata:
             name = field['form_name']
+
             if name not in unique:
-                forms.append({'name': name})
+                forms.append({'name': name, 'order': order})
+                order += 1
                 unique.add(name)
+
         return forms
 
     def sections(self, form_name):
-        sections = [{'name': 'default'}]
+        sections = [{
+            'name': 'default',
+            'label': 'Default',
+            'order': 0
+        }]
+        order = 1
         unique = set()
+
         for field in self._project.metadata:
             # Filter by form_name
             if field['form_name'] != form_name or not field['section_header']:
                 continue
+
             name = field['section_header']
+
             if name not in unique:
-                sections.append({'name': name})
+                sections.append({'name': name, 'order': order})
+                order += 1
                 unique.add(name)
+
         return sections
 
     def fields(self, form_name, section_name):
+        order = 0
         fields = []
         current_section = 'default'
 
@@ -61,6 +77,7 @@ class Client(base.Client):
             # Filter by form_name
             if field['form_name'] != form_name:
                 continue
+
             # Filter by section_name
             current_section = field['section_header'] or current_section
             if current_section != section_name:
@@ -84,7 +101,11 @@ class Client(base.Client):
                 'alignment': field['custom_alignment'],
                 'survey_num': field['question_number'],
                 'matrix': field['matrix_group_name'],
+                'order': order,
             })
+
+            order += 1
+
         return fields
 
 

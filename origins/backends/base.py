@@ -58,9 +58,14 @@ class Node(graphlib.Node):
             instance = klass(props, parent=self, client=self.client)
             self.relate(instance, type, relprops)
 
-    def definitions(self, container):
-        return self.rels(type='DEFINES', outgoing=True)\
+    def definitions(self, container, sort=None):
+        nodes = self.rels(type='DEFINES', outgoing=True)\
             .filter('container', container).nodes()
+
+        if sort:
+            nodes = nodes.sort(sort)
+
+        return nodes
 
     # Hierarchy-based properties relative to the DEFINES relationship
     @property

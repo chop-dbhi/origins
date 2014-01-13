@@ -1,4 +1,5 @@
 from __future__ import division, unicode_literals, absolute_import
+
 from . import base, _file
 
 import openpyxl
@@ -45,11 +46,13 @@ class Client(_file.Client):
                 column_names = range(len(first_row))
 
         columns = []
+
         for i, name in enumerate(column_names):
             columns.append({
                 'name': name,
                 'index': i
             })
+
         return columns
 
 
@@ -60,7 +63,7 @@ class Workbook(_file.File):
 
     @property
     def sheets(self):
-        return self.definitions('sheet')
+        return self.definitions('sheet', sort='index')
 
 
 class Sheet(base.Node):
@@ -69,7 +72,7 @@ class Sheet(base.Node):
 
     @property
     def columns(self):
-        return self.definitions('column')
+        return self.definitions('column', sort='index')
 
 
 class Column(base.Node):

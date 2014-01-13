@@ -238,7 +238,7 @@ class Database(base.Node):
 
     @property
     def tables(self):
-        return self.definitions('table')
+        return self.definitions('table', sort='name')
 
 
 class Table(base.Node):
@@ -247,7 +247,7 @@ class Table(base.Node):
 
     @property
     def columns(self):
-        return self.definitions('column')
+        return self.definitions('column', sort='index')
 
     def count(self, names=None, distinct=False):
         """Returns a count of all records. If `distinct` is true, duplicate

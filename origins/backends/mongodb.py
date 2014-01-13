@@ -91,7 +91,7 @@ class Database(base.Node):
 
     @property
     def collections(self):
-        return self.definitions('collection')
+        return self.definitions('collection', sort='name')
 
 
 class Collection(base.Node):
@@ -100,7 +100,7 @@ class Collection(base.Node):
 
     @property
     def fields(self):
-        return self.definitions('field')
+        return self.definitions('field', sort='name')
 
 
 class Field(base.Node):

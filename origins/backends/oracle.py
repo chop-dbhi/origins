@@ -121,10 +121,11 @@ class Client(_database.Client):
 
         columns = []
 
-        for row in c.description:
+        for i, row in enumerate(c.description):
             attrs = dict(zip(keys, row))
             attrs['type'] = DATA_TYPE_NAMES.get(attrs['type'])
             attrs['nullable'] = bool(attrs['nullable'])
+            attrs['index'] = i
             columns.append(attrs)
 
         return columns
@@ -142,10 +143,11 @@ class Client(_database.Client):
 
         columns = []
 
-        for row in c.description:
+        for i, row in enumerate(c.description):
             attrs = dict(zip(keys, row))
             attrs['type'] = DATA_TYPE_NAMES.get(attrs['type'])
             attrs['nullable'] = bool(attrs['nullable'])
+            attrs['index'] = i
             columns.append(attrs)
 
         return columns
@@ -192,7 +194,7 @@ class Database(_database.Database):
 
     @property
     def views(self):
-        return self.definitions('view')
+        return self.definitions('view', sort='name')
 
 
 class Table(_database.Table):

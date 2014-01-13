@@ -31,22 +31,32 @@ class Client(_file.Client):
     def fields(self):
         r = self.reader
 
-        keys = ('name', 'num_values', 'type', 'description')
+        index = 0
         fields = []
 
         # Fixed fields
         for name, desc in FIXED_FIELDS:
-            attrs = dict(zip(keys, (name, desc, None)))
-            fields.append(attrs)
+            fields.append({
+                'name': name,
+                'description': desc,
+                'index': index,
+            })
+            index += 1
+
+        keys = ('name', 'num_values', 'type', 'description')
 
         # INFO fields
-        for info in r.infos.values():
-            attrs = dict(zip(keys, info[:3]))
+        for row in r.infos.values():
+            attrs = dict(zip(keys, row))
+            attrs['index'] = index
+            index += 1
             fields.append(attrs)
 
         # FORMAT fields
-        for info in r.formats.values():
-            attrs = dict(zip(keys, info[:3]))
+        for row in r.formats.values():
+            attrs = dict(zip(keys, row))
+            attrs['index'] = index
+            index += 1
             fields.append(attrs)
 
         return fields
@@ -59,7 +69,7 @@ class File(base.Node):
 
     @property
     def fields(self):
-        return self.definitions('field')
+        return self.definitions('field', sort='index')
 
 
 class Field(base.Node):

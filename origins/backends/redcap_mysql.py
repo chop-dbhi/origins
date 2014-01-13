@@ -19,11 +19,13 @@ class Client(mysql.Client):
         keys = ('name', 'label')
 
         projects = []
+
         for row in self.fetchall(query):
             attrs = dict(zip(keys, row))
             if not attrs['label']:
                 attrs['label'] = attrs['name']
             projects.append(attrs)
+
         return projects
 
     def project(self):
@@ -34,6 +36,7 @@ class Client(mysql.Client):
             FROM redcap_projects
             WHERE project_name = %s
         '''
+
         keys = ('name', 'label')
         values = self.fetchone(query, [self.project_name])
         return dict(zip(keys, values))
@@ -53,11 +56,14 @@ class Client(mysql.Client):
         keys = ('name', 'label')
 
         forms = []
-        for row in self.fetchall(query, [self.project_name]):
+
+        for i, row in enumerate(self.fetchall(query, [self.project_name])):
             attrs = dict(zip(keys, row))
             if not attrs['label']:
                 attrs['label'] = attrs['name']
+            attrs['order'] = i
             forms.append(attrs)
+
         return forms
 
     def sections(self, form_name):
@@ -74,10 +80,19 @@ class Client(mysql.Client):
 
         keys = ('name',)
 
-        sections = [{'name': 'default'}]
-        for row in self.fetchall(query, [self.project_name, form_name]):
+        sections = [{
+            'name': 'default',
+            'label': 'Default',
+            'order': 0,
+        }]
+
+        rows = self.fetchall(query, [self.project_name, form_name])
+
+        for i, row in enumerate(rows):
             attrs = dict(zip(keys, row))
+            attrs['order'] = i + 1
             sections.append(attrs)
+
         return sections
 
     def fields(self, form_name, section_name):
@@ -97,7 +112,8 @@ class Client(mysql.Client):
                 element_preceding_header,
                 custom_alignment,
                 question_num,
-                grid_name
+                grid_name,
+                field_order
             FROM redcap_metadata JOIN redcap_projects
                 ON (redcap_metadata.project_id = redcap_projects.project_id)
             WHERE redcap_projects.project_name = %s
@@ -108,22 +124,26 @@ class Client(mysql.Client):
         keys = ('name', 'label', 'type', 'note', 'choices', 'display_logic',
                 'validation_type', 'validation_min', 'validation_max',
                 'identifier', 'required', 'header', 'alignment', 'survey_num',
-                'matrix')
+                'matrix', 'order')
 
         fields = []
         current_section = 'default'
+
         for row in self.fetchall(query, [self.project_name, form_name]):
             attrs = dict(zip(keys, row))
             attrs['required'] = bool(attrs['required'])
             attrs['identifier'] = bool(attrs['identifier'])
+
             # Filter by section_name
             current_section = attrs['header'] or current_section
             if current_section != section_name:
                 continue
+
             # Remove header attribute since it is redundant with respect to
             # the parent node.
             attrs.pop('header')
             fields.append(attrs)
+
         return fields
 
 

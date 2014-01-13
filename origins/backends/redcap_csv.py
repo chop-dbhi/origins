@@ -37,34 +37,55 @@ class Client(_file.Client):
     def forms(self):
         "Collects all unique form names while maintaining the order."
         reader = self.reader
+
         forms = []
+        order = 0
         unique = set()
 
         for row in reader:
             form_name = row['form_name']
+
             if form_name not in unique:
                 forms.append({
-                    'name': form_name
+                    'name': form_name,
+                    'order': order,
                 })
+
+                order += 1
                 unique.add(form_name)
+
         return forms
 
     def sections(self, form_name):
         reader = self.reader
-        sections = [{'name': 'default'}]
+
+        sections = [{
+            'name': 'default',
+            'label': 'Default',
+            'order': 0,
+        }]
+
+        order = 1
         unique = set()
+
         for row in reader:
             # Filter by form_name
             if row['form_name'] != form_name or not row['section_header']:
                 continue
+
             name = row['section_header']
+
             if name not in unique:
-                sections.append({'name': name})
+                sections.append({'name': name, 'order': order})
+                order += 1
                 unique.add(name)
+
         return sections
 
     def fields(self, form_name, section_name):
         reader = self.reader
+
+        order = 0
         fields = []
         current_section = 'default'
 
@@ -72,6 +93,7 @@ class Client(_file.Client):
             # Filter by form_name
             if row['form_name'] != form_name:
                 continue
+
             # Filter by section_name
             current_section = row['section_header'] or current_section
             if current_section != section_name:
@@ -95,7 +117,11 @@ class Client(_file.Client):
                 'alignment': row['custom_alignment'],
                 'survey_num': row['question_number'],
                 'matrix': row['matrix_group_name'],
+                'order': order
             })
+
+            order += 1
+
         return fields
 
 

@@ -12,7 +12,7 @@ class Project(base.Node):
 
     @property
     def forms(self):
-        return self.definitions('form')
+        return self.definitions('form', sort='order')
 
 
 class Form(base.Node):
@@ -21,7 +21,7 @@ class Form(base.Node):
 
     @property
     def sections(self):
-        return self.definitions('section')
+        return self.definitions('section', sort='order')
 
     @property
     def fields(self):
@@ -38,7 +38,7 @@ class Section(base.Node):
 
     @property
     def fields(self):
-        return self.definitions('field')
+        return self.definitions('field', sort='order')
 
 
 class Field(base.Node):

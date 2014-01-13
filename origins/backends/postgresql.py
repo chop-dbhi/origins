@@ -177,7 +177,7 @@ class Database(base.Node):
 
     @property
     def schemas(self):
-        return self.definitions('schema')
+        return self.definitions('schema', sort='name')
 
     @property
     def tables(self):
@@ -192,7 +192,7 @@ class Schema(base.Node):
 
     @property
     def tables(self):
-        return self.definitions('table')
+        return self.definitions('table', sort='name')
 
 
 class Table(_database.Table):

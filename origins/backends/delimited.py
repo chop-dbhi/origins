@@ -45,8 +45,10 @@ class Client(_file.Client):
     @property
     def file_handler(self):
         f = open(self.file_path, 'rU')
+
         if self.has_header:
             next(f)
+
         return f
 
     @property
@@ -63,17 +65,21 @@ class Client(_file.Client):
 
     def columns(self):
         columns = []
+
         for i, name in enumerate(self.header):
             columns.append({
                 'name': name,
                 'index': i
             })
+
         return columns
 
     def file_line_count(self):
         n = 0
+
         for _ in self.file_handler:
             n += 1
+
         return n
 
 
@@ -84,7 +90,7 @@ class File(_file.File):
 
     @property
     def columns(self):
-        return self.definitions('column')
+        return self.definitions('column', sort='index')
 
 
 class Column(base.Node):

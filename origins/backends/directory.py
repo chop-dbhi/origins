@@ -63,7 +63,7 @@ class Directory(base.Node):
 
     @property
     def files(self):
-        return self.definitions('file')
+        return self.definitions('file', sort='name')
 
 
 class File(_file.File):
