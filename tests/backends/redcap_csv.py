@@ -2,7 +2,7 @@ import os
 import origins
 from .base import BackendTestCase, TEST_DATA_DIR
 
-FILENAME = 'REDCapDemoDatabase_DataDictionary_2013-12-12.csv'
+FILENAME = 'redcap_demo.csv'
 
 
 class RedcapCsvClientTestCase(BackendTestCase):
