@@ -51,9 +51,16 @@ class Node(graphlib.Node):
     def __bytes__(self):
         return bytes(self.name)
 
+    def __repr__(self):
+        typename = self.__class__.__name__
+        # Strip off 'u' for unicode literals
+        label = repr(self.label).lstrip('u')
+        return '{}({})'.format(typename, label)
+
     def defines(self, iterable, klass, type='DEFINES', relprops=None):
         if relprops is None:
             relprops = {'container': klass.__name__.lower()}
+
         for props in iterable:
             instance = klass(props, parent=self, client=self.client)
             self.relate(instance, type, relprops)
