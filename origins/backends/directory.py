@@ -1,8 +1,10 @@
 from __future__ import division, unicode_literals
+
 from ..constants import DATETIME_FORMAT
 from . import base, _file
 
 import os
+import fnmatch
 from datetime import datetime
 
 
@@ -10,15 +12,14 @@ class Client(base.Client):
     def __init__(self, path, **kwargs):
         self.directory_path = os.path.abspath(path)
         self.recurse = kwargs.get('recurse', True)
+        self.pattern = kwargs.get('pattern', '*')
+        self.hidden = kwargs.get('hidden', False)
 
         # Explictly set depth to 0. A None depth implies no limit
         if not self.recurse:
             self.depth = 0
         else:
             self.depth = kwargs.get('depth')
-
-        # TODO support regexp or glob syntax for matching a subset of files
-        # self.regexp = kwargs.get('regexp')
 
     def directory(self):
         return {
@@ -27,9 +28,9 @@ class Client(base.Client):
         }
 
     def files(self):
-        _files = []
+        files = []
 
-        for root, dirs, files in os.walk(self.directory_path):
+        for root, dirs, names in os.walk(self.directory_path):
             if self.depth is not None:
                 curpath = os.path.relpath(root, self.directory_path)
 
@@ -42,18 +43,24 @@ class Client(base.Client):
                 # desired depth has been reached. Note a `break` does
                 # not work since this would stop processing sibling
                 # directories as well.
-                if depth >= self.depth:
-                    for _ in dirs[:]:
+                for dirname in dirs[:]:
+                    if depth >= self.depth:
+                        dirs.pop()
+                    elif not self.hidden and dirname.startswith('.'):
                         dirs.pop()
 
-            for f in files:
+            for f in fnmatch.filter(names, self.pattern):
+                if not self.hidden and f.startswith('.'):
+                    continue
+
                 path = os.path.join(root, f)
-                _files.append({
+
+                files.append({
                     'name': os.path.relpath(path, self.directory_path),
                     'path': path,
                 })
 
-        return _files
+        return files
 
 
 class Directory(base.Node):
