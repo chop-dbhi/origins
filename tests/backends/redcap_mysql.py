@@ -75,7 +75,7 @@ class RedcapMysqlApiTestCase(BackendTestCase):
     def test_section(self):
         section = self.project.forms['demographics'].sections['default']
 
-        self.assertEqual(section.label, 'default')
+        self.assertEqual(section.label, 'Default')
         self.assertEqual(section.name, 'default')
         self.assertEqual(section.path, 'redcap_demo/demographics/default')
         self.assertEqual(len(section.relpath), 2)
