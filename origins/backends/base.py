@@ -52,7 +52,7 @@ class Node(graphlib.Node):
         return bytes(self.name)
 
     # TODO rename these methods
-    def _contains(self, iterable, klass, type='CONTAINS', relprops=None):
+    def _contains(self, iterable, klass, type='DEFINES', relprops=None):
         if relprops is None:
             relprops = {'container': klass.__name__.lower()}
         for props in iterable:
@@ -60,10 +60,10 @@ class Node(graphlib.Node):
             self.relate(instance, type, relprops)
 
     def _containers(self, container):
-        return self.rels(type='CONTAINS', outgoing=True)\
+        return self.rels(type='DEFINES', outgoing=True)\
             .filter('container', container).nodes()
 
-    # Hierarchy-based properties relative to the CONTAINS relationship
+    # Hierarchy-based properties relative to the DEFINES relationship
     @property
     def root(self):
         "Returns the root node."
@@ -79,7 +79,7 @@ class Node(graphlib.Node):
     @property
     def isleaf(self):
         "Returns true if this node is a leaf."
-        return len(self.rels(type='CONTAINS', outgoing=True)) == 0
+        return len(self.rels(type='DEFINES', outgoing=True)) == 0
 
     @property
     def relpath(self):
@@ -88,7 +88,7 @@ class Node(graphlib.Node):
         parent = self.parent
         current = self
         while parent:
-            path.append(parent.rels(node=current, type='CONTAINS',
+            path.append(parent.rels(node=current, type='DEFINES',
                                     outgoing=True)[0])
             current = parent
             parent = current.parent
