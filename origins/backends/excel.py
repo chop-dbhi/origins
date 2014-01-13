@@ -59,7 +59,7 @@ class Client(_file.Client):
 class Workbook(_file.File):
     def sync(self):
         super(Workbook, self).sync()
-        self.defines(self.client.sheets(), Sheet)
+        self.define(self.client.sheets(), Sheet)
 
     @property
     def sheets(self):
@@ -68,7 +68,7 @@ class Workbook(_file.File):
 
 class Sheet(base.Node):
     def sync(self):
-        self.defines(self.client.columns(self['name']), Column)
+        self.define(self.client.columns(self['name']), Column)
 
     @property
     def columns(self):

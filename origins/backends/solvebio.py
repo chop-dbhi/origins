@@ -41,7 +41,7 @@ class Client(base.Client):
 class Service(base.Node):
     def sync(self):
         self.update(self.client.service())
-        self.defines(self.client.namespaces(), Namespace)
+        self.define(self.client.namespaces(), Namespace)
 
     @property
     def namespaces(self):
@@ -52,7 +52,7 @@ class Namespace(base.Node):
     label_attribute = 'title'
 
     def sync(self):
-        self.defines(self.client.datasets(self['name']), Dataset)
+        self.define(self.client.datasets(self['name']), Dataset)
 
     @property
     def datasets(self):
@@ -61,8 +61,8 @@ class Namespace(base.Node):
 
 class Dataset(base.Node):
     def sync(self):
-        self.defines(self.client.fields(self.parent['name'],
-                     self['name']), Field)
+        self.define(self.client.fields(self.parent['name'], self['name']),
+                    Field)
 
     @property
     def fields(self):

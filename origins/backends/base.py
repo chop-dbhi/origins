@@ -57,17 +57,37 @@ class Node(graphlib.Node):
         label = repr(self.label).lstrip('u')
         return '{}({})'.format(typename, label)
 
-    def defines(self, iterable, klass, type='DEFINES', relprops=None):
+    def define(self, iterable, klass=None, relprops=None):
+        """Create and relate a set nodes that are structurally or logically
+        defined under the current node. Examples include columns within a
+        table or files in a directory.
+
+        If `klass` is specified, the current node's class will be used.
+        """
+        if klass is None:
+            klass = self.__class__
+
         if relprops is None:
-            relprops = {'container': klass.__name__.lower()}
+            relprops = {}
+
+        if 'type' not in relprops:
+            relprops['type'] = klass.__name__.lower()
 
         for props in iterable:
             instance = klass(props, parent=self, client=self.client)
-            self.relate(instance, type, relprops)
+            self.relate(instance, 'DEFINES', relprops)
 
-    def definitions(self, container, sort=None):
-        nodes = self.rels(type='DEFINES', outgoing=True)\
-            .filter('container', container).nodes()
+    def definitions(self, type=None, sort=None):
+        """Return nodes defined under the current node of the specified type
+        and optionally sorting them by a property or function. This is the
+        complement function to the `define` method.
+        """
+        rels = self.rels(type='DEFINES', outgoing=True)
+
+        if type:
+            rels = rels.filter('type', type)
+
+        nodes = rels.nodes()
 
         if sort:
             nodes = nodes.sort(sort)

@@ -86,7 +86,7 @@ class Client(_file.Client):
 class File(_file.File):
     def sync(self):
         super(File, self).sync()
-        self.defines(self.client.columns(), Column)
+        self.define(self.client.columns(), Column)
 
     @property
     def columns(self):

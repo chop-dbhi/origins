@@ -173,7 +173,7 @@ class Client(_database.Client):
 class Database(base.Node):
     def sync(self):
         self.update(self.client.database())
-        self.defines(self.client.schemas(), Schema)
+        self.define(self.client.schemas(), Schema)
 
     @property
     def schemas(self):
@@ -188,7 +188,7 @@ class Database(base.Node):
 
 class Schema(base.Node):
     def sync(self):
-        self.defines(self.client.tables(self['name']), Table)
+        self.define(self.client.tables(self['name']), Table)
 
     @property
     def tables(self):
@@ -197,8 +197,8 @@ class Schema(base.Node):
 
 class Table(_database.Table):
     def sync(self):
-        self.defines(self.client.columns(self.parent['name'], self['name']),
-                     Column)
+        self.define(self.client.columns(self.parent['name'], self['name']),
+                    Column)
 
 
 class Column(_database.Column):

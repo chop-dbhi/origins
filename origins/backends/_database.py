@@ -234,7 +234,7 @@ class Client(base.Client):
 class Database(base.Node):
     def sync(self):
         self.update(self.client.database())
-        self.defines(self.client.tables(), Table)
+        self.define(self.client.tables(), Table)
 
     @property
     def tables(self):
@@ -243,7 +243,7 @@ class Database(base.Node):
 
 class Table(base.Node):
     def sync(self):
-        self.defines(self.client.columns(self['name']), Column)
+        self.define(self.client.columns(self['name']), Column)
 
     @property
     def columns(self):

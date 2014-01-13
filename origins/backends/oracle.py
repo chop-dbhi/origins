@@ -189,8 +189,8 @@ class Client(_database.Client):
 class Database(_database.Database):
     def sync(self):
         self.update(self.client.database())
-        self.defines(self.client.tables(), Table)
-        self.defines(self.client.views(), View)
+        self.define(self.client.tables(), Table)
+        self.define(self.client.views(), View)
 
     @property
     def views(self):
@@ -199,14 +199,14 @@ class Database(_database.Database):
 
 class Table(_database.Table):
     def sync(self):
-        self.defines(self.client.table_columns(self['name']),
-                     _database.Column)
+        self.define(self.client.table_columns(self['name']),
+                    _database.Column)
 
 
 class View(_database.Table):
     def sync(self):
-        self.defines(self.client.view_columns(self['name']),
-                     _database.Column)
+        self.define(self.client.view_columns(self['name']),
+                    _database.Column)
 
 
 # Export for API

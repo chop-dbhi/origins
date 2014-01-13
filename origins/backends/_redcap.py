@@ -8,7 +8,7 @@ from . import base
 class Project(base.Node):
     def sync(self):
         self.update(self.client.project())
-        self.defines(self.client.forms(), Form)
+        self.define(self.client.forms(), Form)
 
     @property
     def forms(self):
@@ -17,7 +17,7 @@ class Project(base.Node):
 
 class Form(base.Node):
     def sync(self):
-        self.defines(self.client.sections(self['name']), Section)
+        self.define(self.client.sections(self['name']), Section)
 
     @property
     def sections(self):
@@ -34,7 +34,7 @@ class Form(base.Node):
 class Section(base.Node):
     def sync(self):
         form_name = self.parent['name']
-        self.defines(self.client.fields(form_name, self['name']), Field)
+        self.define(self.client.fields(form_name, self['name']), Field)
 
     @property
     def fields(self):

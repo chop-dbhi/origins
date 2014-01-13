@@ -66,7 +66,7 @@ class Client(base.Client):
 class Directory(base.Node):
     def sync(self):
         self.update(self.client.directory())
-        self.defines(self.client.files(), File)
+        self.define(self.client.files(), File)
 
     @property
     def files(self):

@@ -87,7 +87,7 @@ class Client(base.Client):
 class Database(base.Node):
     def sync(self):
         self.update(self.client.database())
-        self.defines(self.client.collections(), Collection)
+        self.define(self.client.collections(), Collection)
 
     @property
     def collections(self):
@@ -96,7 +96,7 @@ class Database(base.Node):
 
 class Collection(base.Node):
     def sync(self):
-        self.defines(self.client.fields(self['name']), Field)
+        self.define(self.client.fields(self['name']), Field)
 
     @property
     def fields(self):
