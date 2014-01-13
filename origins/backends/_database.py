@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, absolute_import
+
 import re
 from ..dal import recordtuple
 from .. import logger
@@ -288,7 +290,8 @@ class Column(base.Node):
                 })
 
             self._foreign_keys_synced = True
-        return self.rels(type='RELATES').filter('type', 'foreignkey').nodes()
+        return self.rels(type='RELATES', outgoing=True)\
+            .filter('type', 'foreignkey').nodes()
 
     def count(self, distinct=True):
         """Returns the count of the values in this column. By default this
