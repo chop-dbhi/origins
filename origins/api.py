@@ -36,6 +36,7 @@ BACKENDS = {
     'redcap-api': 'origins.backends.redcap_api',
     'redcap-csv': 'origins.backends.redcap_csv',
     'noop': 'origins.backends.noop',
+    'solvebio': 'origins.backends.solvebio',
 }
 
 BACKEND_ALIASES = {
