@@ -187,24 +187,24 @@ class Client(_database.Client):
 class Database(_database.Database):
     def sync(self):
         self.update(self.client.database())
-        self._contains(self.client.tables(), Table)
-        self._contains(self.client.views(), View)
+        self.defines(self.client.tables(), Table)
+        self.defines(self.client.views(), View)
 
     @property
     def views(self):
-        return self._containers('view')
+        return self.definitions('view')
 
 
 class Table(_database.Table):
     def sync(self):
-        self._contains(self.client.table_columns(self['name']),
-                       _database.Column)
+        self.defines(self.client.table_columns(self['name']),
+                     _database.Column)
 
 
 class View(_database.Table):
     def sync(self):
-        self._contains(self.client.view_columns(self['name']),
-                       _database.Column)
+        self.defines(self.client.view_columns(self['name']),
+                     _database.Column)
 
 
 # Export for API

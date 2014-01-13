@@ -51,15 +51,14 @@ class Node(graphlib.Node):
     def __bytes__(self):
         return bytes(self.name)
 
-    # TODO rename these methods
-    def _contains(self, iterable, klass, type='DEFINES', relprops=None):
+    def defines(self, iterable, klass, type='DEFINES', relprops=None):
         if relprops is None:
             relprops = {'container': klass.__name__.lower()}
         for props in iterable:
             instance = klass(props, parent=self, client=self.client)
             self.relate(instance, type, relprops)
 
-    def _containers(self, container):
+    def definitions(self, container):
         return self.rels(type='DEFINES', outgoing=True)\
             .filter('container', container).nodes()
 

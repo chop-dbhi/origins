@@ -173,11 +173,11 @@ class Client(_database.Client):
 class Database(base.Node):
     def sync(self):
         self.update(self.client.database())
-        self._contains(self.client.schemas(), Schema)
+        self.defines(self.client.schemas(), Schema)
 
     @property
     def schemas(self):
-        return self._containers('schema')
+        return self.definitions('schema')
 
     @property
     def tables(self):
@@ -188,17 +188,17 @@ class Database(base.Node):
 
 class Schema(base.Node):
     def sync(self):
-        self._contains(self.client.tables(self['name']), Table)
+        self.defines(self.client.tables(self['name']), Table)
 
     @property
     def tables(self):
-        return self._containers('table')
+        return self.definitions('table')
 
 
 class Table(_database.Table):
     def sync(self):
-        self._contains(self.client.columns(self.parent['name'], self['name']),
-                       Column)
+        self.defines(self.client.columns(self.parent['name'], self['name']),
+                     Column)
 
 
 class Column(_database.Column):

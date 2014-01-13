@@ -55,11 +55,11 @@ class Client(_file.Client):
 class File(base.Node):
     def sync(self):
         self.update(self.client.file())
-        self._contains(self.client.fields(), Field)
+        self.defines(self.client.fields(), Field)
 
     @property
     def fields(self):
-        return self._containers('field')
+        return self.definitions('field')
 
 
 class Field(base.Node):

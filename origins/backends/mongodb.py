@@ -87,20 +87,20 @@ class Client(base.Client):
 class Database(base.Node):
     def sync(self):
         self.update(self.client.database())
-        self._contains(self.client.collections(), Collection)
+        self.defines(self.client.collections(), Collection)
 
     @property
     def collections(self):
-        return self._containers('collection')
+        return self.definitions('collection')
 
 
 class Collection(base.Node):
     def sync(self):
-        self._contains(self.client.fields(self['name']), Field)
+        self.defines(self.client.fields(self['name']), Field)
 
     @property
     def fields(self):
-        return self._containers('field')
+        return self.definitions('field')
 
 
 class Field(base.Node):

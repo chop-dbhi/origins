@@ -59,11 +59,11 @@ class Client(base.Client):
 class Directory(base.Node):
     def sync(self):
         self.update(self.client.directory())
-        self._contains(self.client.files(), File)
+        self.defines(self.client.files(), File)
 
     @property
     def files(self):
-        return self._containers('file')
+        return self.definitions('file')
 
 
 class File(_file.File):

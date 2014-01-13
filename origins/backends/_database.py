@@ -232,20 +232,20 @@ class Client(base.Client):
 class Database(base.Node):
     def sync(self):
         self.update(self.client.database())
-        self._contains(self.client.tables(), Table)
+        self.defines(self.client.tables(), Table)
 
     @property
     def tables(self):
-        return self._containers('table')
+        return self.definitions('table')
 
 
 class Table(base.Node):
     def sync(self):
-        self._contains(self.client.columns(self['name']), Column)
+        self.defines(self.client.columns(self['name']), Column)
 
     @property
     def columns(self):
-        return self._containers('column')
+        return self.definitions('column')
 
     def count(self, names=None, distinct=False):
         """Returns a count of all records. If `distinct` is true, duplicate

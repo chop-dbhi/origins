@@ -80,11 +80,11 @@ class Client(_file.Client):
 class File(_file.File):
     def sync(self):
         super(File, self).sync()
-        self._contains(self.client.columns(), Column)
+        self.defines(self.client.columns(), Column)
 
     @property
     def columns(self):
-        return self._containers('column')
+        return self.definitions('column')
 
 
 class Column(base.Node):

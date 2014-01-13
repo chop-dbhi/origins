@@ -8,20 +8,20 @@ from . import base
 class Project(base.Node):
     def sync(self):
         self.update(self.client.project())
-        self._contains(self.client.forms(), Form)
+        self.defines(self.client.forms(), Form)
 
     @property
     def forms(self):
-        return self._containers('form')
+        return self.definitions('form')
 
 
 class Form(base.Node):
     def sync(self):
-        self._contains(self.client.sections(self['name']), Section)
+        self.defines(self.client.sections(self['name']), Section)
 
     @property
     def sections(self):
-        return self._containers('section')
+        return self.definitions('section')
 
     @property
     def fields(self):
@@ -34,11 +34,11 @@ class Form(base.Node):
 class Section(base.Node):
     def sync(self):
         form_name = self.parent['name']
-        self._contains(self.client.fields(form_name, self['name']), Field)
+        self.defines(self.client.fields(form_name, self['name']), Field)
 
     @property
     def fields(self):
-        return self._containers('field')
+        return self.definitions('field')
 
 
 class Field(base.Node):

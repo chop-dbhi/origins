@@ -56,20 +56,20 @@ class Client(_file.Client):
 class Workbook(_file.File):
     def sync(self):
         super(Workbook, self).sync()
-        self._contains(self.client.sheets(), Sheet)
+        self.defines(self.client.sheets(), Sheet)
 
     @property
     def sheets(self):
-        return self._containers('sheet')
+        return self.definitions('sheet')
 
 
 class Sheet(base.Node):
     def sync(self):
-        self._contains(self.client.columns(self['name']), Column)
+        self.defines(self.client.columns(self['name']), Column)
 
     @property
     def columns(self):
-        return self._containers('column')
+        return self.definitions('column')
 
 
 class Column(base.Node):
