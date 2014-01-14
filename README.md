@@ -195,6 +195,25 @@ _Note: Sheets are assumed to be fixed width based on the first row._
 - `forms`
 - `fields`
 
+
+### Harvest API
+
+- `harvest` - depends on [requests](https://pypi.python.org/pypi/requests)
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Harvest%2520Example.ipynb)
+
+**Options**
+
+- `url` - Harvest API URL
+- `token` - Harvest API token if authentication is required
+
+**Hierarchy**
+
+- `application`
+- `categories`
+- `concepts`
+- `fields`
+
+
 ## Exporting
 
 The data parsed and structured by Origins can be exported to various backends available in the `origins.io` package. The internal [graph](#graph-model) structure makes it very natural to support exporting to graph databases or hierarchical-based structures like JSON or XML.
