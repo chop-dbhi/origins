@@ -284,13 +284,13 @@ class Column(base.Node):
                 # Get referenced node
                 node = root.tables[attrs['table']].columns[attrs['column']]
 
-                self.relate(node, 'RELATES', {
+                self.relate(node, 'REFERENCES', {
                     'name': attrs['name'],
                     'type': 'foreignkey',
                 })
 
             self._foreign_keys_synced = True
-        return self.rels(type='RELATES', outgoing=True)\
+        return self.rels(type='REFERENCES', outgoing=True)\
             .filter('type', 'foreignkey').nodes()
 
     def count(self, distinct=True):
