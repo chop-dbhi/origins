@@ -15,7 +15,7 @@ class Client(_file.Client):
         # whether the sample
         with open(self.file_path, 'rU') as f:
             sniffer = csv.Sniffer()
-            sample = '\n'.join(l for l in f.readlines(1024))
+            sample = '\n'.join([l for l in f.readlines(sniff)])
             f.seek(0)
 
             if not dialect:
