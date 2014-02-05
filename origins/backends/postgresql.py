@@ -48,8 +48,8 @@ class Client(_database.Client):
         self.connection = psycopg2.connect(database=self.name,
                                            host=self.host,
                                            port=self.port,
-                                           user=user,
-                                           password=password)
+                                           user=user or None,
+                                           password=password or None)
 
     def version(self):
         return self.fetchvalue('show server_version')
