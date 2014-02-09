@@ -92,11 +92,13 @@ class Client(_file.Client):
         for row in reader:
             # Filter by form_name
             if row['form_name'] != form_name:
+                order += 1
                 continue
 
             # Filter by section_name
             current_section = row['section_header'] or current_section
             if current_section != section_name:
+                order += 1
                 continue
 
             identifier = row['identifier'].lower() == 'y' and True or False
