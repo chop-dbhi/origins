@@ -76,11 +76,13 @@ class Client(base.Client):
         for field in self._project.metadata:
             # Filter by form_name
             if field['form_name'] != form_name:
+                order += 1
                 continue
 
             # Filter by section_name
             current_section = field['section_header'] or current_section
             if current_section != section_name:
+                order += 1
                 continue
 
             identifier = field['identifier'].lower() == 'y' and True or False
