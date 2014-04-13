@@ -109,7 +109,7 @@ class Client(base.Client):
         else:
             columns = '*'
         orderby = 'ORDER BY ' + ', '.join([' '.join([self.qn(c), d])
-                  for c, d in sort]) if sort else ''
+                                          for c, d in sort]) if sort else ''
 
         table = self.qn(table_name)
         query = self._select_query(select, columns, table, orderby)

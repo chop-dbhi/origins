@@ -1,8 +1,8 @@
-from __future__ import division, absolute_import
+from __future__ import absolute_import, unicode_literals
 
+from origins._csv import UnicodeDictReader
 from . import _file, _redcap
 
-import csv
 
 METADATA_HEADER = ('field_name', 'form_name', 'section_header', 'field_type',
                    'field_label', 'choices', 'field_note',
@@ -26,7 +26,7 @@ class Client(_file.Client):
 
     @property
     def reader(self):
-        return csv.DictReader(self.file_handler, fieldnames=METADATA_HEADER)
+        return UnicodeDictReader(self.file_handler, fieldnames=METADATA_HEADER)
 
     def project(self):
         return {

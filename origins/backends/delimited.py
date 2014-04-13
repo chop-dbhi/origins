@@ -1,8 +1,9 @@
 # unicode_literals not imported because it conflicts with the csv module
 from __future__ import division, absolute_import
-from . import base, _file
 
 import csv
+from .._csv import UnicodeDictReader, UnicodeCsvReader
+from . import base, _file
 
 
 class Client(_file.Client):
@@ -28,10 +29,11 @@ class Client(_file.Client):
             # Extract header names and fallback to positional values
             if not header:
                 if has_header:
-                    header = csv.DictReader(f, dialect=dialect,
-                                            delimiter=delimiter).fieldnames
+                    header = UnicodeDictReader(f, dialect=dialect,
+                                               delimiter=delimiter).fieldnames
                 else:
-                    r = csv.reader(f, dialect=dialect, delimiter=delimiter)
+                    r = UnicodeCsvReader(f, dialect=dialect,
+                                         delimiter=delimiter)
                     header = range(len(next(r)))
 
             self.header = header
