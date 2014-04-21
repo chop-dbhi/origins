@@ -1,10 +1,8 @@
 from __future__ import unicode_literals, absolute_import
 
-import os
 import unittest
 from importlib import import_module
-
-TEST_DATA_DIR = os.path.join(os.path.dirname(__file__), '../data')
+from .. import TEST_DATA_DIR  # noqa
 
 
 class BackendTestCase(unittest.TestCase):
