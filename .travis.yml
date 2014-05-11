@@ -12,7 +12,7 @@ services:
     - mongodb
 
 before_install:
-    - sh tests/start-neo4j-2.0.0.sh
+    - sh tests/start-neo4j.sh
 
 install:
     - pip install -q coveralls --use-mirrors

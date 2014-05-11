@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DIR="neo4j-community-2.0.0"
+DIR="neo4j-community-2.0.3"
 FILE="$DIR-unix.tar.gz"
 
 wget "http://dist.neo4j.org/$FILE"
