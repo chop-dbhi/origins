@@ -2,7 +2,7 @@ from __future__ import unicode_literals, absolute_import
 
 import unittest
 from importlib import import_module
-from .. import TEST_DATA_DIR  # noqa
+from tests import TEST_DATA_DIR  # noqa
 
 
 class BackendTestCase(unittest.TestCase):
