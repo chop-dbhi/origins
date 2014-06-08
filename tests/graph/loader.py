@@ -27,3 +27,9 @@ class GraphTestCase(unittest.TestCase):
 
         self.assertEqual(out['nodes']['added'], 76)
         self.assertEqual(out['relationships']['added'], 86)
+
+    def test_delete_resource(self):
+        graph.create_resource(self.data)
+        out = graph.delete_resource(self.data)
+        self.assertEqual(out['nodes'], 76)
+        self.assertEqual(out['relationships'], 86)

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals, absolute_import
 
 import time
+from hashlib import sha1
 from . import neo4j, cypher, utils
 
 try:
@@ -78,33 +79,13 @@ def _prepare_rel_params(oid, rel, short_sha1):
     }
 
 
-def get_resource_nodes(data, tx=None):
-    if tx is None:
-        tx = neo4j
-
-    if isinstance(data, str):
-        sha1 = data
-    else:
-        sha1 = data['resource']
-
-    short_sha1 = sha1[:SHORT_SHA1_LEN]
+def _get_resource_nodes(short_sha1, tx=None):
     query = RESOURCE_GRAPH_NODES.format(sha1=short_sha1)
-
     return tx.send(query)
 
 
-def get_resource_rels(data, tx=None):
-    if tx is None:
-        tx = neo4j
-
-    if isinstance(data, str):
-        sha1 = data
-    else:
-        sha1 = data['resource']
-
-    short_sha1 = sha1[:SHORT_SHA1_LEN]
+def _get_resource_rels(short_sha1, tx=None):
     query = RESOURCE_GRAPH_RELS.format(sha1=short_sha1)
-
     return tx.send(query)
 
 
@@ -113,7 +94,7 @@ def create_resource(data):
     t0 = time.time()
     statements = []
 
-    short_sha1 = data['resource'][:SHORT_SHA1_LEN]
+    short_sha1 = sha1(data['resource']).hexdigest()[:SHORT_SHA1_LEN]
 
     for oid, node in data['nodes'].items():
         params = _prepare_node_params(oid, node, short_sha1)
@@ -139,12 +120,11 @@ def delete_resource(data, tx=None):
     if tx is None:
         tx = neo4j
 
-    if isinstance(data, str):
-        sha1 = data
+    if isinstance(data, dict):
+        short_sha1 = sha1(data['resource']).hexdigest()[:SHORT_SHA1_LEN]
     else:
-        sha1 = data['resource']
+        short_sha1 = data
 
-    short_sha1 = sha1[:SHORT_SHA1_LEN]
     query = DELETE_RESOURCE_GRAPH.format(sha1=short_sha1)
 
     nodes, rels = tx.send(query)[0]
@@ -178,12 +158,12 @@ def sync_resource(data, add=True, remove=True, update=True):
 
     statements = []
 
-    short_sha1 = data['resource'][:SHORT_SHA1_LEN]
+    short_sha1 = sha1(data['resource']).hexdigest()[:SHORT_SHA1_LEN]
 
     with neo4j.Transaction() as tx:
 
         # Existing nodes in the graph
-        for nid, old in get_resource_nodes(short_sha1, tx):
+        for nid, old in _get_resource_nodes(short_sha1, tx):
             oid = old['origins:id']
 
             if oid not in nodes:
@@ -202,7 +182,7 @@ def sync_resource(data, add=True, remove=True, update=True):
                 nodes.add(oid)
 
         # Existing relationships in the graph
-        for rid, old in get_resource_rels(short_sha1, tx):
+        for rid, old in _get_resource_rels(short_sha1, tx):
             oid = old['origins:id']
 
             if oid not in rels:
