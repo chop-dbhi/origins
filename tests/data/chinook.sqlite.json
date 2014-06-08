@@ -1,0 +1,1447 @@
+{
+    "relationships": {
+        "8531c94e63dd7cc7f04b531d298fc85977974ab3:descends": {
+            "start": "8531c94e63dd7cc7f04b531d298fc85977974ab3", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "bc0196ac3353f491c33630f718c222a584b59235:descends": {
+            "start": "bc0196ac3353f491c33630f718c222a584b59235", 
+            "end": "1ec3edcc45f396dbf9d2bbf85410bcc727364a7a", 
+            "type": "descends"
+        }, 
+        "69094adc2928635d9e444f5204757b4033db276b:descends": {
+            "start": "69094adc2928635d9e444f5204757b4033db276b", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052:descends": {
+            "start": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "8bbe124a56f80322df27a50f5444e77174fc728c:descends": {
+            "start": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "f66a88d778585ef96735695bc271ae3e5be925f3:descends": {
+            "start": "f66a88d778585ef96735695bc271ae3e5be925f3", 
+            "end": "fde49d690f4d7f472d3ec21641efe21eaf0959dd", 
+            "type": "descends"
+        }, 
+        "a5cc5c1639cb0fae8417aefdae619a5b2804ca4a:descends": {
+            "start": "a5cc5c1639cb0fae8417aefdae619a5b2804ca4a", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "2d7212eb1dc7fb2602b3414c91a9fb9302cbc3a7:descends": {
+            "start": "2d7212eb1dc7fb2602b3414c91a9fb9302cbc3a7", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "b327d419164e28e1f99ec88574982c9ffac17706:descends": {
+            "start": "b327d419164e28e1f99ec88574982c9ffac17706", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "a3a86e3d051e3b3dc8dfe0add5dc0ba857b74bd3:descends": {
+            "start": "a3a86e3d051e3b3dc8dfe0add5dc0ba857b74bd3", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "3181b264e8148ddcf38c15f49a68778201f01990:descends": {
+            "start": "3181b264e8148ddcf38c15f49a68778201f01990", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "cecad61f6d92903ff9babe26b0f82ce23b33db25:descends": {
+            "start": "cecad61f6d92903ff9babe26b0f82ce23b33db25", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "e76256048a3a079919424610379596a6432187b1:descends": {
+            "start": "e76256048a3a079919424610379596a6432187b1", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "3b12e2bbe1aa85fb0e8d6bf70fa3dc02ae98e4a2:descends": {
+            "start": "3b12e2bbe1aa85fb0e8d6bf70fa3dc02ae98e4a2", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "cf3486c47695f941342a5cd96fcf021169de6a55:descends": {
+            "start": "cf3486c47695f941342a5cd96fcf021169de6a55", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "837b7d64a5d858e7c6e13b5832517b7edd4721af:descends": {
+            "start": "837b7d64a5d858e7c6e13b5832517b7edd4721af", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "388b2f8d4415f976e57fca0b5723a0855817ec8a:descends": {
+            "start": "388b2f8d4415f976e57fca0b5723a0855817ec8a", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "26cc5ac5470f4d3443b9f7fcf38f76a942d80438:descends": {
+            "start": "26cc5ac5470f4d3443b9f7fcf38f76a942d80438", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "702c252ce0d2abd027d36d5ccb3aa8ed92ca6ce9:descends": {
+            "start": "702c252ce0d2abd027d36d5ccb3aa8ed92ca6ce9", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "01e89868540f91aaf99ee4033de020018d59c76b:descends": {
+            "start": "01e89868540f91aaf99ee4033de020018d59c76b", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "90df5bb8a5178dbca480dd72b627969485820eb6:descends": {
+            "start": "90df5bb8a5178dbca480dd72b627969485820eb6", 
+            "end": "cf3486c47695f941342a5cd96fcf021169de6a55", 
+            "type": "descends"
+        }, 
+        "a5cc5c1639cb0fae8417aefdae619a5b2804ca4a:references": {
+            "start": "a5cc5c1639cb0fae8417aefdae619a5b2804ca4a", 
+            "end": "27dc45d17e3a9e101b4854fd418f8771429cfa31", 
+            "type": "references"
+        }, 
+        "854c50b3bd0c0e7317f5a99f64c77b402e287da2:descends": {
+            "start": "854c50b3bd0c0e7317f5a99f64c77b402e287da2", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "bbbff5374622fc6953541ad913522f04fda1db6a:descends": {
+            "start": "bbbff5374622fc6953541ad913522f04fda1db6a", 
+            "end": "e76256048a3a079919424610379596a6432187b1", 
+            "type": "descends"
+        }, 
+        "52a7713e3363b01f8dff0c58fd4227e7194a54c6:descends": {
+            "start": "52a7713e3363b01f8dff0c58fd4227e7194a54c6", 
+            "end": "fde49d690f4d7f472d3ec21641efe21eaf0959dd", 
+            "type": "descends"
+        }, 
+        "433c631eb8e9a0a6833facff950cf97162820f0b:descends": {
+            "start": "433c631eb8e9a0a6833facff950cf97162820f0b", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "81fbaa1cb3f2f9456785a76d7c16a38ef294f586:references": {
+            "start": "81fbaa1cb3f2f9456785a76d7c16a38ef294f586", 
+            "end": "0b4bed638b59b2fc5cb925f567d02584365734a6", 
+            "type": "references"
+        }, 
+        "b32ad905d88e717cbdfef04e5773fe78ad9628b3:descends": {
+            "start": "b32ad905d88e717cbdfef04e5773fe78ad9628b3", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "f42da7c9f155ff2bc953462aae3351c1f7e18f93:descends": {
+            "start": "f42da7c9f155ff2bc953462aae3351c1f7e18f93", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "8ff038f723143ac8a1d706fb95c3f20ca015aac1:descends": {
+            "start": "8ff038f723143ac8a1d706fb95c3f20ca015aac1", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "388b2f8d4415f976e57fca0b5723a0855817ec8a:references": {
+            "start": "388b2f8d4415f976e57fca0b5723a0855817ec8a", 
+            "end": "c7f3669404ee18419bc65b0edcc054cf09698e7c", 
+            "type": "references"
+        }, 
+        "23a5b6f00d79576bd8290645cc7abc428eef307c:descends": {
+            "start": "23a5b6f00d79576bd8290645cc7abc428eef307c", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "e96f566d05f9b3a73f42deb70877e1f12812a7c3:descends": {
+            "start": "e96f566d05f9b3a73f42deb70877e1f12812a7c3", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "8e96892c83e580dc4e84cc0e5c7850a165f2d7bb:descends": {
+            "start": "8e96892c83e580dc4e84cc0e5c7850a165f2d7bb", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "27dc45d17e3a9e101b4854fd418f8771429cfa31:descends": {
+            "start": "27dc45d17e3a9e101b4854fd418f8771429cfa31", 
+            "end": "acaaddd138eb4dd5c9cfb33e0dc50db687e75857", 
+            "type": "descends"
+        }, 
+        "82ea1c49e421e422439c1048a11f5c2f4e6150b0:descends": {
+            "start": "82ea1c49e421e422439c1048a11f5c2f4e6150b0", 
+            "end": "acaaddd138eb4dd5c9cfb33e0dc50db687e75857", 
+            "type": "descends"
+        }, 
+        "5c7b6612cc3750fd185cfcafc0c0ea7b6f5e5545:descends": {
+            "start": "5c7b6612cc3750fd185cfcafc0c0ea7b6f5e5545", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "1fb107bd5fdf402066a5a1dbf709ae099adee3cd:descends": {
+            "start": "1fb107bd5fdf402066a5a1dbf709ae099adee3cd", 
+            "end": "f8c19ccdf24696cc6cb0b6500e10fd4a26d1dacb", 
+            "type": "descends"
+        }, 
+        "0b4bed638b59b2fc5cb925f567d02584365734a6:descends": {
+            "start": "0b4bed638b59b2fc5cb925f567d02584365734a6", 
+            "end": "e76256048a3a079919424610379596a6432187b1", 
+            "type": "descends"
+        }, 
+        "691cd8364a530cf976d79269c425093532417d37:descends": {
+            "start": "691cd8364a530cf976d79269c425093532417d37", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "bc0196ac3353f491c33630f718c222a584b59235:references": {
+            "start": "bc0196ac3353f491c33630f718c222a584b59235", 
+            "end": "a3a86e3d051e3b3dc8dfe0add5dc0ba857b74bd3", 
+            "type": "references"
+        }, 
+        "d25e7d661bc04e8c65af82e0e0c03e8ecaa0dc7e:descends": {
+            "start": "d25e7d661bc04e8c65af82e0e0c03e8ecaa0dc7e", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "00de100a855d7655a00a1e5e7c80b067a634c87c:descends": {
+            "start": "00de100a855d7655a00a1e5e7c80b067a634c87c", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "e2a921470329b16fd510a015b6a789424b18a341:references": {
+            "start": "e2a921470329b16fd510a015b6a789424b18a341", 
+            "end": "a3a86e3d051e3b3dc8dfe0add5dc0ba857b74bd3", 
+            "type": "references"
+        }, 
+        "2f0c33229568aac1e65a926925fde41ef29e0a29:descends": {
+            "start": "2f0c33229568aac1e65a926925fde41ef29e0a29", 
+            "end": "cf3486c47695f941342a5cd96fcf021169de6a55", 
+            "type": "descends"
+        }, 
+        "1d7d43f722107e9ac9758c2f67395d629beecec7:descends": {
+            "start": "1d7d43f722107e9ac9758c2f67395d629beecec7", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "f520e00228667cd1299f4ae04166a0d88b905e7a:descends": {
+            "start": "f520e00228667cd1299f4ae04166a0d88b905e7a", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "1ec3edcc45f396dbf9d2bbf85410bcc727364a7a:descends": {
+            "start": "1ec3edcc45f396dbf9d2bbf85410bcc727364a7a", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "4444891123c76d7954ca0689d186db734995c4e7:descends": {
+            "start": "4444891123c76d7954ca0689d186db734995c4e7", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "3187f743ce4f0b09741be7045d115b180169e24d:descends": {
+            "start": "3187f743ce4f0b09741be7045d115b180169e24d", 
+            "end": "854c50b3bd0c0e7317f5a99f64c77b402e287da2", 
+            "type": "descends"
+        }, 
+        "662866d67635a89f9b472f5c86b36b48f4a81182:descends": {
+            "start": "662866d67635a89f9b472f5c86b36b48f4a81182", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "acaaddd138eb4dd5c9cfb33e0dc50db687e75857:descends": {
+            "start": "acaaddd138eb4dd5c9cfb33e0dc50db687e75857", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "837b7d64a5d858e7c6e13b5832517b7edd4721af:references": {
+            "start": "837b7d64a5d858e7c6e13b5832517b7edd4721af", 
+            "end": "8e96892c83e580dc4e84cc0e5c7850a165f2d7bb", 
+            "type": "references"
+        }, 
+        "e7c76efff1cc7efa0c378d30e8235ebea0a5b871:descends": {
+            "start": "e7c76efff1cc7efa0c378d30e8235ebea0a5b871", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "c7f3669404ee18419bc65b0edcc054cf09698e7c:descends": {
+            "start": "c7f3669404ee18419bc65b0edcc054cf09698e7c", 
+            "end": "f8c19ccdf24696cc6cb0b6500e10fd4a26d1dacb", 
+            "type": "descends"
+        }, 
+        "e2a921470329b16fd510a015b6a789424b18a341:descends": {
+            "start": "e2a921470329b16fd510a015b6a789424b18a341", 
+            "end": "fde49d690f4d7f472d3ec21641efe21eaf0959dd", 
+            "type": "descends"
+        }, 
+        "137afb59436de270be65b70bbea20fb949cabac5:descends": {
+            "start": "137afb59436de270be65b70bbea20fb949cabac5", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "0988e3a3213e17a2529d8780ed26fe6c203bc7ce:descends": {
+            "start": "0988e3a3213e17a2529d8780ed26fe6c203bc7ce", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "e959574d9cf842234d2cd62c168f17b5d3f7cbf7:descends": {
+            "start": "e959574d9cf842234d2cd62c168f17b5d3f7cbf7", 
+            "end": "fde49d690f4d7f472d3ec21641efe21eaf0959dd", 
+            "type": "descends"
+        }, 
+        "fde49d690f4d7f472d3ec21641efe21eaf0959dd:descends": {
+            "start": "fde49d690f4d7f472d3ec21641efe21eaf0959dd", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "c0d8a0414591eb029284cbe2ed622cc90f4e93c2:descends": {
+            "start": "c0d8a0414591eb029284cbe2ed622cc90f4e93c2", 
+            "end": "1ec3edcc45f396dbf9d2bbf85410bcc727364a7a", 
+            "type": "descends"
+        }, 
+        "00de100a855d7655a00a1e5e7c80b067a634c87c:references": {
+            "start": "00de100a855d7655a00a1e5e7c80b067a634c87c", 
+            "end": "e2a657bfa1ee3357809d91e8165d711e3352c815", 
+            "type": "references"
+        }, 
+        "acee8d58098490baeb960fd1a8794bfc34ed6a6e:descends": {
+            "start": "acee8d58098490baeb960fd1a8794bfc34ed6a6e", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "1fb107bd5fdf402066a5a1dbf709ae099adee3cd:references": {
+            "start": "1fb107bd5fdf402066a5a1dbf709ae099adee3cd", 
+            "end": "2f0c33229568aac1e65a926925fde41ef29e0a29", 
+            "type": "references"
+        }, 
+        "87ca7e9c09b6a007c80759542a19aa8cb29f3c29:descends": {
+            "start": "87ca7e9c09b6a007c80759542a19aa8cb29f3c29", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "81fbaa1cb3f2f9456785a76d7c16a38ef294f586:descends": {
+            "start": "81fbaa1cb3f2f9456785a76d7c16a38ef294f586", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "6160b80e41a407491c409a4b0a984e8cea23c2bf:descends": {
+            "start": "6160b80e41a407491c409a4b0a984e8cea23c2bf", 
+            "end": "fde49d690f4d7f472d3ec21641efe21eaf0959dd", 
+            "type": "descends"
+        }, 
+        "19ea32578fcc631791c48a6f67596b1956c63f01:descends": {
+            "start": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "abbf8bf5f55efa5039c7485f68d8a113a51a0fcc:descends": {
+            "start": "abbf8bf5f55efa5039c7485f68d8a113a51a0fcc", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "80c8f09a3e4e9251be1a9a6db994d62021a2226f:references": {
+            "start": "80c8f09a3e4e9251be1a9a6db994d62021a2226f", 
+            "end": "e2a657bfa1ee3357809d91e8165d711e3352c815", 
+            "type": "references"
+        }, 
+        "f8c19ccdf24696cc6cb0b6500e10fd4a26d1dacb:descends": {
+            "start": "f8c19ccdf24696cc6cb0b6500e10fd4a26d1dacb", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "e959574d9cf842234d2cd62c168f17b5d3f7cbf7:references": {
+            "start": "e959574d9cf842234d2cd62c168f17b5d3f7cbf7", 
+            "end": "ba7dcf3d94b92ec630f345cfa1c13c48cef292c6", 
+            "type": "references"
+        }, 
+        "25949b7b0eaaa7d67d0c409d213264171090828e:descends": {
+            "start": "25949b7b0eaaa7d67d0c409d213264171090828e", 
+            "end": "19ea32578fcc631791c48a6f67596b1956c63f01", 
+            "type": "descends"
+        }, 
+        "4d598a220f9663d4e3749817f00ad2f879c3c3ac:descends": {
+            "start": "4d598a220f9663d4e3749817f00ad2f879c3c3ac", 
+            "end": "854c50b3bd0c0e7317f5a99f64c77b402e287da2", 
+            "type": "descends"
+        }, 
+        "f649dec68add8e05aee77a266f4b1cf45daf443c:descends": {
+            "start": "f649dec68add8e05aee77a266f4b1cf45daf443c", 
+            "end": "f8c19ccdf24696cc6cb0b6500e10fd4a26d1dacb", 
+            "type": "descends"
+        }, 
+        "aef67c0b9d267c2e98652f16081ee3660901e3b1:descends": {
+            "start": "aef67c0b9d267c2e98652f16081ee3660901e3b1", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "c0d8a0414591eb029284cbe2ed622cc90f4e93c2:references": {
+            "start": "c0d8a0414591eb029284cbe2ed622cc90f4e93c2", 
+            "end": "4d598a220f9663d4e3749817f00ad2f879c3c3ac", 
+            "type": "references"
+        }, 
+        "0e8e48b52e15b6269509535cb2ad401a0e9d8fa2:descends": {
+            "start": "0e8e48b52e15b6269509535cb2ad401a0e9d8fa2", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "80c8f09a3e4e9251be1a9a6db994d62021a2226f:descends": {
+            "start": "80c8f09a3e4e9251be1a9a6db994d62021a2226f", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "2346921acbbdd6120644bb50cd29ae3c5784b688:descends": {
+            "start": "2346921acbbdd6120644bb50cd29ae3c5784b688", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "e39cfe7e78a556e8e032e27479f8665507d6c66b:descends": {
+            "start": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "end": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172", 
+            "type": "descends"
+        }, 
+        "ba7dcf3d94b92ec630f345cfa1c13c48cef292c6:descends": {
+            "start": "ba7dcf3d94b92ec630f345cfa1c13c48cef292c6", 
+            "end": "8bbe124a56f80322df27a50f5444e77174fc728c", 
+            "type": "descends"
+        }, 
+        "e2a657bfa1ee3357809d91e8165d711e3352c815:descends": {
+            "start": "e2a657bfa1ee3357809d91e8165d711e3352c815", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "f98495d6039597a2622d84473e2c533eb05e79be:descends": {
+            "start": "f98495d6039597a2622d84473e2c533eb05e79be", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }, 
+        "1ea918586933c3b412ca35a263250af743130069:descends": {
+            "start": "1ea918586933c3b412ca35a263250af743130069", 
+            "end": "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052", 
+            "type": "descends"
+        }, 
+        "7b399e444f1c14541ea42fefd3a8e4fa4e15e076:descends": {
+            "start": "7b399e444f1c14541ea42fefd3a8e4fa4e15e076", 
+            "end": "e39cfe7e78a556e8e032e27479f8665507d6c66b", 
+            "type": "descends"
+        }
+    }, 
+    "nodes": {
+        "acee8d58098490baeb960fd1a8794bfc34ed6a6e": {
+            "properties": {
+                "default_value": null, 
+                "index": 2, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NVARCHAR(20)", 
+                "name": "LastName"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/LastName"
+        }, 
+        "137afb59436de270be65b70bbea20fb949cabac5": {
+            "properties": {
+                "default_value": null, 
+                "index": 2, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "DATETIME", 
+                "name": "InvoiceDate"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/InvoiceDate"
+        }, 
+        "69094adc2928635d9e444f5204757b4033db276b": {
+            "properties": {
+                "default_value": null, 
+                "index": 9, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(24)", 
+                "name": "Phone"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/Phone"
+        }, 
+        "19ea32578fcc631791c48a6f67596b1956c63f01": {
+            "properties": {
+                "name": "Track"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Track"
+        }, 
+        "8531c94e63dd7cc7f04b531d298fc85977974ab3": {
+            "properties": {
+                "default_value": null, 
+                "index": 8, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NUMERIC(10,2)", 
+                "name": "Total"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/Total"
+        }, 
+        "0b4bed638b59b2fc5cb925f567d02584365734a6": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "MediaTypeId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/MediaType/MediaTypeId"
+        }, 
+        "fde49d690f4d7f472d3ec21641efe21eaf0959dd": {
+            "properties": {
+                "name": "InvoiceLine"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/InvoiceLine"
+        }, 
+        "f98495d6039597a2622d84473e2c533eb05e79be": {
+            "properties": {
+                "default_value": null, 
+                "index": 2, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NVARCHAR(20)", 
+                "name": "FirstName"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/FirstName"
+        }, 
+        "2f0c33229568aac1e65a926925fde41ef29e0a29": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "ArtistId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Artist/ArtistId"
+        }, 
+        "388b2f8d4415f976e57fca0b5723a0855817ec8a": {
+            "properties": {
+                "default_value": null, 
+                "index": 2, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "INTEGER", 
+                "name": "AlbumId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/AlbumId"
+        }, 
+        "6160b80e41a407491c409a4b0a984e8cea23c2bf": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "InvoiceLineId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/InvoiceLine/InvoiceLineId"
+        }, 
+        "25949b7b0eaaa7d67d0c409d213264171090828e": {
+            "properties": {
+                "default_value": null, 
+                "index": 5, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(220)", 
+                "name": "Composer"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/Composer"
+        }, 
+        "f649dec68add8e05aee77a266f4b1cf45daf443c": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NVARCHAR(160)", 
+                "name": "Title"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Album/Title"
+        }, 
+        "f520e00228667cd1299f4ae04166a0d88b905e7a": {
+            "properties": {
+                "default_value": null, 
+                "index": 9, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "State"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/State"
+        }, 
+        "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172": {
+            "properties": {
+                "path": "/Users/ruthb/Code/cbmi/origins/tests/data/chinook.sqlite", 
+                "version": 32, 
+                "name": "chinook.sqlite", 
+                "size": 1067008
+            }, 
+            "types": [
+                "Database", 
+                "RDBMS", 
+                "SQLite"
+            ], 
+            "label": "chinook.sqlite"
+        }, 
+        "2d7212eb1dc7fb2602b3414c91a9fb9302cbc3a7": {
+            "properties": {
+                "default_value": null, 
+                "index": 10, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(24)", 
+                "name": "Fax"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/Fax"
+        }, 
+        "e2a657bfa1ee3357809d91e8165d711e3352c815": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "EmployeeId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/EmployeeId"
+        }, 
+        "854c50b3bd0c0e7317f5a99f64c77b402e287da2": {
+            "properties": {
+                "name": "Playlist"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Playlist"
+        }, 
+        "e7c76efff1cc7efa0c378d30e8235ebea0a5b871": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NVARCHAR(20)", 
+                "name": "LastName"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/LastName"
+        }, 
+        "4d598a220f9663d4e3749817f00ad2f879c3c3ac": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "PlaylistId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Playlist/PlaylistId"
+        }, 
+        "87ca7e9c09b6a007c80759542a19aa8cb29f3c29": {
+            "properties": {
+                "default_value": null, 
+                "index": 6, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "DATETIME", 
+                "name": "HireDate"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/HireDate"
+        }, 
+        "702c252ce0d2abd027d36d5ccb3aa8ed92ca6ce9": {
+            "properties": {
+                "default_value": null, 
+                "index": 3, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(70)", 
+                "name": "BillingAddress"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/BillingAddress"
+        }, 
+        "00de100a855d7655a00a1e5e7c80b067a634c87c": {
+            "properties": {
+                "default_value": null, 
+                "index": 4, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "INTEGER", 
+                "name": "ReportsTo"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/ReportsTo"
+        }, 
+        "837b7d64a5d858e7c6e13b5832517b7edd4721af": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "CustomerId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/CustomerId"
+        }, 
+        "abbf8bf5f55efa5039c7485f68d8a113a51a0fcc": {
+            "properties": {
+                "default_value": null, 
+                "index": 5, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "BillingState"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/BillingState"
+        }, 
+        "8ff038f723143ac8a1d706fb95c3f20ca015aac1": {
+            "properties": {
+                "default_value": null, 
+                "index": 11, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NVARCHAR(60)", 
+                "name": "Email"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/Email"
+        }, 
+        "1ec3edcc45f396dbf9d2bbf85410bcc727364a7a": {
+            "properties": {
+                "name": "PlaylistTrack"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/PlaylistTrack"
+        }, 
+        "bbbff5374622fc6953541ad913522f04fda1db6a": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(120)", 
+                "name": "Name"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/MediaType/Name"
+        }, 
+        "3181b264e8148ddcf38c15f49a68778201f01990": {
+            "properties": {
+                "default_value": null, 
+                "index": 7, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "INTEGER", 
+                "name": "Bytes"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/Bytes"
+        }, 
+        "01e89868540f91aaf99ee4033de020018d59c76b": {
+            "properties": {
+                "default_value": null, 
+                "index": 6, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "BillingCountry"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/BillingCountry"
+        }, 
+        "b327d419164e28e1f99ec88574982c9ffac17706": {
+            "properties": {
+                "default_value": null, 
+                "index": 5, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "DATETIME", 
+                "name": "BirthDate"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/BirthDate"
+        }, 
+        "e2a921470329b16fd510a015b6a789424b18a341": {
+            "properties": {
+                "default_value": null, 
+                "index": 2, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "TrackId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/InvoiceLine/TrackId"
+        }, 
+        "e39cfe7e78a556e8e032e27479f8665507d6c66b": {
+            "properties": {
+                "name": "Employee"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Employee"
+        }, 
+        "26cc5ac5470f4d3443b9f7fcf38f76a942d80438": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NVARCHAR(200)", 
+                "name": "Name"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/Name"
+        }, 
+        "27dc45d17e3a9e101b4854fd418f8771429cfa31": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "GenreId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Genre/GenreId"
+        }, 
+        "662866d67635a89f9b472f5c86b36b48f4a81182": {
+            "properties": {
+                "default_value": null, 
+                "index": 3, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(30)", 
+                "name": "Title"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/Title"
+        }, 
+        "691cd8364a530cf976d79269c425093532417d37": {
+            "properties": {
+                "default_value": null, 
+                "index": 3, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(80)", 
+                "name": "Company"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/Company"
+        }, 
+        "1ea918586933c3b412ca35a263250af743130069": {
+            "properties": {
+                "default_value": null, 
+                "index": 5, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "City"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/City"
+        }, 
+        "80c8f09a3e4e9251be1a9a6db994d62021a2226f": {
+            "properties": {
+                "default_value": null, 
+                "index": 12, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "INTEGER", 
+                "name": "SupportRepId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/SupportRepId"
+        }, 
+        "a3a86e3d051e3b3dc8dfe0add5dc0ba857b74bd3": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "TrackId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/TrackId"
+        }, 
+        "c0d8a0414591eb029284cbe2ed622cc90f4e93c2": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "PlaylistId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/PlaylistTrack/PlaylistId"
+        }, 
+        "52a7713e3363b01f8dff0c58fd4227e7194a54c6": {
+            "properties": {
+                "default_value": null, 
+                "index": 3, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NUMERIC(10,2)", 
+                "name": "UnitPrice"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/InvoiceLine/UnitPrice"
+        }, 
+        "e76256048a3a079919424610379596a6432187b1": {
+            "properties": {
+                "name": "MediaType"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/MediaType"
+        }, 
+        "a5cc5c1639cb0fae8417aefdae619a5b2804ca4a": {
+            "properties": {
+                "default_value": null, 
+                "index": 4, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "INTEGER", 
+                "name": "GenreId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/GenreId"
+        }, 
+        "f8c19ccdf24696cc6cb0b6500e10fd4a26d1dacb": {
+            "properties": {
+                "name": "Album"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Album"
+        }, 
+        "0e8e48b52e15b6269509535cb2ad401a0e9d8fa2": {
+            "properties": {
+                "default_value": null, 
+                "index": 7, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(70)", 
+                "name": "Address"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/Address"
+        }, 
+        "81fbaa1cb3f2f9456785a76d7c16a38ef294f586": {
+            "properties": {
+                "default_value": null, 
+                "index": 3, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "MediaTypeId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/MediaTypeId"
+        }, 
+        "ba7dcf3d94b92ec630f345cfa1c13c48cef292c6": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "InvoiceId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/InvoiceId"
+        }, 
+        "82ea1c49e421e422439c1048a11f5c2f4e6150b0": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(120)", 
+                "name": "Name"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Genre/Name"
+        }, 
+        "f42da7c9f155ff2bc953462aae3351c1f7e18f93": {
+            "properties": {
+                "default_value": null, 
+                "index": 4, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "BillingCity"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/BillingCity"
+        }, 
+        "acaaddd138eb4dd5c9cfb33e0dc50db687e75857": {
+            "properties": {
+                "name": "Genre"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Genre"
+        }, 
+        "cf3486c47695f941342a5cd96fcf021169de6a55": {
+            "properties": {
+                "name": "Artist"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Artist"
+        }, 
+        "2346921acbbdd6120644bb50cd29ae3c5784b688": {
+            "properties": {
+                "default_value": null, 
+                "index": 10, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "Country"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/Country"
+        }, 
+        "1d7d43f722107e9ac9758c2f67395d629beecec7": {
+            "properties": {
+                "default_value": null, 
+                "index": 7, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "Country"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/Country"
+        }, 
+        "cecad61f6d92903ff9babe26b0f82ce23b33db25": {
+            "properties": {
+                "default_value": null, 
+                "index": 6, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "State"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/State"
+        }, 
+        "5c7b6612cc3750fd185cfcafc0c0ea7b6f5e5545": {
+            "properties": {
+                "default_value": null, 
+                "index": 11, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(10)", 
+                "name": "PostalCode"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/PostalCode"
+        }, 
+        "8bbe124a56f80322df27a50f5444e77174fc728c": {
+            "properties": {
+                "name": "Invoice"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Invoice"
+        }, 
+        "4444891123c76d7954ca0689d186db734995c4e7": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NVARCHAR(40)", 
+                "name": "FirstName"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/FirstName"
+        }, 
+        "3187f743ce4f0b09741be7045d115b180169e24d": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(120)", 
+                "name": "Name"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Playlist/Name"
+        }, 
+        "7b399e444f1c14541ea42fefd3a8e4fa4e15e076": {
+            "properties": {
+                "default_value": null, 
+                "index": 14, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(60)", 
+                "name": "Email"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/Email"
+        }, 
+        "e96f566d05f9b3a73f42deb70877e1f12812a7c3": {
+            "properties": {
+                "default_value": null, 
+                "index": 6, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "Milliseconds"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/Milliseconds"
+        }, 
+        "bc0196ac3353f491c33630f718c222a584b59235": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "TrackId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/PlaylistTrack/TrackId"
+        }, 
+        "d25e7d661bc04e8c65af82e0e0c03e8ecaa0dc7e": {
+            "properties": {
+                "default_value": null, 
+                "index": 7, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(10)", 
+                "name": "BillingPostalCode"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Invoice/BillingPostalCode"
+        }, 
+        "b32ad905d88e717cbdfef04e5773fe78ad9628b3": {
+            "properties": {
+                "default_value": null, 
+                "index": 8, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(10)", 
+                "name": "PostalCode"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/PostalCode"
+        }, 
+        "0988e3a3213e17a2529d8780ed26fe6c203bc7ce": {
+            "properties": {
+                "default_value": null, 
+                "index": 8, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(40)", 
+                "name": "City"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/City"
+        }, 
+        "8e96892c83e580dc4e84cc0e5c7850a165f2d7bb": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "CustomerId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/CustomerId"
+        }, 
+        "90df5bb8a5178dbca480dd72b627969485820eb6": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(120)", 
+                "name": "Name"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Artist/Name"
+        }, 
+        "1fb107bd5fdf402066a5a1dbf709ae099adee3cd": {
+            "properties": {
+                "default_value": null, 
+                "index": 2, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "ArtistId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Album/ArtistId"
+        }, 
+        "8c4a8b7d4c1748f9e9dd78e076a49d7ebf59a052": {
+            "properties": {
+                "name": "Customer"
+            }, 
+            "types": [
+                "Table"
+            ], 
+            "label": "chinook.sqlite/Customer"
+        }, 
+        "e959574d9cf842234d2cd62c168f17b5d3f7cbf7": {
+            "properties": {
+                "default_value": null, 
+                "index": 1, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "InvoiceId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/InvoiceLine/InvoiceId"
+        }, 
+        "433c631eb8e9a0a6833facff950cf97162820f0b": {
+            "properties": {
+                "default_value": null, 
+                "index": 12, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(24)", 
+                "name": "Phone"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/Phone"
+        }, 
+        "aef67c0b9d267c2e98652f16081ee3660901e3b1": {
+            "properties": {
+                "default_value": null, 
+                "index": 13, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(24)", 
+                "name": "Fax"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Employee/Fax"
+        }, 
+        "c7f3669404ee18419bc65b0edcc054cf09698e7c": {
+            "properties": {
+                "default_value": null, 
+                "index": 0, 
+                "primary_key": 1, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "AlbumId"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Album/AlbumId"
+        }, 
+        "f66a88d778585ef96735695bc271ae3e5be925f3": {
+            "properties": {
+                "default_value": null, 
+                "index": 4, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "INTEGER", 
+                "name": "Quantity"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/InvoiceLine/Quantity"
+        }, 
+        "3b12e2bbe1aa85fb0e8d6bf70fa3dc02ae98e4a2": {
+            "properties": {
+                "default_value": null, 
+                "index": 8, 
+                "primary_key": 0, 
+                "nullable": false, 
+                "type": "NUMERIC(10,2)", 
+                "name": "UnitPrice"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Track/UnitPrice"
+        }, 
+        "23a5b6f00d79576bd8290645cc7abc428eef307c": {
+            "properties": {
+                "default_value": null, 
+                "index": 4, 
+                "primary_key": 0, 
+                "nullable": true, 
+                "type": "NVARCHAR(70)", 
+                "name": "Address"
+            }, 
+            "types": [
+                "Column"
+            ], 
+            "label": "chinook.sqlite/Customer/Address"
+        }
+    }, 
+    "version": 1.0, 
+    "resource": "5a0fc8e6d6233b88d91fd8dc78448a06f4aae172"
+}
