@@ -41,16 +41,15 @@ HEADERS = {
 
 class Neo4jError(Exception):
     def __init__(self, errors, *args):
-        if isinstance(errors, dict):
-            self.errors = errors
+        if isinstance(errors, list):
             message = []
 
             for error in errors:
-                message.append('{code}: {message}'.format(**error))
+                message.append('{code}: {message}\n{stackTrace}'
+                               .format(**error))
 
             message = '\n'.join(message)
         else:
-            self.errors = {}
             message = errors
 
         super(Neo4jError, self).__init__(message, *args)
