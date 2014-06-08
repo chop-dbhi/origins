@@ -6,7 +6,7 @@ except NameError:
     pass
 
 
-def cypher_value(value):
+def value_string(value):
     if value is True:
         return 'true'
     if value is False:
@@ -14,7 +14,7 @@ def cypher_value(value):
     if value is None:
         return 'null'
     if isinstance(value, (list, tuple)):
-        return '[' + ', '.join(cypher_value(v) for v in value) + ']'
+        return '[' + ', '.join(value_string(v) for v in value) + ']'
     if isinstance(value, (int, float)):
         return repr(value)
 
@@ -26,10 +26,23 @@ def cypher_value(value):
     return repr(value).lstrip('u')
 
 
-def cypher_map(props):
+def map_string(props):
+    if not props:
+        return '{}'
+
     toks = []
 
-    for k in props:
-        toks.append('`{}`: {}'.format(k, cypher_value(props[k])))
+    for k, v in props.items():
+        if v is None:
+            continue
+
+        toks.append('`{}`: {}'.format(k, value_string(v)))
 
     return '{' + ', '.join(toks) + '}'
+
+
+def labels_string(labels):
+    if not labels:
+        return ''
+
+    return ':' + ':'.join(['`{}`'.format(l) for l in labels])

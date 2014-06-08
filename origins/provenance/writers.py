@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 import sys
 from collections import defaultdict
-from .cypher import cypher_map
-from . import neo4j
+from ..graph import cypher
+from ..graph import neo4j
 from .identifier import QualifiedName
 from .model import Relation, Namespace, Mention
 from .constants import ORIGINS_REL_SEMANTICS, \
@@ -235,7 +235,7 @@ class Writer(object):
             for ref, pattern, props in self._merges:
                 query.append('MERGE {}'.format(pattern))
                 query.append('ON CREATE SET {} = {}'
-                             .format(ref, cypher_map(props)))
+                             .format(ref, cypher.map_string(props)))
 
             self._merges = []
 

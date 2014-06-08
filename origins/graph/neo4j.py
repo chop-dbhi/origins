@@ -14,7 +14,10 @@ except NameError:
 
 
 import json
-from . import logger
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 # Default URI to Neo4j REST endpoint
