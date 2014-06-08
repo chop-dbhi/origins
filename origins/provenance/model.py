@@ -3,7 +3,7 @@ from __future__ import unicode_literals, absolute_import
 import time
 from uuid import uuid4
 from hashlib import sha1
-from .cypher import cypher_map
+from ..graph import cypher
 from .identifier import QualifiedName
 from .constants import *  # noqa
 
@@ -86,7 +86,7 @@ class Interface(object):
         label_strings = ('`' + str(l) + '`' for l in labels)
 
         return '({}:{} {})'.format(identifier, ':'.join(label_strings),
-                                   cypher_map(props))
+                                   cypher.map_string(props))
 
     def node(self, identifier=None):
         "Returns a node containing all properties."
