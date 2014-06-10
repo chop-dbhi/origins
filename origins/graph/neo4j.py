@@ -196,6 +196,12 @@ class Transaction(object):
 
     def send(self, statements, params=None, formats=None, raw=False,
              keys=False):
+        """Sends statements to an existing transaction or opens a new one.
+
+        This must be followed by `commit` or `rollback` to close the
+        transaction, otherwise the transaction will timeout on the server
+        and implicitly rolled back.
+        """
         resp, data = self._send(self.transaction_uri, statements,
                                 params=params, formats=formats)
 
@@ -212,6 +218,7 @@ class Transaction(object):
 
     def commit(self, statements=None, params=None, formats=None, raw=False,
                keys=False):
+        "Commits an open transaction or performs a single transaction request."
         if self.commit_uri:
             uri = self.commit_uri
         else:
@@ -253,7 +260,17 @@ def send(statements, params=None, formats=None, uri=None, raw=False,
 
 def purge(*args, **kwargs):
     "Deletes all nodes and relationships."
-    send('OPTIONAL MATCH (a)-[r]-(b) DELETE r, a, b', *args, **kwargs)
+
+    result = send('MATCH (a) '
+                  'OPTIONAL MATCH (a)-[r]->(b) '
+                  'DELETE r, a, b '
+                  'RETURN count(r), count(distinct a)',
+                  *args, **kwargs)
+
+    return {
+        'nodes': result[0][0],
+        'relationships': result[0][1],
+    }
 
 
 def summary(*args, **kwargs):
