@@ -17,16 +17,16 @@ from .identifier import Namespaces
 NAMESPACES = Namespaces({
     'xsd': 'http://www.w3.org/2000/10/XMLSchema#',
     'prov': 'http://www.w3.org/ns/prov#',
-    'origins': 'http://origins.link/',
     'up': 'http://semweb.mmlab.be/ns/up#',
+    'origins': 'http://origins.link/1.0/',
 })
 
 
 PROV = NAMESPACES['prov']
-ORIGINS = NAMESPACES['origins']
 UP = NAMESPACES['up']
+ORIGINS = NAMESPACES['origins']
 
-#  C1. Entities/Activities
+# Entities/Activities
 PROV_ENTITY = PROV['Entity']
 PROV_ACTIVITY = PROV['Activity']
 PROV_GENERATION = PROV['Generation']
@@ -40,29 +40,29 @@ PROV_INVALIDATION = PROV['Invalidation']
 PROV_RELATION = PROV['Relation']
 PROV_EVENT = PROV['Event']
 
-#  C2. Derivations
+# Derivations
 PROV_DERIVATION = PROV['Derivation']
 
-#  C3. Agents/Responsibility
+# Agents/Responsibility
 PROV_AGENT = PROV['Agent']
 PROV_ATTRIBUTION = PROV['Attribution']
 PROV_ASSOCIATION = PROV['Association']
 PROV_DELEGATION = PROV['Delegation']
 PROV_INFLUENCE = PROV['Influence']
 
-#  C4. Bundles
+# Bundles
 PROV_BUNDLE = PROV['Bundle']
 
-#  C5. Alternate
+# Alternate
 PROV_ALTERNATE = PROV['Alternate']
 PROV_SPECIALIZATION = PROV['Specialization']
 PROV_MENTION = PROV['Mention']
 
-#  C6. Collections
+# Collections
 PROV_MEMBERSHIP = PROV['Membership']
 
-# Maps PROV-N components to standard PROV terms
-PROV_N_MAP = {
+# Maps PROV-N components to standard PROV components
+PROV_ALT_COMPONENTS = {
     PROV['entity']: PROV_ENTITY,
     PROV['agent']: PROV_AGENT,
     PROV['activity']: PROV_ACTIVITY,
@@ -137,6 +137,123 @@ PROV_TYPE_ORGANIZATION = PROV['Organization']
 PROV_TYPE_SOFTWARE_AGENT = PROV['SoftwareAgent']
 
 
+PROV_EVENT_TYPES = {
+    PROV_GENERATION,
+    PROV_USAGE,
+    PROV_START,
+    PROV_END,
+    PROV_INVALIDATION,
+}
+
+PROV_RELATION_TYPES = PROV_EVENT_TYPES | {
+    PROV_COMMUNICATION,
+    PROV_DERIVATION,
+    PROV_ATTRIBUTION,
+    PROV_ASSOCIATION,
+    PROV_DELEGATION,
+    PROV_INFLUENCE,
+    PROV_SPECIALIZATION,
+    PROV_ALTERNATE,
+    PROV_MENTION,
+    PROV_MEMBERSHIP,
+}
+
+PROV_OBJECT_TYPES = {
+    PROV_ENTITY,
+    PROV_ACTIVITY,
+    PROV_AGENT,
+    PROV_BUNDLE,
+}
+
+PROV_COMPONENTS = PROV_OBJECT_TYPES | PROV_RELATION_TYPES
+
+
+PROV_RELATION_ATTRS = {
+    PROV_GENERATION: {
+        PROV_ATTR_ENTITY: True,
+        PROV_ATTR_ACTIVITY: False,
+    },
+
+    PROV_USAGE: {
+        PROV_ATTR_ACTIVITY: True,
+        PROV_ATTR_ENTITY: False,
+    },
+
+    PROV_COMMUNICATION: {
+        PROV_ATTR_INFORMED: True,
+        PROV_ATTR_INFORMANT: False,
+    },
+
+    PROV_START: {
+        PROV_ATTR_ACTIVITY: True,
+        PROV_ATTR_TRIGGER: False,
+        PROV_ATTR_STARTER: False,
+    },
+
+    PROV_END: {
+        PROV_ATTR_ACTIVITY: True,
+        PROV_ATTR_TRIGGER: False,
+        PROV_ATTR_ENDER: False,
+    },
+
+    PROV_INVALIDATION: {
+        PROV_ATTR_ENTITY: True,
+        PROV_ATTR_ACTIVITY: False,
+    },
+
+    PROV_DERIVATION: {
+        PROV_ATTR_GENERATED_ENTITY: True,
+        PROV_ATTR_USED_ENTITY: True,
+        PROV_ATTR_ACTIVITY: False,
+        PROV_ATTR_GENERATION: False,
+        PROV_ATTR_USAGE: False,
+    },
+
+    PROV_ATTRIBUTION: {
+        PROV_ATTR_ENTITY: True,
+        PROV_ATTR_AGENT: True,
+    },
+
+    PROV_ASSOCIATION: {
+        PROV_ATTR_ACTIVITY: True,
+        PROV_ATTR_AGENT: False,
+        PROV_ATTR_PLAN: False,
+    },
+
+    PROV_DELEGATION: {
+        PROV_ATTR_DELEGATE: True,
+        PROV_ATTR_RESPONSIBLE: True,
+        PROV_ATTR_ACTIVITY: False,
+    },
+
+    PROV_INFLUENCE: {
+        PROV_ATTR_INFLUENCEE: True,
+        PROV_ATTR_INFLUENCER: True,
+    },
+
+    PROV_SPECIALIZATION: {
+        PROV_ATTR_SPECIFIC_ENTITY: True,
+        PROV_ATTR_GENERAL_ENTITY: True,
+    },
+
+    PROV_ALTERNATE: {
+        PROV_ATTR_ALTERNATE1: True,
+        PROV_ATTR_ALTERNATE2: True,
+    },
+
+    PROV_MENTION: {
+        PROV_ATTR_SPECIFIC_ENTITY: True,
+        PROV_ATTR_GENERAL_ENTITY: True,
+        PROV_ATTR_BUNDLE: True,
+    },
+
+    PROV_MEMBERSHIP: {
+        PROV_ATTR_COLLECTION: True,
+        PROV_ATTR_ENTITY: True,
+    },
+}
+
+
 # UP attributes
 UP_ATTR_ASSERTION_CONFIDENCE = UP['assertionConfidence']
 UP_ATTR_CONTENT_CONFIDENCE = UP['contentConfidence']
@@ -152,21 +269,59 @@ UP_TYPE_FUTURE = UP['Future']
 UP_TYPE_TRUSTED = UP['Trusted']
 UP_TYPE_UNTRUSTED = UP['Untrusted']
 
-ORIGINS_NAMESPACE = ORIGINS['Namespace']
 ORIGINS_REPOSITORY = ORIGINS['Repository']
+ORIGINS_NAMESPACE = ORIGINS['Namespace']
 ORIGINS_DOCUMENT = ORIGINS['Document']
+ORIGINS_DEPENDENCE = ORIGINS['Dependence']
 
 # Origins general attributes
 ORIGINS_ATTR_ID = ORIGINS['id']
 ORIGINS_ATTR_UUID = ORIGINS['uuid']
-ORIGINS_ATTR_SHA1 = ORIGINS['sha1']
 ORIGINS_ATTR_TIMESTAMP = ORIGINS['timestamp']
 ORIGINS_ATTR_TYPE = ORIGINS['type']
-
-# Specific for namespace
 ORIGINS_ATTR_URI = ORIGINS['uri']
 ORIGINS_ATTR_PREFIX = ORIGINS['prefix']
-ORIGINS_REL_SEMANTICS = ORIGINS['hadSemanticsFrom']
+ORIGINS_ATTR_NEO4J = ORIGINS['neo4j']
 
-# Specific for document and bundles
+# Dependence attributes
+ORIGINS_ATTR_DEPENDENT = ORIGINS['dependent']
+ORIGINS_ATTR_DEPENDENCY = ORIGINS['dependency']
+
+ORIGINS_REL_SEMANTICS = ORIGINS['hadSemanticsFrom']
 ORIGINS_REL_DESCRIPTION = ORIGINS['hadDescription']
+
+ORIGINS_OBJECT_TYPES = set()
+
+ORIGINS_EVENT_TYPES = set()
+
+ORIGINS_RELATION_TYPES = {
+    ORIGINS_DEPENDENCE,
+}
+
+ORIGINS_ALT_COMPONENTS = {
+    ORIGINS['wasDependentOn']: ORIGINS_DEPENDENCE,
+}
+
+ORIGINS_RELATION_ATTRS = {
+    ORIGINS_DEPENDENCE: {
+        ORIGINS_ATTR_DEPENDENT: True,
+        ORIGINS_ATTR_DEPENDENCY: True,
+    }
+}
+
+ORIGINS_COMPONENTS = ORIGINS_OBJECT_TYPES | ORIGINS_RELATION_TYPES
+
+# All configuration options for supported namespaces
+OBJECT_TYPES = PROV_OBJECT_TYPES | ORIGINS_OBJECT_TYPES
+RELATION_TYPES = PROV_RELATION_TYPES | ORIGINS_RELATION_TYPES
+EVENT_TYPES = PROV_EVENT_TYPES | ORIGINS_EVENT_TYPES
+
+COMPONENTS = PROV_COMPONENTS | ORIGINS_COMPONENTS
+
+RELATION_ATTRS = {}
+RELATION_ATTRS.update(PROV_RELATION_ATTRS)
+RELATION_ATTRS.update(ORIGINS_RELATION_ATTRS)
+
+ALT_COMPONENTS = {}
+ALT_COMPONENTS.update(PROV_ALT_COMPONENTS)
+ALT_COMPONENTS.update(ORIGINS_ALT_COMPONENTS)
