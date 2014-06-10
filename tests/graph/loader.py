@@ -4,6 +4,7 @@ import os
 import json
 import unittest
 from origins import graph
+from origins.graph import neo4j
 from .. import TEST_DATA_DIR
 
 export_data_path = os.path.join(TEST_DATA_DIR, 'chinook.sqlite.json')
@@ -11,10 +12,13 @@ export_data_path = os.path.join(TEST_DATA_DIR, 'chinook.sqlite.json')
 
 class GraphTestCase(unittest.TestCase):
     def setUp(self):
+        neo4j.purge()
+
         with open(export_data_path) as f:
             self.data = json.load(f)
 
-        graph.delete_resource(self.data)
+    def tearDown(self):
+        neo4j.purge()
 
     def test_create_resource(self):
         out = graph.create_resource(self.data)
