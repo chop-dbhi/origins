@@ -1,4 +1,4 @@
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals, absolute_import, division
 
 try:
     import requests
@@ -13,6 +13,7 @@ except NameError:
     pass
 
 
+import math
 import json
 import logging
 
@@ -82,10 +83,11 @@ def normalize_results(response, keys=True):
 
 
 class Transaction(object):
-    def __init__(self, uri=None):
+    def __init__(self, uri=None, batch=100):
         self.uri = uri or DEFAULT_URI
         self.transaction_uri = TRANSACTION_URI_TMPL.format(self.uri)
         self.commit_uri = None
+        self.batch = batch
 
         # transaction is committed or rolled back
         self._closed = False
@@ -128,18 +130,19 @@ class Transaction(object):
 
         return formats
 
-    def _send(self, url, statements=None, params=None, formats=None):
-        if self._closed:
-            raise Neo4jError('transaction closed')
+    def _merge_response_data(self, output, resp):
+        if output is None:
+            return resp
 
-        statements = self._clean_statements(statements, params)
+        output['results'].extend(resp['results'])
+        output['errors'].extend(resp['errors'])
 
-        payload = {'statements': statements}
+        if 'transaction' in resp:
+            output['transaction'] = resp['transaction']
 
-        if formats:
-            formats = self._clean_formats(formats)
-            payload['resultDataContents'] = formats
+        return output
 
+    def _send_request(self, url, payload):
         data = json.dumps(payload)
         resp = requests.post(url, data=data, headers=HEADERS)
 
@@ -156,13 +159,45 @@ class Transaction(object):
 
         return resp, resp_data
 
+    def _send(self, url, statements=None, params=None, formats=None):
+        if self._closed:
+            raise Neo4jError('transaction closed')
+
+        statements = self._clean_statements(statements, params)
+
+        if formats:
+            formats = self._clean_formats(formats)
+
+        resp = {}
+        resp_data = None
+
+        # Send at least one request
+        batches = max(1, int(math.ceil(len(statements) / self.batch)))
+
+        for i in range(batches):
+            logger.info('sending batch {}/{}'.format(i + 1, batches))
+
+            start, end = i * self.batch, (i + 1) * self.batch
+
+            data = {'statements': statements[start:end]}
+
+            if formats:
+                data['resultDataContents'] = formats
+
+            resp, _resp_data = self._send_request(url, data)
+
+            resp_data = self._merge_response_data(resp_data, _resp_data)
+
+            # Implicit switch to transaction URL
+            if 'location' in resp.headers:
+                url = self.transaction_uri = resp.headers['location']
+
+        return resp, resp_data
+
     def send(self, statements, params=None, formats=None, raw=False,
              keys=False):
         resp, data = self._send(self.transaction_uri, statements,
                                 params=params, formats=formats)
-
-        if 'location' in resp.headers:
-            self.transaction_uri = resp.headers['location']
 
         if 'commit' in data:
             if not self.commit_uri:
