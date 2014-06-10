@@ -1,0 +1,193 @@
+{
+    "prefix": {
+        "foaf": "http://xmlns.com/foaf/0.1/",
+        "dcterms": "http://purl.org/dc/terms/",
+        "ex": "http://example/"
+    },
+
+    "wasDerivedFrom": {
+        "_:id11": {
+            "prov:usedEntity": "ex:article",
+            "prov:generatedEntity": "ex:blogEntry",
+            "prov:type": {
+                "type": "xsd:QName",
+                "$": "prov:Quotation"
+            }
+        },
+
+        "_:id9": {
+            "prov:usedEntity": "ex:dataSet2",
+            "prov:generatedEntity": "ex:articleV2"
+        },
+
+        "_:id10": {
+            "prov:usedEntity": "ex:dataSet1",
+            "prov:generatedEntity": "ex:dataSet2",
+            "prov:type": {
+                "type": "xsd:QName",
+                "$": "prov:Revision"
+            }
+        },
+
+        "_:id13": {
+            "prov:usedEntity": "ex:dataSet1",
+            "prov:generatedEntity": "ex:articleV1"
+        },
+
+        "_:id12": {
+            "prov:usedEntity": "ex:dataSet2",
+            "prov:generatedEntity": "ex:chart2"
+        }
+    },
+
+    "wasAssociatedWith": {
+        "_:id15": {
+            "prov:agent": "ex:derek",
+            "prov:activity": "ex:compose"
+        },
+
+        "_:id16": {
+            "prov:agent": "ex:derek",
+            "prov:activity": "ex:illustrate"
+        }
+    },
+
+    "used": {
+        "_:id5": {
+            "prov:entity": "ex:composition",
+            "prov:activity": "ex:illustrate"
+        },
+
+        "_:id7": {
+            "prov:role": "ex:dataToCompose",
+            "prov:entity": "ex:dataSet1",
+            "prov:activity": "ex:compose"
+        },
+
+        "_:id6": {
+            "prov:entity": "ex:dataSet1",
+            "prov:activity": "ex:correct"
+        },
+
+        "_:id8": {
+            "prov:role": "ex:regionsToAggregateBy",
+            "prov:entity": "ex:regionList",
+            "prov:activity": "ex:compose"
+        }
+    },
+
+    "actedOnBehalfOf": {
+        "_:id17": {
+            "prov:responsible": "ex:chartgen",
+            "prov:delegate": "ex:derek",
+            "prov:activity": "ex:compose"
+        }
+    },
+
+    "wasAttributedTo": {
+        "_:id14": {
+            "prov:entity": "ex:chart1",
+            "prov:agent": "ex:derek"
+        }
+    },
+
+    "agent": {
+        "ex:derek": {
+            "foaf:givenName": "Derek",
+            "prov:type": {
+                "type": "xsd:QName",
+                "$": "prov:Person"
+            },
+            "foaf:mbox": "<mailto:derek@example.org>"
+        },
+
+        "ex:chartgen": {
+            "foaf:name": "Chart Generators Inc",
+            "prov:type": {
+                "type": "xsd:QName",
+                "$": "prov:Organization"
+            }
+        }
+    },
+
+    "entity": {
+        "ex:article": {
+            "dcterms:title": "Crime rises in cities"
+        },
+
+        "ex:blogEntry": {},
+
+        "ex:chart2": {},
+
+        "ex:chart1": {},
+
+        "ex:dataSet1": {},
+
+        "ex:dataSet2": {},
+
+        "ex:composition": {},
+
+        "ex:regionList": {},
+
+        "ex:articleV1": {},
+
+        "ex:articleV2": {}
+    },
+
+    "alternateOf": {
+        "_:id18": {
+            "prov:alternate1": "ex:articleV2",
+            "prov:alternate2": "ex:articleV1"
+        }
+    },
+
+    "activity": {
+        "ex:compile": {},
+
+        "ex:correct": {
+            "prov:startTime": "2012-03-31T09:21:00",
+            "prov:endTime": "2012-04-01T15:21:00"
+        },
+
+        "ex:compose": {},
+
+        "ex:compile2": {},
+
+        "ex:illustrate": {}
+    },
+
+    "specializationOf": {
+        "_:id20": {
+            "prov:generalEntity": "ex:article",
+            "prov:specificEntity": "ex:articleV2"
+        },
+
+        "_:id19": {
+            "prov:generalEntity": "ex:article",
+            "prov:specificEntity": "ex:articleV1"
+        }
+    },
+
+    "wasGeneratedBy": {
+        "_:id4": {
+            "prov:entity": "ex:chart1",
+            "prov:activity": "ex:illustrate"
+        },
+
+        "_:id1": {
+            "prov:time": "2012-03-02T10:30:00",
+            "prov:entity": "ex:chart1",
+            "prov:activity": "ex:compile"
+        },
+
+        "_:id3": {
+            "prov:entity": "ex:dataSet2",
+            "prov:activity": "ex:correct"
+        },
+
+        "_:id2": {
+            "prov:entity": "ex:composition",
+            "prov:activity": "ex:compose"
+        }
+    }
+}

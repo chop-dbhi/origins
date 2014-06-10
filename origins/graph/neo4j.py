@@ -45,6 +45,7 @@ class Neo4jError(Exception):
             message = []
 
             for error in errors:
+                error.setdefault('stackTrace', '')
                 message.append('{code}: {message}\n{stackTrace}'
                                .format(**error))
 
@@ -205,7 +206,25 @@ class Transaction(object):
 
 def send(statements, params=None, formats=None, uri=None, raw=False,
          keys=False):
+    """Sends a single request to the Neo4j transaction endpoint.
 
+    One or more statements can be given, formats including: `row`, `graph`,
+    and `REST` can be specified (default is `row`).
+    """
     with Transaction(uri) as tx:
         return tx.commit(statements, params=params, formats=formats,
                          raw=raw, keys=keys)
+
+
+def purge(*args, **kwargs):
+    "Deletes all nodes and relationships."
+    send('OPTIONAL MATCH (a)-[r]-(b) DELETE r, a, b', *args, **kwargs)
+
+
+def summary(*args, **kwargs):
+    "Returns a summary of relationships in graph."
+    return send('OPTIONAL MATCH (s)-[r]->(e) '
+                'RETURN labels(s), count(distinct s), type(r), '
+                'labels(e), count(distinct e)'
+                'ORDER BY labels(s)[0], labels(e)[0], type(r)',
+                *args, **kwargs)
