@@ -14,7 +14,7 @@ from .constants import PROV_BUNDLE, COMPONENTS, ALT_COMPONENTS, NAMESPACES, \
     ORIGINS_ATTR_NEO4J, ORIGINS_ATTR_UUID, RELATION_TYPES, \
     RELATION_ATTRS, ORIGINS_ATTR_TIMESTAMP, EVENT_TYPES, \
     ORIGINS_ATTR_TYPE, PROV_RELATION, PROV_EVENT, PROV_MENTION, \
-    PROV_ATTR_BUNDLE, PROV_ATTR_GENERAL_ENTITY
+    PROV_ATTR_BUNDLE, PROV_ATTR_GENERAL_ENTITY, ORIGINS_PROVENANCE
 
 
 try:
@@ -119,7 +119,7 @@ def _parse_container(prov_data, namespaces, default=None):
     return descriptions
 
 
-def _prepare_node_params(comp_type, props, uuid, timestamp):
+def _prepare_node_params(comp_type, props, uuid, timestamp, labels):
     # Copy properties. For relation types, ignore relation attributes
     if comp_type in RELATION_ATTRS:
         copy = {}
@@ -137,22 +137,29 @@ def _prepare_node_params(comp_type, props, uuid, timestamp):
     if ORIGINS_ATTR_TIMESTAMP not in copy:
         copy[ORIGINS_ATTR_TIMESTAMP] = timestamp
 
-    labels = _comp_labels(comp_type)
-
     return {
         'props': cypher.map_string(copy),
         'labels': cypher.labels_string(labels),
     }
 
 
-def _comp_labels(comp_type):
-    labels = [comp_type]
+def _comp_labels(comp_type=None, short_sha1=None):
+    # Generic label for all provenance nodes. This combined with the UUID
+    if short_sha1:
+        prov_label = str(ORIGINS_PROVENANCE) + ':' + short_sha1
+    else:
+        prov_label = ORIGINS_PROVENANCE
 
-    if comp_type in RELATION_TYPES:
-        labels.append(PROV_RELATION)
+    labels = [prov_label]
 
-        if comp_type in EVENT_TYPES:
-            labels.append(PROV_EVENT)
+    if comp_type:
+        labels.append(comp_type)
+
+        if comp_type in RELATION_TYPES:
+            labels.append(PROV_RELATION)
+
+            if comp_type in EVENT_TYPES:
+                labels.append(PROV_EVENT)
 
     return labels
 
@@ -190,7 +197,7 @@ def parse_prov_data(prov_data):
     return bundles
 
 
-def read_document(url, type=None):
+def read_document(url, file_type=None):
     """Reads or fetchs a PROV document.
 
     This currently relies on the ProvToolbox to convert the input to the
@@ -198,8 +205,8 @@ def read_document(url, type=None):
     """
     # Remote file, attempt to fetch it
     if urlparse(url).scheme:
-        if type:
-            ext = '.' + type
+        if file_type:
+            ext = '.' + file_type
         else:
             ext = os.path.splitext(url)[1]
 
@@ -247,7 +254,7 @@ def read_document(url, type=None):
     return data
 
 
-def prepare_statements(bundles):
+def prepare_statements(bundles, short_sha1=None):
     """Takes parsed provenance bundles and loads it into the graph.
 
     It performs the following tasks:
@@ -287,14 +294,16 @@ def prepare_statements(bundles):
                     # Create UUID for this node for reference
                     uuid = str(uuid4())
 
+                    _labels = _comp_labels(comp_type, short_sha1)
                     params = _prepare_node_params(comp_type, props, uuid,
-                                                  timestamp)
+                                                  timestamp, _labels)
+
                     statements.append(CREATE_NODE.format(**params))
 
-                labels = _comp_labels(comp_type)
+                _labels = _comp_labels(None, short_sha1)
                 uuid_props = {ORIGINS_ATTR_UUID: uuid}
                 pattern = '(`{}`{} {})'.format(ref,
-                                               cypher.labels_string(labels),
+                                               cypher.labels_string(_labels),
                                                cypher.map_string(uuid_props))
 
                 comp_uuid[pair] = (ref, pattern)
@@ -368,13 +377,13 @@ def prepare_statements(bundles):
     return statements
 
 
-def load_document(data, type=None, tx=None):
+def load_document(data, file_type=None, tx=None):
     "Loads prov data or from a file."
     if tx is None:
         tx = neo4j
 
     if isinstance(data, (str, bytes)):
-        data = read_document(data, type=type)
+        data = read_document(data, file_type=file_type)
 
     bundles = parse_prov_data(data)
     statements = prepare_statements(bundles)

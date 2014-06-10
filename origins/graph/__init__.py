@@ -1,1 +1,2 @@
-from .loader import create_resource, sync_resource, delete_resource  # noqa
+from .loader import (SHORT_SHA1_LEN, create_resource, sync_resource,  # noqa
+    delete_resource)
