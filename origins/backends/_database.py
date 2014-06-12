@@ -1,9 +1,16 @@
 from __future__ import unicode_literals, absolute_import
 
 import re
+import logging
 from ..dal import recordtuple
-from .. import logger
 from . import base
+
+try:
+    str = unicode
+except NameError:
+    pass
+
+logger = logging.getLogger(__name__)
 
 
 class Client(base.Client):

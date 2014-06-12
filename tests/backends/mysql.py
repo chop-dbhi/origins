@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, absolute_import
+
 import os
 import origins
 from .base import BackendTestCase
