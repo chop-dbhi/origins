@@ -104,7 +104,7 @@ def create_resource(data, tx=None):
 
     statements = []
 
-    short_sha1 = hashlib.sha1(data['resource'])\
+    short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
         .hexdigest()[:SHORT_SHA1_LEN]
 
     for oid, node in data['nodes'].items():
@@ -133,7 +133,7 @@ def delete_resource(data, tx=None):
         tx = neo4j
 
     if isinstance(data, dict):
-        short_sha1 = hashlib.sha1(data['resource'])\
+        short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
             .hexdigest()[:SHORT_SHA1_LEN]
     else:
         short_sha1 = data
@@ -174,7 +174,8 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
 
     statements = []
 
-    short_sha1 = hashlib.sha1(data['resource']).hexdigest()[:SHORT_SHA1_LEN]
+    short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
+        .hexdigest()[:SHORT_SHA1_LEN]
 
     # Existing nodes in the graph
     for nid, old in _get_resource_nodes(short_sha1, tx):

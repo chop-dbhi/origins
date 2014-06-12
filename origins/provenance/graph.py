@@ -50,7 +50,7 @@ def create_resource(data, tx=None):
     generation = {}
     dependence = {}
 
-    short_sha1 = hashlib.sha1(data['resource'])\
+    short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
         .hexdigest()[:SHORT_SHA1_LEN]
 
     for oid, node in data['nodes'].items():
@@ -168,7 +168,8 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
     invalidation = {}
     dependence = {}
 
-    short_sha1 = hashlib.sha1(data['resource']).hexdigest()[:SHORT_SHA1_LEN]
+    short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
+        .hexdigest()[:SHORT_SHA1_LEN]
 
     # ID of general entity and latest revision id and properties
     for gid, gprops, rid, old in _get_latest_revisions(short_sha1, tx):
@@ -343,7 +344,7 @@ def delete_resource(data, tx=None):
         tx = neo4j
 
     if isinstance(data, dict):
-        short_sha1 = hashlib.sha1(data['resource'])\
+        short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
             .hexdigest()[:SHORT_SHA1_LEN]
     else:
         short_sha1 = data
