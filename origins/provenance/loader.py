@@ -8,7 +8,10 @@ import tempfile
 import subprocess
 import requests
 from uuid import uuid4
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse  # noqa
+except ImportError:
+    from urlparse import urlparse
 from origins.graph import cypher, neo4j
 from .constants import PROV_BUNDLE, COMPONENTS, ALT_COMPONENTS, NAMESPACES, \
     ORIGINS_ATTR_NEO4J, ORIGINS_ATTR_UUID, RELATION_TYPES, \

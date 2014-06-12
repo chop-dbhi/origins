@@ -4,6 +4,7 @@ python:
     - "2.7"
     - "3.2"
     - "3.3"
+    - "3.4"
 
 env:
     - MYSQL_USER=travis MYSQL_HOST=127.0.0.1 POSTGRESQL_USER=postgres POSTGRESQL_HOST=127.0.0.1
@@ -12,6 +13,7 @@ services:
     - mongodb
 
 before_install:
+    - sh bin/check_signoff.sh
     - sh tests/start-neo4j.sh
 
 install:
