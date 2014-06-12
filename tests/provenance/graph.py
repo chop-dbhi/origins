@@ -5,7 +5,7 @@ import json
 import unittest
 from origins.provenance import graph
 from origins.graph import neo4j
-from .. import TEST_DATA_DIR
+from tests import TEST_DATA_DIR
 
 
 export_data_path = os.path.join(TEST_DATA_DIR, 'chinook.sqlite.json')

@@ -4,7 +4,7 @@ import os
 import unittest
 from origins.provenance import load_document
 from origins.graph import neo4j
-from .. import TEST_DATA_DIR
+from tests import TEST_DATA_DIR
 
 
 class LoaderTestCase(unittest.TestCase):
