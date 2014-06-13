@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 # Default URI to Neo4j REST endpoint
 DEFAULT_URI = 'http://localhost:7474/db/data/'
 
+# Default number of statements that will be sent in one request
+DEFAULT_BATCH_SIZE = 100
+
 # Endpoint for opening a transaction
 TRANSACTION_URI_TMPL = '{}transaction'
 
@@ -37,6 +40,7 @@ RESULT_FORMATS = {'row', 'graph', 'REST'}
 HEADERS = {
     'accept': 'application/json; charset=utf-8',
     'content-type': 'application/json',
+    'x-stream': 'true',
 }
 
 
@@ -57,7 +61,7 @@ class Neo4jError(Exception):
         super(Neo4jError, self).__init__(message, *args)
 
 
-def normalize_results(response, keys=True):
+def _normalize_results(response, keys=True):
     if not response:
         return
 
@@ -82,12 +86,48 @@ def normalize_results(response, keys=True):
     return result
 
 
+def _send_request(url, payload):
+    "Sends a request to the server."
+    data = json.dumps(payload)
+    resp = requests.post(url, data=data, headers=HEADERS)
+
+    resp.raise_for_status()
+    resp_data = resp.json()
+
+    if resp_data['errors']:
+        raise Neo4jError(resp_data['errors'])
+
+    return resp, resp_data
+
+
+class Client(object):
+    def __init__(self, uri=DEFAULT_URI):
+        self.uri = uri
+
+    def transaction(self, batch_size=None):
+        return Transaction(self.uri, batch_size)
+
+    def send(self, *args, **kwargs):
+        batch_size = kwargs.pop('batch_size', None)
+        tx = Transaction(self.uri, batch_size)
+        return tx.commit(*args, **kwargs)
+
+
 class Transaction(object):
-    def __init__(self, uri=None, batch=100):
-        self.uri = uri or DEFAULT_URI
-        self.transaction_uri = TRANSACTION_URI_TMPL.format(self.uri)
+    def __init__(self, client=None, batch_size=None):
+        if not client:
+            client = Client()
+        elif isinstance(client, str):
+            client = Client(client)
+
+        if not batch_size:
+            batch_size = DEFAULT_BATCH_SIZE
+
+        self.client = client
+        self.transaction_uri = TRANSACTION_URI_TMPL.format(client.uri)
         self.commit_uri = None
-        self.batch = batch
+        self.batch_size = batch_size
+        self.batches = 0
 
         # transaction is committed or rolled back
         self._closed = False
@@ -99,11 +139,11 @@ class Transaction(object):
         if not self._closed:
             self.commit()
 
-    def _clean_statements(self, statements, params):
+    def _normalize_statements(self, statements, parameters):
         if not statements:
             return []
 
-        # Statement with params
+        # Statement with parameters
         if isinstance(statements, dict):
             return [statements]
 
@@ -111,14 +151,17 @@ class Transaction(object):
             _statements = []
 
             for x in statements:
-                _statements.extend(self._clean_statements(x, params))
+                _statements.extend(self._normalize_statements(x, parameters))
 
             return _statements
 
         # Bare statement
-        return [{'statement': str(statements), 'parameters': params}]
+        return [{
+            'statement': str(statements),
+            'parameters': parameters,
+        }]
 
-    def _clean_formats(self, formats):
+    def _normalize_formats(self, formats):
         if isinstance(formats, str):
             formats = [formats]
 
@@ -130,7 +173,7 @@ class Transaction(object):
 
         return formats
 
-    def _merge_response_data(self, output, resp):
+    def _merge_response(self, output, resp):
         if output is None:
             return resp
 
@@ -142,59 +185,45 @@ class Transaction(object):
 
         return output
 
-    def _send_request(self, url, payload):
-        data = json.dumps(payload)
-        resp = requests.post(url, data=data, headers=HEADERS)
-
-        resp.raise_for_status()
-        resp_data = resp.json()
-
-        if resp_data['errors']:
-            # Do not shadow the real error
-            try:
-                self.rollback()
-            except Neo4jError:
-                pass
-            raise Neo4jError(resp_data['errors'])
-
-        return resp, resp_data
-
-    def _send(self, url, statements=None, params=None, formats=None):
+    def _send(self, url, statements=None, parameters=None, formats=None):
         if self._closed:
             raise Neo4jError('transaction closed')
 
-        statements = self._clean_statements(statements, params)
+        statements = self._normalize_statements(statements, parameters)
 
         if formats:
-            formats = self._clean_formats(formats)
+            formats = self._normalize_formats(formats)
 
         resp = {}
         resp_data = None
 
         # Send at least one request
-        batches = max(1, int(math.ceil(len(statements) / self.batch)))
+        batches = max(1, int(math.ceil(len(statements) / self.batch_size)))
 
         for i in range(batches):
-            logger.info('sending batch {}/{}'.format(i + 1, batches))
+            logger.info('sending batch {}/{} to {}'
+                        .format(i + 1, batches, url))
 
-            start, end = i * self.batch, (i + 1) * self.batch
+            start, end = i * self.batch_size, (i + 1) * self.batch_size
 
             data = {'statements': statements[start:end]}
 
             if formats:
                 data['resultDataContents'] = formats
 
-            resp, _resp_data = self._send_request(url, data)
+            resp, _resp_data = _send_request(url, data)
 
-            resp_data = self._merge_response_data(resp_data, _resp_data)
+            resp_data = self._merge_response(resp_data, _resp_data)
 
             # Implicit switch to transaction URL
             if 'location' in resp.headers:
                 url = self.transaction_uri = resp.headers['location']
 
+            self.batches += 1
+
         return resp, resp_data
 
-    def send(self, statements, params=None, formats=None, raw=False,
+    def send(self, statements, parameters=None, formats=None, raw=False,
              keys=False):
         """Sends statements to an existing transaction or opens a new one.
 
@@ -203,7 +232,7 @@ class Transaction(object):
         and implicitly rolled back.
         """
         resp, data = self._send(self.transaction_uri, statements,
-                                params=params, formats=formats)
+                                parameters=parameters, formats=formats)
 
         if 'commit' in data:
             if not self.commit_uri:
@@ -214,17 +243,17 @@ class Transaction(object):
         if raw:
             return data
 
-        return normalize_results(data['results'], keys=keys)
+        return _normalize_results(data['results'], keys=keys)
 
-    def commit(self, statements=None, params=None, formats=None, raw=False,
+    def commit(self, statements=None, parameters=None, formats=None, raw=False,
                keys=False):
         "Commits an open transaction or performs a single transaction request."
         if self.commit_uri:
             uri = self.commit_uri
         else:
-            uri = SINGLE_TRANSACTION_URI_TMPL.format(self.uri)
+            uri = SINGLE_TRANSACTION_URI_TMPL.format(self.client.uri)
 
-        resp, data = self._send(uri, statements, params=params,
+        resp, data = self._send(uri, statements, parameters=parameters,
                                 formats=formats)
 
         logger.info('commit: {}'.format(uri))
@@ -234,7 +263,7 @@ class Transaction(object):
         if raw:
             return data
 
-        return normalize_results(data['results'], keys=keys)
+        return _normalize_results(data['results'], keys=keys)
 
     def rollback(self):
         if not self.commit_uri:
@@ -246,15 +275,15 @@ class Transaction(object):
         self._closed = True
 
 
-def send(statements, params=None, formats=None, uri=None, raw=False,
-         keys=False):
+def send(statements, parameters=None, formats=None, uri=None, raw=False,
+         keys=False, batch_size=None):
     """Sends a single request to the Neo4j transaction endpoint.
 
     One or more statements can be given, formats including: `row`, `graph`,
     and `REST` can be specified (default is `row`).
     """
-    with Transaction(uri) as tx:
-        return tx.commit(statements, params=params, formats=formats,
+    with Transaction(uri, batch_size) as tx:
+        return tx.commit(statements, parameters=parameters, formats=formats,
                          raw=raw, keys=keys)
 
 
@@ -262,9 +291,9 @@ def purge(*args, **kwargs):
     "Deletes all nodes and relationships."
 
     result = send('MATCH (a) '
-                  'OPTIONAL MATCH (a)-[r]->(b) '
-                  'DELETE r, a, b '
-                  'RETURN count(r), count(distinct a)',
+                  'OPTIONAL MATCH (a)-[r]-() '
+                  'DELETE r, a '
+                  'RETURN count(distinct r), count(distinct a)',
                   *args, **kwargs)
 
     return {
