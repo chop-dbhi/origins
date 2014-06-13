@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import time
 import logging
 import hashlib
-from origins.graph import neo4j, utils, SHORT_SHA1_LEN
+from origins.graph import neo4j, utils
 from .loader import prepare_statements, parse_prov_data
 
 
@@ -14,6 +14,9 @@ except NameError:
 
 
 logger = logging.getLogger(__name__)
+
+
+SHORT_SHA1_LEN = 6
 
 
 RESOURCE_PROV_NODES = '''\
@@ -53,7 +56,7 @@ def create_resource(data, tx=None):
     short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
         .hexdigest()[:SHORT_SHA1_LEN]
 
-    for oid, node in data['nodes'].items():
+    for oid, node in data['components'].items():
         oid_rev = oid + '_rev'
         oid_gen = oid + '_gen'
         oid_spec = oid + '_spec'
@@ -138,9 +141,12 @@ def create_resource(data, tx=None):
 def sync_resource(data, add=True, remove=True, update=True, tx=None):
     """Syncs client exported data with the existing resource graph.
 
-    `add` - Adds new nodes/rels that are not present in the existing graph.
-    `remove` - Remove old nodes/rels that are not present in `data`.
-    `update` - Merges changes in new nodes/rels into their existing nodes/rels.
+    `add` - Adds new components and relationships that are not present in the
+            existing graph.
+    `remove` - Removes remotes components and relationships that are not
+               present in the locally.
+    `update` - Merges changes from local components and relationships into the
+               remote representation.
     """
     if tx is None:
         tx = neo4j
@@ -148,14 +154,14 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
     t0 = time.time()
 
     data_entities = {}
-    data_entities.update(data.get('nodes', {}))
+    data_entities.update(data.get('components', {}))
     data_entities.update(data.get('relationships', {}))
 
-    nodes = set()
+    components = set()
 
-    add_nodes = 0
-    update_nodes = 0
-    remove_nodes = 0
+    add_components = 0
+    update_components = 0
+    remove_components = 0
 
     add_rels = 0
     update_rels = 0
@@ -205,7 +211,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
             if isrel:
                 remove_rels += 1
             else:
-                remove_nodes += 1
+                remove_components += 1
 
             invalidation[oid_inv] = {
                 'prov:entity': oid_old
@@ -218,7 +224,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
                 if isrel:
                     update_rels += 1
                 else:
-                    update_nodes += 1
+                    update_components += 1
 
                 # New revision entity
                 entity[oid_rev] = {
@@ -258,18 +264,18 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
                         'origins:dependency': new['end'] + '_rev',
                     }
 
-        nodes.add(oid)
+        components.add(oid)
 
-    # All nodes/rels that have been unseen are marked for creation
+    # All components/rels that have been unseen are marked for creation
     if add:
         for oid, new in data_entities.items():
             isrel = 'start' in new
 
-            if oid not in nodes:
+            if oid not in components:
                 if isrel:
                     add_rels += 1
                 else:
-                    add_nodes += 1
+                    add_components += 1
 
                 oid_rev = oid + '_rev'
                 oid_gen = oid + '_gen'
@@ -331,10 +337,10 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
         'prov:wasInvalidatedBy': len(invalidation),
         'prov:wasDerivedFrom': len(derivation),
         'origins:wasDependentOn': len(dependence),
-        'nodes': {
-            'added': add_nodes,
-            'updated': update_nodes,
-            'removed': remove_nodes,
+        'components': {
+            'added': add_components,
+            'updated': update_components,
+            'removed': remove_components,
         },
         'relationships': {
             'added': add_rels,
@@ -368,6 +374,6 @@ def delete_resource(data, tx=None):
 
     return {
         'time': time.time() - t0,
-        'nodes': node_count,
+        'components': node_count,
         'relationships': rel_count,
     }
