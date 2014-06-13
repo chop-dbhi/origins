@@ -162,7 +162,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
     remove_rels = 0
 
     entity = {}
-    entity_refs = {}
+    new_entities = set()
     specialization = {}
     generation = {}
     invalidation = {}
@@ -182,16 +182,16 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
         oid_spec = oid + '_spec'
         oid_dep = oid + '_dep'
 
-        entity_refs[oid] = {
+        entity[oid] = {
             'origins:neo4j': gid,
         }
 
         # Current revision is the old and new revision
-        entity_refs[oid_old] = {
+        entity[oid_old] = {
             'origins:neo4j': rid,
         }
 
-        entity_refs[oid_rev] = {
+        entity[oid_rev] = {
             'origins:neo4j': rid,
         }
 
@@ -222,6 +222,8 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
                 entity[oid_rev] = {
                     'origins:id': oid,
                 }
+
+                new_entities.add(oid_rev)
 
                 entity[oid_rev].update(new.get('properties', {}))
 
@@ -271,10 +273,14 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
                     'origins:id': oid,
                 }
 
+                new_entities.add(oid)
+
                 # Revision
                 entity[oid_rev] = {
                     'origins:id': oid,
                 }
+
+                new_entities.add(oid_rev)
 
                 entity[oid_rev].update(new.get('properties', {}))
 
@@ -296,9 +302,6 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
                         'origins:dependency': new['end'] + '_rev',
                     }
 
-    new_entities = len(entity)
-    entity.update(entity_refs)
-
     bundles = parse_prov_data({
         'prov:entity': entity,
         'prov:specializationOf': specialization,
@@ -313,7 +316,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
 
     return {
         'time': time.time() - t0,
-        'prov:entity': new_entities,
+        'prov:entity': len(new_entities),
         'prov:specializationOf': len(specialization),
         'prov:wasGeneratedBy': len(generation),
         'prov:wasInvalidatedBy': len(invalidation),
