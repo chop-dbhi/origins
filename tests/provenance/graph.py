@@ -35,6 +35,7 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(out['prov:entity'], 324)
         self.assertEqual(out['prov:specializationOf'], 162)
         self.assertEqual(out['prov:wasGeneratedBy'], 162)
+        self.assertEqual(out['prov:wasDerivedFrom'], 0)
         self.assertEqual(out['origins:wasDependentOn'], 86)
 
         out = graph.sync_resource(self.data)
@@ -42,6 +43,7 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(out['prov:specializationOf'], 0)
         self.assertEqual(out['prov:wasGeneratedBy'], 0)
         self.assertEqual(out['prov:wasInvalidatedBy'], 0)
+        self.assertEqual(out['prov:wasDerivedFrom'], 0)
         self.assertEqual(out['origins:wasDependentOn'], 0)
 
         self.data['nodes']['chinook.sqlite/Album/Title']['properties']['type'] = 'NVARCHAR(200)'  # noqa
@@ -51,6 +53,7 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(out['prov:specializationOf'], 1)
         self.assertEqual(out['prov:wasGeneratedBy'], 1)
         self.assertEqual(out['prov:wasInvalidatedBy'], 1)
+        self.assertEqual(out['prov:wasDerivedFrom'], 1)
         self.assertEqual(out['origins:wasDependentOn'], 0)
 
     def test_delete_resource(self):

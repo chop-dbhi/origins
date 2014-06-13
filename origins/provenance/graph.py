@@ -166,6 +166,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
     specialization = {}
     generation = {}
     invalidation = {}
+    derivation = {}
     dependence = {}
 
     short_sha1 = hashlib.sha1(data['resource'].encode('utf8'))\
@@ -181,6 +182,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
         oid_inv = oid + '_inv'
         oid_spec = oid + '_spec'
         oid_dep = oid + '_dep'
+        oid_der = oid + '_der'
 
         entity[oid] = {
             'origins:neo4j': gid,
@@ -226,6 +228,12 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
                 new_entities.add(oid_rev)
 
                 entity[oid_rev].update(new.get('properties', {}))
+
+                derivation[oid_der] = {
+                    'prov:generatedEntity': oid_rev,
+                    'prov:usedEntity': oid_old,
+                    'prov:type': 'prov:Revision',
+                }
 
                 # Invalidate previous revision
                 invalidation[oid_inv] = {
@@ -307,6 +315,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
         'prov:specializationOf': specialization,
         'prov:wasGeneratedBy': generation,
         'prov:wasInvalidatedBy': invalidation,
+        'prov:wasDerivedFrom': derivation,
         'origins:wasDependentOn': dependence,
     })
 
@@ -320,6 +329,7 @@ def sync_resource(data, add=True, remove=True, update=True, tx=None):
         'prov:specializationOf': len(specialization),
         'prov:wasGeneratedBy': len(generation),
         'prov:wasInvalidatedBy': len(invalidation),
+        'prov:wasDerivedFrom': len(derivation),
         'origins:wasDependentOn': len(dependence),
         'nodes': {
             'added': add_nodes,
