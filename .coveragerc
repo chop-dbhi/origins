@@ -9,6 +9,7 @@ exclude_lines =
     def __str__
     def __bytes__
     def __unicode__
+    except NameError:
     raise AssertionError
     raise NotImplemented(Error)?
     if 0:
