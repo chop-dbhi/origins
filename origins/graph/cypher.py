@@ -7,6 +7,7 @@ except NameError:
 
 
 def value_string(value):
+    "Converts a native Python value into an equivalent Cypher value."
     if value is True:
         return 'true'
     if value is False:
@@ -27,6 +28,7 @@ def value_string(value):
 
 
 def map_string(props):
+    "Converts a dict into a valid Cypher map structure."
     if not props:
         return '{}'
 
@@ -42,6 +44,7 @@ def map_string(props):
 
 
 def labels_string(labels):
+    "Converts and array of labels into the Cypher labels format for a node."
     if not labels:
         return ''
 

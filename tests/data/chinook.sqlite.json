@@ -431,7 +431,7 @@
             "type": "descends"
         }
     },
-    "nodes": {
+    "components": {
         "chinook.sqlite/Track/AlbumId": {
             "properties": {
                 "default_value": null,

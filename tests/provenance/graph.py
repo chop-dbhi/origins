@@ -46,7 +46,7 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(out['prov:wasDerivedFrom'], 0)
         self.assertEqual(out['origins:wasDependentOn'], 0)
 
-        self.data['nodes']['chinook.sqlite/Album/Title']['properties']['type'] = 'NVARCHAR(200)'  # noqa
+        self.data['components']['chinook.sqlite/Album/Title']['properties']['type'] = 'NVARCHAR(200)'  # noqa
 
         out = graph.sync_resource(self.data)
 
@@ -60,5 +60,5 @@ class GraphTestCase(unittest.TestCase):
         graph.create_resource(self.data)
         out = graph.delete_resource(self.data)
 
-        self.assertEqual(out['nodes'], 734)
+        self.assertEqual(out['components'], 734)
         self.assertEqual(out['relationships'], 658)
