@@ -1,0 +1,10 @@
+name,type,nullable,primary_key
+"TrackId","INTEGER",0,1
+"Name","NVARCHAR(200)",0,0
+"AlbumId","INTEGER",1,0
+"MediaTypeId","INTEGER",0,0
+"GenreId",INTEGER",1,0
+"Composer","NVARCHAR(220)",1,0
+"Milliseconds","INTEGER",0,0
+"Bytes","INTEGER",0,0
+"UnitPrice","NUMERIC(10,2)",0,0
