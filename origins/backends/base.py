@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import graphlib
-from ..utils import res, build_uri, PATH_SEPERATOR
+from ..utils import res, build_uri, id_func_factory, PATH_SEPERATOR
 
 try:
     str = unicode
@@ -26,7 +26,14 @@ class Client(object):
 
 
 class Rel(graphlib.Rel):
-    pass
+
+    def __eq__(self, other):
+        return self.type == other.type and \
+            self.start == other.start and \
+            self.end == other.end
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Node(graphlib.Node):
@@ -56,6 +63,13 @@ class Node(graphlib.Node):
         # Strip off 'u' for unicode literals
         label = repr(self.label).lstrip('u')
         return '{}({})'.format(typename, label)
+
+    def __eq__(self, other):
+        return self.__class__.__name__ == other.__class__.__name__ and \
+            self.uri == other.uri
+
+    def __ne__(self, other):
+        return not self == other
 
     def define(self, iterable, klass=None, relprops=None):
         """Create and relate a set nodes that are structurally or logically
@@ -168,3 +182,80 @@ class Node(graphlib.Node):
 
     def sync(self):
         "Loads and syncs the immediate relationships relative to this node."
+
+    def export(self, id_map=None, resource_id=None, subset=True):
+        """Returns a JSON-compatible export of nodes, relationships, and their
+        properties. id_map is a dict or function that takes node or rel
+        objects and returns ids. If it isn't passed, or when it returns None,
+        the default id for the resource is resource.uri, for nodes is
+        node.path, and for rels is rel.start.path:rel.type:rel.end.path.
+        resource_id is a string to be used as resource_id. If it is None,
+        self is assumed the be the resource and id_func (or self.uri by
+        default) is used. If the subset flag is True, then incoming 'DEFINES'
+        rels are not returned or followed.
+        """
+
+        version = 1.0
+        components = {}
+        relationships = {}
+
+        # Recursion stop condition
+        self._exporting = True
+
+        # Sync foreign keys if they exist
+        try:
+            self.foreign_keys
+        except:
+            pass
+
+        # Wrap id_map with in a function with defaults
+        id_func = id_func_factory(id_map)
+
+        if resource_id:
+            self_id = id_func(self)
+        else:
+            resource_id = self_id = id_func(self, resource=True)
+
+        components[self_id] = {
+            'label': self.label,
+            'type': self.__class__.__name__,
+            'properties': self.props.copy(),
+        }
+
+        for rel in self.rels():
+            # Implement subset behavior
+            if subset and rel.type == 'DEFINES' and self != rel.start:
+                continue
+            rel_id = id_func(rel)
+            relationships[rel_id] = {
+                'type': rel.type,
+                'start': id_func(rel.start),
+                'end': id_func(rel.end),
+                'properties': rel.props.copy()
+            }
+
+            other = rel.end if rel.start == self else rel.start
+            # Restrict recursion to this resource
+            if self.root != other.root:
+                other_id = id_func(other)
+                components[other_id] = {
+                    'label': other.label,
+                    'type': other.__class__.__name__,
+                    'properties': other.props.copy(),
+                }
+
+            # Recursion stop condition
+            elif not getattr(other, '_exporting', False):
+                other_export = other.export(id_map, resource_id=resource_id,
+                                            subset=subset)
+                components.update(other_export['components'])
+                relationships.update(other_export['relationships'])
+
+        self._exporting = False
+
+        return {
+            'version': version,
+            'resource': resource_id,
+            'components': components,
+            'relationships': relationships,
+        }

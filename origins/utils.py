@@ -5,6 +5,8 @@ try:
 except ImportError:
     from urllib.parse import quote as urlquote
 
+from graphlib import Node, Rel
+
 PATH_SEPERATOR = '/'
 
 
@@ -54,3 +56,34 @@ def build_uri(scheme, host=None, port=None, path=None):
         netloc = host
 
     return '{}://{}{}'.format(scheme, netloc, urlquote(path))
+
+
+def id_func_factory(id_map):
+    """Returns an id mapping function by wrapping an input dictionary or
+    function and ensuring that any obj passed to the function will fall back
+    to sensible defaults.
+    """
+
+    def default_id_func(obj, resource=False):
+        if isinstance(obj, Node):
+            if resource:
+                return obj.uri
+            else:
+                return obj.path
+        elif isinstance(obj, Rel):
+            return obj.start.path + ':' + obj.type + ':' + obj.end.path
+        else:
+            raise RuntimeError('No default id for non-Node or -Rel object:' +
+                               obj)
+
+    if callable(id_map):
+        def id_func(obj, resource=False):
+            return id_map(obj) or default_id_func(obj, resource)
+    elif isinstance(id_map, dict):
+        def id_func(obj, resource=False):
+            return id_map.get(obj) or default_id_func(obj, resource)
+    else:
+        def id_func(obj, resource=False):
+            return default_id_func(obj, resource)
+
+    return id_func
