@@ -127,10 +127,12 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 
 #### Files
 
-- `delimited` - General backed for acessing fixed width delimited files.
+- `delimited` - General backend for accessing fixed width delimited files.
     - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Delimited%2520Example.ipynb)
 - `csv` - Alias for the `,` delimiter
 - `tab` - Alias for the `\t` delimiter
+- `datadict` General backend for data dictionary-style delimited files.
+    - [Example](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/DataDict%2520Example.ipynb)
 
 **Options**
 
@@ -143,7 +145,7 @@ One or more **options** can be passed to the backend. **Hierarchy** lists the pa
 **Hierarchy**
 
 - `file`
-- `columns`
+- `columns` (delimited) | `fields` (datadict)
 
 #### Excel
 

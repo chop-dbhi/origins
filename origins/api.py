@@ -38,6 +38,7 @@ BACKENDS = {
     'noop': 'origins.backends.noop',
     'solvebio': 'origins.backends.solvebio',
     'harvest': 'origins.backends.harvest',
+    'datadict': 'origins.backends.datadict',
 }
 
 BACKEND_ALIASES = {

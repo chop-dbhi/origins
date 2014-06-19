@@ -2,8 +2,12 @@
 from __future__ import division, absolute_import
 
 import csv
-from .._csv import UnicodeDictReader, UnicodeCsvReader
+import logging
+from .._csv import UnicodeCsvReader
 from . import base, _file
+
+
+logger = logging.getLogger(__name__)
 
 
 class Client(_file.Client):
@@ -15,34 +19,37 @@ class Client(_file.Client):
         # Infer various attributes from the file including the dialect,
         # whether the sample
         with open(self.file_path, 'rU') as f:
-            sniffer = csv.Sniffer()
             sample = '\n'.join([l for l in f.readlines(sniff)])
             f.seek(0)
+
+            sniffer = csv.Sniffer()
 
             if not dialect:
                 dialect = sniffer.sniff(sample)
 
-            # Detect if a header is present to omit it from the count and
-            # to use as the column names
-            has_header = sniffer.has_header(sample)
+            r = UnicodeCsvReader(f, dialect=dialect,
+                                 delimiter=delimiter)
 
-            # Extract header names and fallback to positional values
+            # Get the first row as the header
+            _header = r.next()
+
+            # Explicit declaration of the header being present
+            if header is True:
+                has_header = True
+                header = _header
+            elif sniffer.has_header(sample):
+                has_header = True
+            else:
+                has_header = False
+                _header = range(len(_header))
+
             if not header:
-                if has_header:
-                    header = UnicodeDictReader(f, dialect=dialect,
-                                               delimiter=delimiter).fieldnames
-                else:
-                    r = UnicodeCsvReader(f, dialect=dialect,
-                                         delimiter=delimiter)
-                    header = range(len(next(r)))
+                header = tuple(_header)
 
-            self.header = header
-            self.has_header = has_header
-            self.dialect = dialect
-            self.delimiter = delimiter
-
-            # Map of column name to index
-            self._header_index = dict(zip(header, range(len(header))))
+        self.header = header
+        self.has_header = has_header
+        self.dialect = dialect
+        self.delimiter = delimiter
 
     @property
     def file_handler(self):
@@ -55,8 +62,8 @@ class Client(_file.Client):
 
     @property
     def reader(self):
-        return csv.reader(self.file_handler, dialect=self.dialect,
-                          delimiter=self.delimiter)
+        return UnicodeCsvReader(self.file_handler, dialect=self.dialect,
+                                delimiter=self.delimiter)
 
     def file(self):
         return {
