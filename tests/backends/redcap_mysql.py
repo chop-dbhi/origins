@@ -35,7 +35,7 @@ class RedcapMysqlClientTestCase(BackendTestCase):
         self.assertTrue('name' in sections[0])
 
     def test_fields(self):
-        fields = self.client.fields('demographics', 'default')
+        fields = self.client.fields('demographics', 'demographics')
         self.assertTrue(fields)
         self.assertTrue('name' in fields[0])
 
@@ -75,22 +75,22 @@ class RedcapMysqlApiTestCase(BackendTestCase):
         self.assertTrue(form.fields)
 
     def test_section(self):
-        section = self.project.forms['demographics'].sections['default']
+        section = self.project.forms['demographics'].sections['demographics']
 
-        self.assertEqual(section.label, 'Default')
-        self.assertEqual(section.name, 'default')
-        self.assertEqual(section.path, 'redcap_demo/demographics/default')
+        self.assertEqual(section.label, 'demographics')
+        self.assertEqual(section.name, 'demographics')
+        self.assertEqual(section.path, 'redcap_demo/demographics/demographics')
         self.assertEqual(len(section.relpath), 2)
         self.assertFalse(section.isroot)
         self.assertFalse(section.isleaf)
 
     def test_field(self):
-        field = self.project.forms['demographics'].sections['default']\
+        field = self.project.forms['demographics'].sections['demographics']\
             .fields['date_enrolled']
 
         self.assertEqual(field.label, 'Date subject signed consent')
         self.assertEqual(field.name, 'date_enrolled')
-        self.assertEqual(field.path, 'redcap_demo/demographics/default/'
+        self.assertEqual(field.path, 'redcap_demo/demographics/demographics/'
                                      'date_enrolled')
         self.assertEqual(len(field.relpath), 3)
         self.assertFalse(field.isroot)

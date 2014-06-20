@@ -46,11 +46,12 @@ class Client(base.Client):
         return forms
 
     def sections(self, form_name):
+        # Default section
         sections = [{
-            'name': 'default',
-            'label': 'Default',
+            'name': form_name,
             'order': 0
         }]
+
         order = 1
         unique = set()
 
@@ -71,7 +72,7 @@ class Client(base.Client):
     def fields(self, form_name, section_name):
         order = 0
         fields = []
-        current_section = 'default'
+        current_section = form_name
 
         for field in self._project.metadata:
             # Filter by form_name

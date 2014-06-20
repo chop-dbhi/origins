@@ -60,8 +60,7 @@ class Client(_file.Client):
         reader = self.reader
 
         sections = [{
-            'name': 'default',
-            'label': 'Default',
+            'name': form_name,
             'order': 0,
         }]
 
@@ -87,7 +86,7 @@ class Client(_file.Client):
 
         order = 0
         fields = []
-        current_section = 'default'
+        current_section = form_name
 
         for row in reader:
             # Filter by form_name
