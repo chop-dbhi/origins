@@ -271,6 +271,12 @@ _Note: Sheets are assumed to be fixed width based on the first row._
 View the [example using SQLite](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Data%20Access%20Layer.ipynb)
 
 
+## Resource Exporter
+
+The resource exporter returns a JSON-compatible format representing the nodes and relationships from the "connect" API above. This format is intended to be consumed by the Origins graph API, however it can serve as a general purpose format for other consumers.
+
+See an [example usage](http://nbviewer.ipython.org/urls/raw.github.com/cbmi/origins/master/notebooks/Resource%20Exporter.ipynb)
+
 ## Deprecated APIs
 
 - Support for exporting to Neo4j has been removed in Origins in favor of the APIs available in [graphlib](https://github.com/bruth/graphlib/) which Origins currently depends on.
