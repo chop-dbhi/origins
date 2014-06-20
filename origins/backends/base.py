@@ -168,3 +168,17 @@ class Node(graphlib.Node):
 
     def sync(self):
         "Loads and syncs the immediate relationships relative to this node."
+
+    def export(self, resource=None, cls=None):
+        """Exports this node as a resource and all outgoing relationships and
+        nodes.
+        """
+        from origins.resources import export
+
+        if not resource:
+            resource = {
+                'id': self.uri,
+                'label': self.label,
+            }
+
+        return export(resource, self, incoming=False, cls=cls)
