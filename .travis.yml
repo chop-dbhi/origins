@@ -17,7 +17,7 @@ before_install:
     - sh tests/start-neo4j.sh
 
 install:
-    - pip install -q coveralls --use-mirrors
+    - pip install -q coveralls
     - pip install -r tests/requirements.txt
     - pip install flake8
 
