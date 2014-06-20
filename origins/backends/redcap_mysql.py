@@ -81,8 +81,7 @@ class Client(mysql.Client):
         keys = ('name',)
 
         sections = [{
-            'name': 'default',
-            'label': 'Default',
+            'name': form_name,
             'order': 0,
         }]
 
@@ -127,7 +126,7 @@ class Client(mysql.Client):
                 'matrix', 'order')
 
         fields = []
-        current_section = 'default'
+        current_section = form_name
 
         for row in self.fetchall(query, [self.project_name, form_name]):
             attrs = dict(zip(keys, row))
