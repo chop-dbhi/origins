@@ -21,7 +21,6 @@ class DelimitedClientTestCase(BackendTestCase):
     def test_setup(self):
         self.assertTrue(self.client.has_header)
         self.assertEqual(self.client.delimiter, ',')
-        self.assertEqual(len(self.client._header_index), 9)
 
     def test_properties(self):
         self.assertGreater(self.client.file_line_count(), 0)
