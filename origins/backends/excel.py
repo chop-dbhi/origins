@@ -4,6 +4,8 @@ from . import base, _file
 
 import openpyxl
 
+OPENPYXL_MAJOR_VERSION = int(openpyxl.__version__[0])
+
 
 class Client(_file.Client):
     def __init__(self, path, headers=True, **kwargs):
@@ -16,6 +18,7 @@ class Client(_file.Client):
         else:
             self.has_headers = False
             first_sheet = self.workbook.get_sheet_names()[0]
+
             if isinstance(headers, (list, tuple)):
                 self._sheet_columns[first_sheet] = headers
             elif isinstance(headers, dict):
@@ -40,8 +43,12 @@ class Client(_file.Client):
         else:
             sheet = self.workbook.get_sheet_by_name(sheet_name)
             first_row = next(sheet.iter_rows())
+
             if self.has_headers:
-                column_names = [c.internal_value for c in first_row]
+                if OPENPYXL_MAJOR_VERSION > 1:
+                    column_names = [c.value for c in first_row]
+                else:
+                    column_names = [c.internal_value for c in first_row]
             else:
                 column_names = range(len(first_row))
 
