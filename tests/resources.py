@@ -35,7 +35,7 @@ class ResourceExporterTestCase(unittest.TestCase):
         self.assertEqual(len(data['components']), 76)
         self.assertEqual(len(data['relationships']), 85)
 
-        self.assertTrue('label' in data['relationships'].values()[0])
+        self.assertTrue('label' in list(data['relationships'].values())[0])
 
     def test_node(self):
         data = self.db.export()
