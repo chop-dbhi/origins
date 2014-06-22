@@ -73,7 +73,7 @@ class Workbook(_file.File):
         return self.definitions('sheet', sort='index')
 
 
-class Sheet(base.Node):
+class Sheet(base.Component):
     def sync(self):
         self.define(self.client.columns(self['name']), Column)
 
@@ -82,7 +82,7 @@ class Sheet(base.Node):
         return self.definitions('column', sort='index')
 
 
-class Column(base.Node):
+class Column(base.Component):
     pass
 
 

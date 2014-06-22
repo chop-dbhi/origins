@@ -84,7 +84,7 @@ class Client(base.Client):
         return self.db[collection_name].distinct(field_name)
 
 
-class Database(base.Node):
+class Database(base.Component):
     def sync(self):
         self.update(self.client.database())
         self.define(self.client.collections(), Collection)
@@ -94,7 +94,7 @@ class Database(base.Node):
         return self.definitions('collection', sort='name')
 
 
-class Collection(base.Node):
+class Collection(base.Component):
     def sync(self):
         self.define(self.client.fields(self['name']), Field)
 
@@ -103,7 +103,7 @@ class Collection(base.Node):
         return self.definitions('field', sort='name')
 
 
-class Field(base.Node):
+class Field(base.Component):
     pass
 
 

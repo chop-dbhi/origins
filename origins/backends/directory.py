@@ -63,7 +63,7 @@ class Client(base.Client):
         return files
 
 
-class Directory(base.Node):
+class Directory(base.Component):
     def sync(self):
         self.update(self.client.directory())
         self.define(self.client.files(), File)

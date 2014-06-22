@@ -170,7 +170,7 @@ class Client(_database.Client):
         return columns
 
 
-class Database(base.Node):
+class Database(base.Component):
     def sync(self):
         self.update(self.client.database())
         self.define(self.client.schemas(), Schema)
@@ -186,7 +186,7 @@ class Database(base.Node):
         return default_schema.tables
 
 
-class Schema(base.Node):
+class Schema(base.Component):
     def sync(self):
         self.define(self.client.tables(self['name']), Table)
 

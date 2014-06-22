@@ -238,7 +238,7 @@ class Client(base.Client):
             return tuple(row[0] for row in self.fetchall(query))
 
 
-class Database(base.Node):
+class Database(base.Component):
     def sync(self):
         self.update(self.client.database())
         self.define(self.client.tables(), Table)
@@ -248,7 +248,7 @@ class Database(base.Node):
         return self.definitions('table', sort='name')
 
 
-class Table(base.Node):
+class Table(base.Component):
     def sync(self):
         self.define(self.client.columns(self['name']), Column)
 
@@ -277,7 +277,7 @@ class Table(base.Node):
                                   sort=sort, iterator=iterator)
 
 
-class Column(base.Node):
+class Column(base.Component):
     def sync(self):
         self._foreign_keys_synced = False
 

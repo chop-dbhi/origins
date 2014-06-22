@@ -6,5 +6,5 @@ class Client(base.Client):
     pass
 
 
-class Origin(base.Node):
+class Origin(base.Component):
     pass

@@ -5,7 +5,7 @@ from ..utils import cached_property
 from . import base
 
 
-class Project(base.Node):
+class Project(base.Component):
     def sync(self):
         self.update(self.client.project())
         self.define(self.client.forms(), Form)
@@ -15,7 +15,7 @@ class Project(base.Node):
         return self.definitions('form', sort='order')
 
 
-class Form(base.Node):
+class Form(base.Component):
     def sync(self):
         self.define(self.client.sections(self['name']), Section)
 
@@ -31,7 +31,7 @@ class Form(base.Node):
         return Nodes(fields)
 
 
-class Section(base.Node):
+class Section(base.Component):
     def sync(self):
         form_name = self.parent['name']
         self.define(self.client.fields(form_name, self['name']), Field)
@@ -41,7 +41,7 @@ class Section(base.Node):
         return self.definitions('field', sort='order')
 
 
-class Field(base.Node):
+class Field(base.Component):
     @cached_property
     def choices(self):
         if self['choices']:

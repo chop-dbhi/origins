@@ -102,7 +102,7 @@ class File(_file.File):
         return self.definitions('column', sort='index')
 
 
-class Column(base.Node):
+class Column(base.Component):
     pass
 
 

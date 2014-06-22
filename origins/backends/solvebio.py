@@ -38,7 +38,7 @@ class Client(base.Client):
             }
 
 
-class Service(base.Node):
+class Service(base.Component):
     def sync(self):
         self.update(self.client.service())
         self.define(self.client.namespaces(), Namespace)
@@ -48,7 +48,7 @@ class Service(base.Node):
         return self.definitions('namespace')
 
 
-class Namespace(base.Node):
+class Namespace(base.Component):
     label_attribute = 'title'
 
     def sync(self):
@@ -59,7 +59,7 @@ class Namespace(base.Node):
         return self.definitions('dataset')
 
 
-class Dataset(base.Node):
+class Dataset(base.Component):
     def sync(self):
         self.define(self.client.fields(self.parent['name'], self['name']),
                     Field)
@@ -69,7 +69,7 @@ class Dataset(base.Node):
         return self.definitions('field')
 
 
-class Field(base.Node):
+class Field(base.Component):
     def sync(self):
         namespace = self.parent.parent['name']
         dataset = self.parent['name']

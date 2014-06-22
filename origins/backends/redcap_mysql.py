@@ -139,7 +139,7 @@ class Client(mysql.Client):
                 continue
 
             # Remove header attribute since it is redundant with respect to
-            # the parent node.
+            # the section.
             attrs.pop('header')
             fields.append(attrs)
 

@@ -2,7 +2,7 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 from collections import deque
-from .backends.base import Node, Rel
+from .backends.base import Component, Rel
 
 try:
     str = unicode
@@ -65,26 +65,26 @@ class ResourceExporter(object):
 
         self.exported.add(rel)
 
-    def _export_component(self, node, traverse, type, incoming, outgoing):
-        self._prepare_component(node)
+    def _export_component(self, comp, traverse, type, incoming, outgoing):
+        self._prepare_component(comp)
 
-        key = self.component_id(node)
+        key = self.component_id(comp)
 
         if key in self.components:
             raise ValueError('component id {} is not unique'.format(key))
 
-        data = self.component_data(node)
+        data = self.component_data(comp)
         self.components[key] = data
 
-        self.exported.add(node)
+        self.exported.add(comp)
 
         if traverse:
             rels = []
 
             # Queue relationships to neighbors. The start and end
-            # nodes are guaranteed to be queued first, so there is
+            # components are guaranteed to be queued first, so there is
             # no need to queue them here.
-            for rel in node.rels(type=type, incoming=incoming,
+            for rel in comp.rels(type=type, incoming=incoming,
                                  outgoing=outgoing):
                 self._queue(rel.start)
                 self._queue(rel.end)
@@ -94,7 +94,7 @@ class ResourceExporter(object):
             self._queue(rels)
 
     def _export(self, item, **kwargs):
-        if isinstance(item, Node):
+        if isinstance(item, Component):
             self._export_component(item, **kwargs)
         else:
             self._export_relationship(item)
@@ -104,7 +104,7 @@ class ResourceExporter(object):
             for _item in item:
                 self._queue(_item)
         elif item not in self.queue and item not in self.exported:
-            if isinstance(item, Node):
+            if isinstance(item, Component):
                 self.queue.append(item)
             elif isinstance(item, Rel):
                 self._queue(item.start)
@@ -114,24 +114,24 @@ class ResourceExporter(object):
                 raise TypeError('unable to queue objects with type "{}"'
                                 .format(type(item)))
 
-    # HACK: This ensures nodes that use lazy loading have their caches
+    # HACK: This ensures components that use lazy loading have their caches
     # pre-filled. See issue #11 for the discussion on the refactor.
-    def _prepare_component(self, node):
-        if hasattr(node, '_foreign_keys_synced'):
-            if not node._foreign_keys_synced:
-                node.foreign_keys
+    def _prepare_component(self, comp):
+        if hasattr(comp, '_foreign_keys_synced'):
+            if not comp._foreign_keys_synced:
+                comp.foreign_keys
 
     def _prepare_relationship(self, rel):
         pass
 
-    def component_data(self, node):
+    def component_data(self, comp):
         """Returns a dict of metadata and embedded properties for a
         component.
         """
         return {
-            'label': node.label,
-            'type': node.__class__.__name__,
-            'properties': node.props.copy(),
+            'label': comp.label,
+            'type': comp.__class__.__name__,
+            'properties': comp.props.copy(),
         }
 
     def relationship_data(self, rel):
@@ -144,9 +144,9 @@ class ResourceExporter(object):
             'properties': rel.props.copy(),
         }
 
-    def component_id(self, node):
+    def component_id(self, comp):
         "Returns a unique identifier for a component."
-        return node.path
+        return comp.path
 
     def relationship_id(self, rel):
         "Returns a unique identifier for a relationship."
@@ -157,11 +157,11 @@ class ResourceExporter(object):
 
     def export(self, item=None, traverse=True, type=None, incoming=True,
                outgoing=True):
-        """Prepares a node or relationship (or list of them) for export.
+        """Prepares a component or relationship (or list of them) for export.
 
-        If traverse is true, node relationships will be traversed and exported
-        recursively. The `type`, `incoming` and `outgoing` arguments dictate
-        which relationships will be handled.
+        If traverse is true, component relationships will be traversed and
+        exported recursively. The `type`, `incoming` and `outgoing` arguments
+        dictate which relationships will be handled.
         """
         if item is not None:
             self._queue(item)

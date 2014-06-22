@@ -23,6 +23,6 @@ class Client(base.Client):
         }
 
 
-class File(base.Node):
+class File(base.Component):
     def sync(self):
         self.update(self.client.file())

@@ -62,7 +62,7 @@ class Client(_file.Client):
         return fields
 
 
-class File(base.Node):
+class File(base.Component):
     def sync(self):
         self.update(self.client.file())
         self.define(self.client.fields(), Field)
@@ -72,7 +72,7 @@ class File(base.Node):
         return self.definitions('field', sort='index')
 
 
-class Field(base.Node):
+class Field(base.Component):
     pass
 
 

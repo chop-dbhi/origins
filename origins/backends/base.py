@@ -29,10 +29,10 @@ class Rel(graphlib.Rel):
     pass
 
 
-class Node(graphlib.Node):
-    """A node contains attributes and a parent (if not the origin).
+class Component(graphlib.Node):
+    """A component contains attributes and a parent (if not the origin).
     It implements a dict-like interface for accessing the attributes of the
-    node.
+    component.
     """
     name_attribute = 'name'
     label_attribute = 'label'
@@ -42,7 +42,7 @@ class Node(graphlib.Node):
     def __init__(self, *args, **kwargs):
         self.parent = kwargs.pop('parent', None)
         self.client = kwargs.pop('client', None)
-        super(Node, self).__init__(*args, **kwargs)
+        super(Component, self).__init__(*args, **kwargs)
         self.sync()
 
     def __str__(self):
@@ -58,11 +58,10 @@ class Node(graphlib.Node):
         return '{}({})'.format(typename, label)
 
     def define(self, iterable, klass=None, relprops=None):
-        """Create and relate a set nodes that are structurally or logically
-        defined under the current node. Examples include columns within a
-        table or files in a directory.
+        """Create and relate a set components that are structurally or
+        logically defined under the current component.
 
-        If `klass` is specified, the current node's class will be used.
+        If `klass` is specified, the current component's class will be used.
         """
         if klass is None:
             klass = self.__class__
@@ -78,9 +77,9 @@ class Node(graphlib.Node):
             self.relate(instance, 'DEFINES', relprops)
 
     def definitions(self, type=None, sort=None):
-        """Return nodes defined under the current node of the specified type
-        and optionally sorting them by a property or function. This is the
-        complement function to the `define` method.
+        """Return components defined under the current component of the
+        specified type and optionally sorting them by a property or function.
+        This is the complement function to the `define` method.
         """
         rels = self.rels(type='DEFINES', outgoing=True)
 
@@ -97,24 +96,24 @@ class Node(graphlib.Node):
     # Hierarchy-based properties relative to the DEFINES relationship
     @property
     def root(self):
-        "Returns the root node."
+        "Returns the root component."
         if self.parent:
             return self.parent.root
         return self
 
     @property
     def isroot(self):
-        "Returns true if this node is the root."
+        "Returns true if this component is the root."
         return self.root is self
 
     @property
     def isleaf(self):
-        "Returns true if this node is a leaf."
+        "Returns true if this component is a leaf."
         return len(self.rels(type='DEFINES', outgoing=True)) == 0
 
     @property
     def relpath(self):
-        "Returns the path of relationships from the root to this node."
+        "Returns the path of relationships from the root to this component."
         path = []
         parent = self.parent
         current = self
@@ -128,27 +127,29 @@ class Node(graphlib.Node):
 
     @property
     def path(self):
-        "Returns the pathname of this node from the root."
+        "Returns the pathname of this component from the root."
         names = [str(r.start) for r in self.relpath] + [str(self)]
         return PATH_SEPERATOR.join(names)
 
     @property
     def uri(self):
-        "Returns the URI of this node. This is useful as a unique identifier."
+        """Returns the URI of this component. This is useful as a
+        unique identifier.
+        """
         return self.client.uri(self.path)
 
     @property
     def name(self):
-        """Returns the name for this node. The `name_attribute` class
+        """Returns the name for this component. The `name_attribute` class
         property can be set to an alternate property key.
         """
         return self.props.get(self.name_attribute)
 
     @property
     def label(self):
-        """Returns the label for this node. The `label_attribute` class
+        """Returns the label for this component. The `label_attribute` class
         property can be set to an alternate property key. Falls back to
-        this node's `name`.
+        this component's `name`.
         """
         label = self.props.get(self.label_attribute)
         if label is None or label == '':
@@ -156,7 +157,7 @@ class Node(graphlib.Node):
         return label
 
     def serialize(self, uri=True, name=True, label=True):
-        "Serializes node properties."
+        "Serializes component properties."
         props = self.props.copy()
         if uri:
             props['uri'] = self.uri
@@ -167,11 +168,11 @@ class Node(graphlib.Node):
         return props
 
     def sync(self):
-        "Loads and syncs the immediate relationships relative to this node."
+        "Loads and syncs the immediate relationships for to this component."
 
     def export(self, resource=None, cls=None):
-        """Exports this node as a resource and all outgoing relationships and
-        nodes.
+        """Exports this component as a resource and all outgoing
+        relationships and components.
         """
         from origins.resources import export
 

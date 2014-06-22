@@ -29,7 +29,7 @@ class File(_file.File):
         return self.definitions('field', sort='index')
 
 
-class Field(base.Node):
+class Field(base.Component):
     pass
 
 

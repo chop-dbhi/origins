@@ -101,7 +101,7 @@ class Client(base.Client):
         return fields
 
 
-class Application(base.Node):
+class Application(base.Component):
     def sync(self):
         self.props.update(self.client.application())
 
@@ -113,7 +113,7 @@ class Application(base.Node):
         return self.definitions('category')
 
 
-class Category(base.Node):
+class Category(base.Component):
     def sync(self):
         concepts = self.client.concepts(self['id'])
         self.define(concepts, Concept)
@@ -123,7 +123,7 @@ class Category(base.Node):
         return self.definitions('concept')
 
 
-class Concept(base.Node):
+class Concept(base.Component):
     def sync(self):
         fields = self.client.fields(self['id'])
         self.define(fields, Field)
@@ -133,7 +133,7 @@ class Concept(base.Node):
         return self.definitions('field')
 
 
-class Field(base.Node):
+class Field(base.Component):
     pass
 
 
