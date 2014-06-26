@@ -98,3 +98,10 @@ def connect(backend, **options):
     module = import_backend(backend)
     client = module.Client(**options)
     return module.Origin(client=client)
+
+
+def export(backend, **options):
+    "Convenience function to connect and export a resource."
+    resource = options.pop('resource', None)
+    conn = connect(backend, **options)
+    return conn.export(resource)
