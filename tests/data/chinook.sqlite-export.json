@@ -1,0 +1,1565 @@
+{
+    "relationships": {
+        "chinook.sqlite:DEFINES:chinook.sqlite/Invoice": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Invoice",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/ReportsTo": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/ReportsTo",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/InvoiceLine:DEFINES:chinook.sqlite/InvoiceLine/Quantity": {
+            "start": "chinook.sqlite/InvoiceLine",
+            "end": "chinook.sqlite/InvoiceLine/Quantity",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/BillingPostalCode": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/BillingPostalCode",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/Artist": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Artist",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/Playlist": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Playlist",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/State": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/State",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/MediaType:DEFINES:chinook.sqlite/MediaType/Name": {
+            "start": "chinook.sqlite/MediaType",
+            "end": "chinook.sqlite/MediaType/Name",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Playlist:DEFINES:chinook.sqlite/Playlist/PlaylistId": {
+            "start": "chinook.sqlite/Playlist",
+            "end": "chinook.sqlite/Playlist/PlaylistId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/EmployeeId": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/EmployeeId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/Email": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/Email",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/HireDate": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/HireDate",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/AlbumId": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/AlbumId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/InvoiceLine:DEFINES:chinook.sqlite/InvoiceLine/InvoiceId": {
+            "start": "chinook.sqlite/InvoiceLine",
+            "end": "chinook.sqlite/InvoiceLine/InvoiceId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/InvoiceLine:DEFINES:chinook.sqlite/InvoiceLine/TrackId": {
+            "start": "chinook.sqlite/InvoiceLine",
+            "end": "chinook.sqlite/InvoiceLine/TrackId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track/AlbumId:REFERENCES:chinook.sqlite/Album/AlbumId": {
+            "start": "chinook.sqlite/Track/AlbumId",
+            "end": "chinook.sqlite/Album/AlbumId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Album_AlbumId"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/Milliseconds": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/Milliseconds",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/Title": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/Title",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/BillingState": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/BillingState",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/BillingCity": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/BillingCity",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/State": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/State",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Album:DEFINES:chinook.sqlite/Album/AlbumId": {
+            "start": "chinook.sqlite/Album",
+            "end": "chinook.sqlite/Album/AlbumId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/Address": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/Address",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/GenreId": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/GenreId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Genre:DEFINES:chinook.sqlite/Genre/Name": {
+            "start": "chinook.sqlite/Genre",
+            "end": "chinook.sqlite/Genre/Name",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/MediaTypeId": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/MediaTypeId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/Address": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/Address",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/Country": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/Country",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/UnitPrice": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/UnitPrice",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/CustomerId": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/CustomerId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/PlaylistTrack/TrackId:REFERENCES:chinook.sqlite/Track/TrackId": {
+            "start": "chinook.sqlite/PlaylistTrack/TrackId",
+            "end": "chinook.sqlite/Track/TrackId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Track_TrackId"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/SupportRepId": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/SupportRepId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/InvoiceId": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/InvoiceId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/Phone": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/Phone",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/Composer": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/Composer",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Album:DEFINES:chinook.sqlite/Album/Title": {
+            "start": "chinook.sqlite/Album",
+            "end": "chinook.sqlite/Album/Title",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/PostalCode": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/PostalCode",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Invoice/CustomerId:REFERENCES:chinook.sqlite/Customer/CustomerId": {
+            "start": "chinook.sqlite/Invoice/CustomerId",
+            "end": "chinook.sqlite/Customer/CustomerId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Customer_CustomerId"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/Employee": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Employee",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/InvoiceLine/TrackId:REFERENCES:chinook.sqlite/Track/TrackId": {
+            "start": "chinook.sqlite/InvoiceLine/TrackId",
+            "end": "chinook.sqlite/Track/TrackId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Track_TrackId"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/Bytes": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/Bytes",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/PlaylistTrack/PlaylistId:REFERENCES:chinook.sqlite/Playlist/PlaylistId": {
+            "start": "chinook.sqlite/PlaylistTrack/PlaylistId",
+            "end": "chinook.sqlite/Playlist/PlaylistId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Playlist_PlaylistId"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/Fax": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/Fax",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/PlaylistTrack:DEFINES:chinook.sqlite/PlaylistTrack/PlaylistId": {
+            "start": "chinook.sqlite/PlaylistTrack",
+            "end": "chinook.sqlite/PlaylistTrack/PlaylistId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/InvoiceLine:DEFINES:chinook.sqlite/InvoiceLine/InvoiceLineId": {
+            "start": "chinook.sqlite/InvoiceLine",
+            "end": "chinook.sqlite/InvoiceLine/InvoiceLineId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track/MediaTypeId:REFERENCES:chinook.sqlite/MediaType/MediaTypeId": {
+            "start": "chinook.sqlite/Track/MediaTypeId",
+            "end": "chinook.sqlite/MediaType/MediaTypeId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_MediaType_MediaTypeId"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/BillingAddress": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/BillingAddress",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/TrackId": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/TrackId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track/GenreId:REFERENCES:chinook.sqlite/Genre/GenreId": {
+            "start": "chinook.sqlite/Track/GenreId",
+            "end": "chinook.sqlite/Genre/GenreId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Genre_GenreId"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/Email": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/Email",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/LastName": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/LastName",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/PostalCode": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/PostalCode",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/City": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/City",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/Company": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/Company",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/InvoiceLine": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/InvoiceLine",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/FirstName": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/FirstName",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Track:DEFINES:chinook.sqlite/Track/Name": {
+            "start": "chinook.sqlite/Track",
+            "end": "chinook.sqlite/Track/Name",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/Country": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/Country",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/Album": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Album",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Playlist:DEFINES:chinook.sqlite/Playlist/Name": {
+            "start": "chinook.sqlite/Playlist",
+            "end": "chinook.sqlite/Playlist/Name",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/Genre": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Genre",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/BillingCountry": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/BillingCountry",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/CustomerId": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/CustomerId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/FirstName": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/FirstName",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/Phone": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/Phone",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Album:DEFINES:chinook.sqlite/Album/ArtistId": {
+            "start": "chinook.sqlite/Album",
+            "end": "chinook.sqlite/Album/ArtistId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/City": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/City",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/PlaylistTrack:DEFINES:chinook.sqlite/PlaylistTrack/TrackId": {
+            "start": "chinook.sqlite/PlaylistTrack",
+            "end": "chinook.sqlite/PlaylistTrack/TrackId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee/ReportsTo:REFERENCES:chinook.sqlite/Employee/EmployeeId": {
+            "start": "chinook.sqlite/Employee/ReportsTo",
+            "end": "chinook.sqlite/Employee/EmployeeId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Employee_EmployeeId"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/MediaType": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/MediaType",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Customer/SupportRepId:REFERENCES:chinook.sqlite/Employee/EmployeeId": {
+            "start": "chinook.sqlite/Customer/SupportRepId",
+            "end": "chinook.sqlite/Employee/EmployeeId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Employee_EmployeeId"
+            }
+        },
+        "chinook.sqlite/InvoiceLine:DEFINES:chinook.sqlite/InvoiceLine/UnitPrice": {
+            "start": "chinook.sqlite/InvoiceLine",
+            "end": "chinook.sqlite/InvoiceLine/UnitPrice",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/BirthDate": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/BirthDate",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/PlaylistTrack": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/PlaylistTrack",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/Track": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Track",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Customer:DEFINES:chinook.sqlite/Customer/Fax": {
+            "start": "chinook.sqlite/Customer",
+            "end": "chinook.sqlite/Customer/Fax",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/InvoiceLine/InvoiceId:REFERENCES:chinook.sqlite/Invoice/InvoiceId": {
+            "start": "chinook.sqlite/InvoiceLine/InvoiceId",
+            "end": "chinook.sqlite/Invoice/InvoiceId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Invoice_InvoiceId"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/InvoiceDate": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/InvoiceDate",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Artist:DEFINES:chinook.sqlite/Artist/Name": {
+            "start": "chinook.sqlite/Artist",
+            "end": "chinook.sqlite/Artist/Name",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite:DEFINES:chinook.sqlite/Customer": {
+            "start": "chinook.sqlite",
+            "end": "chinook.sqlite/Customer",
+            "type": "DEFINES",
+            "properties": {
+                "type": "table"
+            }
+        },
+        "chinook.sqlite/Invoice:DEFINES:chinook.sqlite/Invoice/Total": {
+            "start": "chinook.sqlite/Invoice",
+            "end": "chinook.sqlite/Invoice/Total",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Artist:DEFINES:chinook.sqlite/Artist/ArtistId": {
+            "start": "chinook.sqlite/Artist",
+            "end": "chinook.sqlite/Artist/ArtistId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Genre:DEFINES:chinook.sqlite/Genre/GenreId": {
+            "start": "chinook.sqlite/Genre",
+            "end": "chinook.sqlite/Genre/GenreId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/MediaType:DEFINES:chinook.sqlite/MediaType/MediaTypeId": {
+            "start": "chinook.sqlite/MediaType",
+            "end": "chinook.sqlite/MediaType/MediaTypeId",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Employee:DEFINES:chinook.sqlite/Employee/LastName": {
+            "start": "chinook.sqlite/Employee",
+            "end": "chinook.sqlite/Employee/LastName",
+            "type": "DEFINES",
+            "properties": {
+                "type": "column"
+            }
+        },
+        "chinook.sqlite/Album/ArtistId:REFERENCES:chinook.sqlite/Artist/ArtistId": {
+            "start": "chinook.sqlite/Album/ArtistId",
+            "end": "chinook.sqlite/Artist/ArtistId",
+            "type": "REFERENCES",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Artist_ArtistId"
+            }
+        }
+    },
+    "version": 1.0,
+    "resource": {
+        "origins:id": "sqlite:///chinook.sqlite",
+        "origins:label": "chinook.sqlite"
+    },
+    "components": {
+        "chinook.sqlite/Track/AlbumId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 2,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "INTEGER",
+                "name": "AlbumId"
+            },
+            "label": "AlbumId"
+        },
+        "chinook.sqlite/Invoice/BillingState": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 5,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "BillingState"
+            },
+            "label": "BillingState"
+        },
+        "chinook.sqlite/Customer/CustomerId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "CustomerId"
+            },
+            "label": "CustomerId"
+        },
+        "chinook.sqlite/Employee/EmployeeId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "EmployeeId"
+            },
+            "label": "EmployeeId"
+        },
+        "chinook.sqlite/Invoice": {
+            "type": "Table",
+            "properties": {
+                "name": "Invoice"
+            },
+            "label": "Invoice"
+        },
+        "chinook.sqlite/InvoiceLine": {
+            "type": "Table",
+            "properties": {
+                "name": "InvoiceLine"
+            },
+            "label": "InvoiceLine"
+        },
+        "chinook.sqlite/InvoiceLine/Quantity": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 4,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "Quantity"
+            },
+            "label": "Quantity"
+        },
+        "chinook.sqlite/Track/Milliseconds": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 6,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "Milliseconds"
+            },
+            "label": "Milliseconds"
+        },
+        "chinook.sqlite/Album/ArtistId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 2,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "ArtistId"
+            },
+            "label": "ArtistId"
+        },
+        "chinook.sqlite/Customer/Address": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 4,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(70)",
+                "name": "Address"
+            },
+            "label": "Address"
+        },
+        "chinook.sqlite/Customer/State": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 6,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "State"
+            },
+            "label": "State"
+        },
+        "chinook.sqlite/Album/Title": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NVARCHAR(160)",
+                "name": "Title"
+            },
+            "label": "Title"
+        },
+        "chinook.sqlite/Playlist/PlaylistId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "PlaylistId"
+            },
+            "label": "PlaylistId"
+        },
+        "chinook.sqlite/Track/UnitPrice": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 8,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NUMERIC(10,2)",
+                "name": "UnitPrice"
+            },
+            "label": "UnitPrice"
+        },
+        "chinook.sqlite/Invoice/Total": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 8,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NUMERIC(10,2)",
+                "name": "Total"
+            },
+            "label": "Total"
+        },
+        "chinook.sqlite/Employee/State": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 9,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "State"
+            },
+            "label": "State"
+        },
+        "chinook.sqlite/InvoiceLine/InvoiceId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "InvoiceId"
+            },
+            "label": "InvoiceId"
+        },
+        "chinook.sqlite/Invoice/InvoiceDate": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 2,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "DATETIME",
+                "name": "InvoiceDate"
+            },
+            "label": "InvoiceDate"
+        },
+        "chinook.sqlite/Invoice/BillingCountry": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 6,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "BillingCountry"
+            },
+            "label": "BillingCountry"
+        },
+        "chinook.sqlite/PlaylistTrack/TrackId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "TrackId"
+            },
+            "label": "TrackId"
+        },
+        "chinook.sqlite/Track/MediaTypeId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 3,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "MediaTypeId"
+            },
+            "label": "MediaTypeId"
+        },
+        "chinook.sqlite/Customer/Country": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 7,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "Country"
+            },
+            "label": "Country"
+        },
+        "chinook.sqlite/Employee": {
+            "type": "Table",
+            "properties": {
+                "name": "Employee"
+            },
+            "label": "Employee"
+        },
+        "chinook.sqlite/Customer/Company": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 3,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(80)",
+                "name": "Company"
+            },
+            "label": "Company"
+        },
+        "chinook.sqlite/Customer/City": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 5,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "City"
+            },
+            "label": "City"
+        },
+        "chinook.sqlite/MediaType/Name": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(120)",
+                "name": "Name"
+            },
+            "label": "Name"
+        },
+        "chinook.sqlite/InvoiceLine/TrackId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 2,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "TrackId"
+            },
+            "label": "TrackId"
+        },
+        "chinook.sqlite/Artist/Name": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(120)",
+                "name": "Name"
+            },
+            "label": "Name"
+        },
+        "chinook.sqlite/Album": {
+            "type": "Table",
+            "properties": {
+                "name": "Album"
+            },
+            "label": "Album"
+        },
+        "chinook.sqlite/PlaylistTrack": {
+            "type": "Table",
+            "properties": {
+                "name": "PlaylistTrack"
+            },
+            "label": "PlaylistTrack"
+        },
+        "chinook.sqlite/Employee/Phone": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 12,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(24)",
+                "name": "Phone"
+            },
+            "label": "Phone"
+        },
+        "chinook.sqlite/Customer/LastName": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 2,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NVARCHAR(20)",
+                "name": "LastName"
+            },
+            "label": "LastName"
+        },
+        "chinook.sqlite/Employee/HireDate": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 6,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "DATETIME",
+                "name": "HireDate"
+            },
+            "label": "HireDate"
+        },
+        "chinook.sqlite/Playlist/Name": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(120)",
+                "name": "Name"
+            },
+            "label": "Name"
+        },
+        "chinook.sqlite/Track/TrackId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "TrackId"
+            },
+            "label": "TrackId"
+        },
+        "chinook.sqlite/MediaType": {
+            "type": "Table",
+            "properties": {
+                "name": "MediaType"
+            },
+            "label": "MediaType"
+        },
+        "chinook.sqlite/Playlist": {
+            "type": "Table",
+            "properties": {
+                "name": "Playlist"
+            },
+            "label": "Playlist"
+        },
+        "chinook.sqlite/Employee/PostalCode": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 11,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(10)",
+                "name": "PostalCode"
+            },
+            "label": "PostalCode"
+        },
+        "chinook.sqlite/Genre/Name": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(120)",
+                "name": "Name"
+            },
+            "label": "Name"
+        },
+        "chinook.sqlite/Customer/Email": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 11,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NVARCHAR(60)",
+                "name": "Email"
+            },
+            "label": "Email"
+        },
+        "chinook.sqlite/Invoice/CustomerId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "CustomerId"
+            },
+            "label": "CustomerId"
+        },
+        "chinook.sqlite": {
+            "type": "Database",
+            "properties": {
+                "path": "/Users/ruthb/Code/cbmi/origins/tests/data/chinook.sqlite",
+                "version": 32,
+                "name": "chinook.sqlite",
+                "size": 1067008
+            },
+            "label": "chinook.sqlite"
+        },
+        "chinook.sqlite/Employee/Address": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 7,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(70)",
+                "name": "Address"
+            },
+            "label": "Address"
+        },
+        "chinook.sqlite/Employee/Title": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 3,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(30)",
+                "name": "Title"
+            },
+            "label": "Title"
+        },
+        "chinook.sqlite/Customer/Phone": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 9,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(24)",
+                "name": "Phone"
+            },
+            "label": "Phone"
+        },
+        "chinook.sqlite/Genre": {
+            "type": "Table",
+            "properties": {
+                "name": "Genre"
+            },
+            "label": "Genre"
+        },
+        "chinook.sqlite/Track/Composer": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 5,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(220)",
+                "name": "Composer"
+            },
+            "label": "Composer"
+        },
+        "chinook.sqlite/Employee/City": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 8,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "City"
+            },
+            "label": "City"
+        },
+        "chinook.sqlite/Artist/ArtistId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "ArtistId"
+            },
+            "label": "ArtistId"
+        },
+        "chinook.sqlite/Employee/ReportsTo": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 4,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "INTEGER",
+                "name": "ReportsTo"
+            },
+            "label": "ReportsTo"
+        },
+        "chinook.sqlite/Employee/Fax": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 13,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(24)",
+                "name": "Fax"
+            },
+            "label": "Fax"
+        },
+        "chinook.sqlite/Employee/LastName": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NVARCHAR(20)",
+                "name": "LastName"
+            },
+            "label": "LastName"
+        },
+        "chinook.sqlite/Invoice/InvoiceId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "InvoiceId"
+            },
+            "label": "InvoiceId"
+        },
+        "chinook.sqlite/Employee/BirthDate": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 5,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "DATETIME",
+                "name": "BirthDate"
+            },
+            "label": "BirthDate"
+        },
+        "chinook.sqlite/PlaylistTrack/PlaylistId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "PlaylistId"
+            },
+            "label": "PlaylistId"
+        },
+        "chinook.sqlite/Track": {
+            "type": "Table",
+            "properties": {
+                "name": "Track"
+            },
+            "label": "Track"
+        },
+        "chinook.sqlite/InvoiceLine/InvoiceLineId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "InvoiceLineId"
+            },
+            "label": "InvoiceLineId"
+        },
+        "chinook.sqlite/Customer/Fax": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 10,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(24)",
+                "name": "Fax"
+            },
+            "label": "Fax"
+        },
+        "chinook.sqlite/Employee/Email": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 14,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(60)",
+                "name": "Email"
+            },
+            "label": "Email"
+        },
+        "chinook.sqlite/Invoice/BillingAddress": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 3,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(70)",
+                "name": "BillingAddress"
+            },
+            "label": "BillingAddress"
+        },
+        "chinook.sqlite/InvoiceLine/UnitPrice": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 3,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NUMERIC(10,2)",
+                "name": "UnitPrice"
+            },
+            "label": "UnitPrice"
+        },
+        "chinook.sqlite/Invoice/BillingCity": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 4,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "BillingCity"
+            },
+            "label": "BillingCity"
+        },
+        "chinook.sqlite/Track/GenreId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 4,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "INTEGER",
+                "name": "GenreId"
+            },
+            "label": "GenreId"
+        },
+        "chinook.sqlite/Track/Bytes": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 7,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "INTEGER",
+                "name": "Bytes"
+            },
+            "label": "Bytes"
+        },
+        "chinook.sqlite/Invoice/BillingPostalCode": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 7,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(10)",
+                "name": "BillingPostalCode"
+            },
+            "label": "BillingPostalCode"
+        },
+        "chinook.sqlite/Customer/PostalCode": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 8,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(10)",
+                "name": "PostalCode"
+            },
+            "label": "PostalCode"
+        },
+        "chinook.sqlite/Track/Name": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NVARCHAR(200)",
+                "name": "Name"
+            },
+            "label": "Name"
+        },
+        "chinook.sqlite/MediaType/MediaTypeId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "MediaTypeId"
+            },
+            "label": "MediaTypeId"
+        },
+        "chinook.sqlite/Artist": {
+            "type": "Table",
+            "properties": {
+                "name": "Artist"
+            },
+            "label": "Artist"
+        },
+        "chinook.sqlite/Customer/FirstName": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 1,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NVARCHAR(40)",
+                "name": "FirstName"
+            },
+            "label": "FirstName"
+        },
+        "chinook.sqlite/Employee/FirstName": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 2,
+                "primary_key": 0,
+                "nullable": false,
+                "type": "NVARCHAR(20)",
+                "name": "FirstName"
+            },
+            "label": "FirstName"
+        },
+        "chinook.sqlite/Genre/GenreId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "GenreId"
+            },
+            "label": "GenreId"
+        },
+        "chinook.sqlite/Employee/Country": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 10,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "NVARCHAR(40)",
+                "name": "Country"
+            },
+            "label": "Country"
+        },
+        "chinook.sqlite/Album/AlbumId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 0,
+                "primary_key": 1,
+                "nullable": false,
+                "type": "INTEGER",
+                "name": "AlbumId"
+            },
+            "label": "AlbumId"
+        },
+        "chinook.sqlite/Customer/SupportRepId": {
+            "type": "Column",
+            "properties": {
+                "default_value": null,
+                "index": 12,
+                "primary_key": 0,
+                "nullable": true,
+                "type": "INTEGER",
+                "name": "SupportRepId"
+            },
+            "label": "SupportRepId"
+        },
+        "chinook.sqlite/Customer": {
+            "type": "Table",
+            "properties": {
+                "name": "Customer"
+            },
+            "label": "Customer"
+        }
+    }
+}

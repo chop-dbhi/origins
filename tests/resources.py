@@ -41,8 +41,8 @@ class ResourceExporterTestCase(unittest.TestCase):
         data = self.db.export()
 
         self.assertEqual(data['resource'], {
-            'id': self.db.uri,
-            'label': self.db.label,
+            'origins:id': self.db.uri,
+            'origins:label': self.db.label,
         })
 
         self.assertEqual(len(data['components']), 76)
@@ -53,8 +53,8 @@ class ResourceExporterTestCase(unittest.TestCase):
         data = artist.export()
 
         self.assertEqual(data['resource'], {
-            'id': artist.uri,
-            'label': artist.label,
+            'origins:id': artist.uri,
+            'origins:label': artist.label,
         })
 
         self.assertEqual(len(data['components']), 3)
