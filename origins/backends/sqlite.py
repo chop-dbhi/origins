@@ -109,12 +109,12 @@ class Client(_database.Client):
 
         column_fks = defaultdict(lambda: defaultdict(list))
 
-        for target, in self.fetchall(query, ['table']):
-            for values in self._table_foreign_keys(target):
-                table, _from, to = values[2:5]
-                column_fks[target][to].append({
-                    'table': table,
-                    'column': _from,
+        for target_table, in self.fetchall(query, ['table']):
+            for values in self._table_foreign_keys(target_table):
+                source_table, target_column, source_column = values[2:5]
+                column_fks[target_table][target_column].append({
+                    'table': source_table,
+                    'column': source_column,
                 })
 
         return column_fks
