@@ -178,8 +178,8 @@ class Component(graphlib.Node):
 
         if not resource:
             resource = {
-                'id': self.uri,
-                'label': self.label,
+                'origins:id': self.uri,
+                'origins:label': self.label,
             }
 
         return export(resource, self, incoming=False, cls=cls)

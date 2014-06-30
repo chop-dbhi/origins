@@ -33,7 +33,7 @@ class ResourceExporter(object):
 
     def __init__(self, resource):
         if isinstance(resource, dict):
-            if 'id' not in resource:
+            if 'origins:id' not in resource:
                 raise KeyError('dict-based resource must contain an id')
 
         self.resource = resource
