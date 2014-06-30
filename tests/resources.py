@@ -26,14 +26,14 @@ class ResourceExporterTestCase(unittest.TestCase):
 
         self.assertEqual(data['resource'], 'test')
         self.assertEqual(len(data['components']), 76)
-        self.assertEqual(len(data['relationships']), 85)
+        self.assertEqual(len(data['relationships']), 86)
 
     def test_subclass(self):
         e = Exporter('test')
         data = e.export(self.db)
 
         self.assertEqual(len(data['components']), 76)
-        self.assertEqual(len(data['relationships']), 85)
+        self.assertEqual(len(data['relationships']), 86)
 
         self.assertTrue('label' in list(data['relationships'].values())[0])
 
@@ -46,7 +46,7 @@ class ResourceExporterTestCase(unittest.TestCase):
         })
 
         self.assertEqual(len(data['components']), 76)
-        self.assertEqual(len(data['relationships']), 85)
+        self.assertEqual(len(data['relationships']), 86)
 
         # Export one table
         artist = self.db.tables['Artist']
