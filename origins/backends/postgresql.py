@@ -217,13 +217,15 @@ class Column(_database.Column):
                     .tables[attrs['table']]\
                     .columns[attrs['column']]
 
-                self.relate(node, 'RELATES', {
+                self.relate(node, 'REFERENCES', {
                     'name': attrs['name'],
                     'type': 'foreignkey',
                 })
 
             self._foreign_keys_synced = True
-        return self.rels(type='RELATES').filter('type', 'foreignkey').nodes()
+
+        return self.rels(type='REFERENCES').filter('type', 'foreignkey')\
+            .nodes()
 
 
 # Export for API
