@@ -5,3 +5,4 @@ pymysql
 pycap
 pyvcf
 openpyxl
+redis

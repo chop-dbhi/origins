@@ -11,6 +11,7 @@ env:
 
 services:
     - mongodb
+    - redis-server
 
 before_install:
     - sh bin/check_signoff.sh
