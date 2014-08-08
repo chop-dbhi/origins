@@ -12,8 +12,10 @@ class RedcapApiClientTestCase(BackendTestCase):
 
     def setUp(self):
         self.load_backend()
-        self.client = self.backend.Client('redcap_demo', url=API_URL,
-                                          token=API_TOKEN)
+        self.client = self.backend.Client('redcap_demo',
+                                          url=API_URL,
+                                          token=API_TOKEN,
+                                          verify_ssl=False)
 
     def test_project(self):
         self.assertTrue(self.client.project())
@@ -38,8 +40,11 @@ class RedcapApiApiTestCase(BackendTestCase):
     backend_path = 'origins.backends.redcap_api'
 
     def setUp(self):
-        self.project = origins.connect('redcap-api', name='redcap_demo',
-                                       url=API_URL, token=API_TOKEN)
+        self.project = origins.connect('redcap-api',
+                                       name='redcap_demo',
+                                       url=API_URL,
+                                       token=API_TOKEN,
+                                       verify_ssl=False)
 
     def test_project(self):
         self.assertEqual(self.project.label, 'redcap_demo')
