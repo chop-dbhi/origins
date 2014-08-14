@@ -23,6 +23,7 @@ kwargs = {
 
     'install_requires': [
         'graphlib>=0.9.4',
+        'requests>=2.2.0,<2.3',
         'flask>=0.10,<0.11',
         'flask-restful>=0.2,<0.3',
         'flask-cors>=1.7,<1.8',
