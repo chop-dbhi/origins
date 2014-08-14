@@ -55,8 +55,8 @@ def get_redis_client():
 
     if not _redis_client:
         _redis_client = redis.StrictRedis(host=REDIS_HOST,
-                                          port=REDIS_PORT,
-                                          db=REDIS_DB)
+                                          port=int(REDIS_PORT),
+                                          db=int(REDIS_DB))
 
     return _redis_client
 

@@ -23,8 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 # Default URI to Neo4j REST endpoint
-DEFAULT_URI = os.environ.get('ORIGINS_NEO4J_URI',
-                             'http://127.0.0.1:7474/db/data/')
+NEO4J_HOST = os.environ.get('ORIGINS_NEO4J_HOST', 'locahost')
+NEO4J_PORT = os.environ.get('ORIGINS_NEO4J_PORT', 7474)
+
+DEFAULT_URI = 'http://{}:{}/db/data/'.format(NEO4J_HOST, NEO4J_PORT)
 
 # Default number of statements that will be sent in one request
 DEFAULT_BATCH_SIZE = 100
