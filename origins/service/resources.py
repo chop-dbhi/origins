@@ -1,7 +1,10 @@
 from __future__ import unicode_literals, absolute_import
 
 import json
-from urllib2 import unquote
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib2 import unquote
 from flask import Flask, abort, url_for, make_response, request
 from flask.ext import restful
 from flask_cors import cross_origin
@@ -9,6 +12,12 @@ from origins.graph import resources, components, collections, \
     relationships, trends
 
 DEFAULT_LIMIT = 200
+
+
+try:
+    str = unicode
+except NameError:
+    pass
 
 
 def add_collection_data(c):
@@ -827,120 +836,120 @@ def json_representation(data, code, headers=None):
 
 api.add_resource(Root,
                  '/',
-                 endpoint=b'root')
+                 endpoint='root')
 
 api.add_resource(Resources,
                  '/resources/',
-                 endpoint=b'resources')
+                 endpoint='resources')
 
 api.add_resource(Resource,
                  '/resources/<uuid>/',
-                 endpoint=b'resource')
+                 endpoint='resource')
 
 api.add_resource(ResourceComponents,
                  '/resources/<uuid>/components/',
-                 endpoint=b'resource-components')
+                 endpoint='resource-components')
 
 api.add_resource(ResourceRelationships,
                  '/resources/<uuid>/relationships/',
-                 endpoint=b'resource-relationships')
+                 endpoint='resource-relationships')
 
 api.add_resource(ResourceTimeline,
                  '/resources/<uuid>/timeline/',
-                 endpoint=b'resource-timeline'),
+                 endpoint='resource-timeline'),
 
 api.add_resource(Collections,
                  '/collections/',
-                 endpoint=b'collections')
+                 endpoint='collections')
 
 api.add_resource(Collection,
                  '/collections/<uuid>/',
-                 endpoint=b'collection')
+                 endpoint='collection')
 
 api.add_resource(CollectionResources,
                  '/collections/<uuid>/resources/',
-                 endpoint=b'collection-resources')
+                 endpoint='collection-resources')
 
 api.add_resource(Components,
                  '/components/',
-                 endpoint=b'components')
+                 endpoint='components')
 
 api.add_resource(Component,
                  '/components/<uuid>/',
-                 endpoint=b'component')
+                 endpoint='component')
 
 api.add_resource(ComponentSources,
                  '/components/<uuid>/sources/',
-                 endpoint=b'component-sources')
+                 endpoint='component-sources')
 
 api.add_resource(ComponentChildren,
                  '/components/<uuid>/children/',
-                 endpoint=b'component-children')
+                 endpoint='component-children')
 
 api.add_resource(ComponentLineage,
                  '/components/<uuid>/lineage/',
-                 endpoint=b'component-lineage')
+                 endpoint='component-lineage')
 
 api.add_resource(ComponentRevisions,
                  '/components/<uuid>/revisions/',
-                 endpoint=b'component-revisions')
+                 endpoint='component-revisions')
 
 api.add_resource(ComponentRevision,
                  '/components/revisions/<uuid>/',
-                 endpoint=b'component-revision')
+                 endpoint='component-revision')
 
 api.add_resource(ComponentTimeline,
                  '/components/<uuid>/timeline/',
-                 endpoint=b'component-timeline')
+                 endpoint='component-timeline')
 
 api.add_resource(ComponentRelationships,
                  '/components/<uuid>/relationships/',
-                 endpoint=b'component-relationships')
+                 endpoint='component-relationships')
 
 api.add_resource(Relationships,
                  '/relationships/',
-                 endpoint=b'relationships')
+                 endpoint='relationships')
 
 api.add_resource(Relationship,
                  '/relationships/<uuid>/',
-                 endpoint=b'relationship')
+                 endpoint='relationship')
 
 api.add_resource(RelationshipRevisions,
                  '/relationships/<uuid>/revisions/',
-                 endpoint=b'relationship-revisions')
+                 endpoint='relationship-revisions')
 
 api.add_resource(RelationshipRevision,
                  '/relationships/revisions/<uuid>/',
-                 endpoint=b'relationship-revision')
+                 endpoint='relationship-revision')
 
 api.add_resource(RelationshipTimeline,
                  '/relationships/<uuid>/timeline/',
-                 endpoint=b'relationship-timeline')
+                 endpoint='relationship-timeline')
 
 api.add_resource(Trends,
                  '/trends/',
-                 endpoint=b'trends')
+                 endpoint='trends')
 
 api.add_resource(ConnectedComponentsTrend,
                  '/trends/connected-components/',
-                 endpoint=b'trend-components-connected')
+                 endpoint='trend-components-connected')
 
 api.add_resource(UsedComponentsTrend,
                  '/trends/used-components/',
-                 endpoint=b'trend-used-components')
+                 endpoint='trend-used-components')
 
 api.add_resource(ConnectedResourcesTrend,
                  '/trends/connected-resources/',
-                 endpoint=b'trend-connected-resources')
+                 endpoint='trend-connected-resources')
 
 api.add_resource(UsedResourcesTrend,
                  '/trends/used-resources/',
-                 endpoint=b'trend-used-resources')
+                 endpoint='trend-used-resources')
 
 api.add_resource(ComponentSourcesTrend,
                  '/trends/component-sources/',
-                 endpoint=b'trend-component-sources')
+                 endpoint='trend-component-sources')
 
 api.add_resource(CommonRelationshipsTrend,
                  '/trends/common-relationships/',
-                 endpoint=b'trend-common-relationships')
+                 endpoint='trend-common-relationships')
