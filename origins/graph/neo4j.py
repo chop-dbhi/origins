@@ -13,6 +13,7 @@ except NameError:
     pass
 
 
+import os
 import math
 import json
 import logging
@@ -22,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 # Default URI to Neo4j REST endpoint
-DEFAULT_URI = 'http://localhost:7474/db/data/'
+DEFAULT_URI = os.environ.get('ORIGINS_NEO4J_URI',
+                             'http://127.0.0.1:7474/db/data/')
 
 # Default number of statements that will be sent in one request
 DEFAULT_BATCH_SIZE = 100
