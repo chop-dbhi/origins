@@ -166,9 +166,9 @@ def revision(statement, uuid):
     }
 
 
-def timeline(statement, _id, skip=None, limit=None):
+def timeline(statement, uuid, skip=None, limit=None):
     parameters = {
-        'id': utils._id(_id)
+        'uuid': utils._uuid(uuid)
     }
 
     statement, parameters = skip_limit(statement, parameters, skip, limit)

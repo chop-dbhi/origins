@@ -101,8 +101,7 @@ def resources(_id, tx=neo4j):
 
     result = tx.send(query)
 
-    if result:
-        return [parse_resource(r) for r in result]
+    return [parse_resource(r) for r in result]
 
 
 def resource_count(_id, tx=neo4j):

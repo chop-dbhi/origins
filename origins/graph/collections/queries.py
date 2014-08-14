@@ -11,14 +11,14 @@ RETURN count(col)
 
 MATCH_COLLECTIONS = _('''
 MATCH (col:`origins:Collection` %(predicate)s)
-RETURN id(col), col
+RETURN DISTINCT id(col), col
 ''')
 
 
 SEARCH_COLLECTIONS = _('''
 MATCH (col:`origins:Collection`)
 WHERE %(predicate)s
-RETURN id(col), col
+RETURN DISTINCT id(col), col
 ''')
 
 

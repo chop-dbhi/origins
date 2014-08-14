@@ -12,15 +12,18 @@ from ..utils import _
 # ecr - end component revision
 # inv - invalidation
 
+RELATIONSHIP_REVISION_UUID = _('''
+(rev:`origins:RelationshipRevision` {`origins:uuid`: { uuid }})
+''')
 
 MATCH_RELATIONSHIPS = _('''
-MATCH (rel:`origins:Relationship`)-[:`origins:latest`]->(rev:`prov:Revision` %(predicate)s)
+MATCH (rel:`origins:Relationship`)-[:`origins:latest`]->(rev:`origins:RelationshipRevision` %(predicate)s)
 
-WITH rel, rev
+WITH DISTINCT rel, rev
 
 // Get the start and end component (revisions)
-MATCH (rev)-[:`origins:start`]->(scr:`prov:Revision`),
-      (rev)-[:`origins:end`]->(ecr:`prov:Revision`)
+MATCH (rev)-[:`origins:start`]->(scr:`origins:ComponentRevision`),
+      (rev)-[:`origins:end`]->(ecr:`origins:ComponentRevision`)
 
 OPTIONAL MATCH (rev)<-[:`prov:entity`]-(inv:`prov:Invalidation`)
 
@@ -29,14 +32,14 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, inv is null
 
 
 SEARCH_RELATIONSHIPS = _('''
-MATCH (rel:`origins:Relationship`)-[:`origins:latest`]->(rev:`prov:Revision`)
+MATCH (rel:`origins:Relationship`)-[:`origins:latest`]->(rev:`origins:RelationshipRevision`)
 WHERE %(predicate)s
 
-WITH rel, rev
+WITH DISTINCT rel, rev
 
 // Get the start and end component (revisions)
-MATCH (rev)-[:`origins:start`]->(scr:`prov:Revision`),
-      (rev)-[:`origins:end`]->(ecr:`prov:Revision`)
+MATCH (rev)-[:`origins:start`]->(scr:`origins:ComponentRevision`),
+      (rev)-[:`origins:end`]->(ecr:`origins:ComponentRevision`)
 
 OPTIONAL MATCH (r)<-[:`prov:entity`]-(inv:`prov:Invalidation`)
 
@@ -45,13 +48,14 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, inv is null
 
 
 GET_RELATIONSHIP = _('''
-MATCH (rel:`origins:Relationship`)-[:`origins:latest`]->(rev:`prov:Revision` %(predicate)s)
+MATCH (rel:`origins:Relationship`)-[:`origins:latest`]->(rev:`origins:RelationshipRevision` %(predicate)s)
 
 WITH rel, rev
+LIMIT 1
 
 // Get the start and end component (revisions)
-MATCH (rev)-[:`origins:start`]->(scr:`prov:Revision`),
-      (rev)-[:`origins:end`]->(ecr:`prov:Revision`)
+MATCH (rev)-[:`origins:start`]->(scr:`origins:ComponentRevision`),
+      (rev)-[:`origins:end`]->(ecr:`origins:ComponentRevision`)
 
 OPTIONAL MATCH (r)<-[:`prov:entity`]-(inv:`prov:Invalidation`)
 
@@ -62,8 +66,8 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, inv is null
 # Create statement for node with labels and properties
 CREATE_RELATIONSHIP = _('''
 MATCH (res:`origins:Resource` {`origins:id`: { resource }}),
-      (scr:`prov:Revision` {`origins:uuid`: { start }})<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(scp:`origins:Component`),
-      (ecr:`prov:Revision` {`origins:uuid`: { end }})<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(ecp:`origins:Component`)
+      (scr:`origins:ComponentRevision` {`origins:uuid`: { start }})<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(scp:`origins:Component`),
+      (ecr:`origins:ComponentRevision` {`origins:uuid`: { end }})<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(ecp:`origins:Component`)
 
 // Create literal relationship between components
 MERGE (scp)-[:`%(type)s`]->(ecp)
@@ -76,7 +80,7 @@ CREATE
         `origins:timestamp`: { timestamp }
     }),
 
-    (rev:`prov:Revision`:`prov:Entity` { properties }),
+    (rev:`origins:RelationshipRevision`:`prov:Entity` { properties }),
 
     (gen2:`prov:Generation`:`prov:Relation`:`prov:Event` {
         `origins:type`: 'prov:Generation',
@@ -121,15 +125,25 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, true
 ''')  # noqa
 
 
+DESCENDS_RELATIONSHIP = _('''
+MATCH (start:`origins:ComponentRevision` {`origins:uuid`: { start }}),
+      (end:`origins:ComponentRevision` {`origins:uuid`: { end }})
+
+MERGE (start)-[rel:`origins:descends`]->(end)
+
+RETURN id(rel), rel
+''')
+
+
 UPDATE_RELATIONSHIP = _('''
-MATCH (rel:`origins:Relationship` {`origins:id`: { id }})-[lat:`origins:latest`]->(pre:`prov:Revision`),
+MATCH (rel:`origins:Relationship` {`origins:id`: { id }})-[lat:`origins:latest`]->(pre:`origins:RelationshipRevision`),
       // Get latest revision of each start and end components
-      (pre)-[:`origins:start`]->(:`prov:Revision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(:`origins:Component`)-[:`origins:latest`]->(scr:`prov:Revision`),
-      (pre)-[:`origins:end`]->(:`prov:Revision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(:`origins:Component`)-[:`origins:latest`]->(ecr:`prov:Revision`)
+      (pre)-[:`origins:start`]->(:`origins:ComponentRevision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(:`origins:Component`)-[:`origins:latest`]->(scr:`origins:ComponentRevision`),
+      (pre)-[:`origins:end`]->(:`origins:ComponentRevision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(:`origins:Component`)-[:`origins:latest`]->(ecr:`origins:ComponentRevision`)
 
 
 CREATE
-    (rev:`prov:Revision`:`prov:Entity` { properties }),
+    (rev:`origins:RelationshipRevision`:`prov:Entity` { properties }),
 
     (gen:`prov:Generation`:`prov:Relation`:`prov:Event` {
         `origins:type`: 'prov:Generation',
@@ -195,12 +209,12 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, true
 
 
 DELETE_RELATIONSHIP = _('''
-MATCH (rel:`origins:Relationship` {`origins:id`: { id }})<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`prov:Revision`)
+MATCH (rel:`origins:Relationship` {`origins:id`: { id }})<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`origins:RelationshipRevision`)
 
 WITH rel, rev
 
-MATCH (rev)-[:`origins:start`]->(scr:`prov:Revision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(scp:`origins:Component`),
-      (rev)-[:`origins:end`]->(ecr:`prov:Revision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(ecp:`origins:Component`)
+MATCH (rev)-[:`origins:start`]->(scr:`origins:ComponentRevision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(scp:`origins:Component`),
+      (rev)-[:`origins:end`]->(ecr:`origins:ComponentRevision`)<-[:`prov:specificEntity`]-(:`prov:Specialization`)-[:`prov:generalEntity`]->(ecp:`origins:Component`)
 
 CREATE
     (inv:`prov:Relation`:`prov:Event` {
@@ -222,12 +236,12 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, false
 
 
 RELATIONSHIP_REVISIONS = _('''
-MATCH (rel:`origins:Relationship` {`origins:id`: { id }})<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`prov:Revision`)
+MATCH (rel:`origins:Relationship` {`origins:id`: { id }})<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`origins:RelationshipRevision`)
 
 WITH rel, rev
 
-MATCH (rev)-[:`origins:start`]->(scr:`prov:Revision`),
-      (rev)-[:`origins:end`]->(ecr:`prov:Revision`)
+MATCH (rev)-[:`origins:start`]->(scr:`origins:ComponentRevision`),
+      (rev)-[:`origins:end`]->(ecr:`origins:ComponentRevision`)
 
 OPTIONAL MATCH (rev)<-[:`prov:entity`]-(inv:`prov:Invalidation`)
 
@@ -237,7 +251,7 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, inv is null
 
 
 RELATIONSHIP_REVISION = _('''
-MATCH (rel:`origins:Relationship`)<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`prov:Revision` {`origins:uuid`: { uuid }})
+MATCH (rel:`origins:Relationship`)<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`origins:RelationshipRevision` {`origins:uuid`: { uuid }})
 
 WITH rel, rev
 
@@ -276,7 +290,7 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, inv is null
 
 # Returns the full lineage of sources with depth
 RELATIONSHIP_LINEAGE = _('''
-MATCH (:`origins:Relationship` {`origins:id`: { id }})<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`prov:Revision`),
+MATCH (:`origins:Relationship` {`origins:id`: { id }})<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`origins:RelationshipRevision`),
     pth=(rev)<-[:`prov:generatedEntity`]-(der:`prov:Derivation`)-[:`prov:generatedEntity`|`prov:usedEntity`*]-(:`prov:Entity`)
 WHERE der.`prov:type` <> 'prov:Revision'
 
@@ -293,10 +307,31 @@ RETURN id(rel), rel, id(rev), rev, id(scr), scr, id(ecr), ecr, inv is null
 
 
 RELATIONSHIP_TIMELINE = _('''
-MATCH (:`origins:Relationship` {`origins:id`: { id }})<-[:`origins:describes`]-(bun:`prov:Bundle`)-[des:`origins:describes`]->(rel:`prov:Relation`)-[lnk]->(obj)
+MATCH (:`origins:Relationship`)<-[:`prov:generalEntity`]-(:`prov:Specialization`)-[:`prov:specificEntity`]->(rev:`origins:RelationshipRevision` {`origins:uuid`: { uuid }}),
+    (rev)<--(rel:`prov:Relation`)<-[des:`origins:describes`]-(bun:`prov:Bundle`)
+
+OPTIONAL MATCH (rel)-[lnk]->(obj)
 
 RETURN id(rel), rel, type(lnk), id(obj), obj
 
 ORDER BY bun.`origins:timestamp`,
          des.`origins:sequence`
+''')  # noqa
+
+
+DELETE_RELATIONSHIP_REAL = _('''
+MATCH (rel:`origins:Relationship` {`origins:id`: { id }})
+
+OPTIONAL MATCH (rel)-[rel_r]-()
+
+OPTIONAL MATCH (rel)<-[rel_e:`prov:entity`]-(rel_gen:`prov:Generation`),
+               (rel_gen)-[rel_gen_r]-()
+
+OPTIONAL MATCH (rel)<-[rel_ge:`prov:generalEntity`]-(spe:`prov:Specialization`)-[rel_se:`prov:specificEntity`]->(rev:`origins:RelationshipRevision`),
+               (rev)<-[rev_e:`prov:entity`]-(rev_gen:`prov:Generation`),
+               (spe)-[spe_r]-(),
+               (rev)-[rev_r]-(),
+               (rev_gen)-[rev_gen_r]-()
+
+DELETE rel_ge, rel_se, rev_e, rel_e, spe_r, rev_r, rel_r, rev_gen_r, rel_gen_r, spe, rev, rel, rev_gen, rel_gen
 ''')  # noqa

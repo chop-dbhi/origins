@@ -102,7 +102,8 @@ def parse_timeline(rows):
         related[row[2]] = utils.unpack(row[3:])
 
     if event:
-        event.update(related)
-        result.append(utils.unpack((_id, event)))
+        event = utils.unpack((_id, event))
+        event['related'] = related
+        result.append(event)
 
     return result

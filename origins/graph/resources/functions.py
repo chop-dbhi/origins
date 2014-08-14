@@ -18,7 +18,8 @@ def match(predicate=None, skip=None, limit=None, tx=neo4j):
 
 
 def search(predicate, skip=None, limit=None, tx=neo4j):
-    query = base.search(queries.SEARCH_RESOURCES, predicate, skip, limit)
+    query = base.search(queries.SEARCH_RESOURCES, 'res', predicate,
+                        skip=skip, limit=limit)
 
     return [parse_resource(r) for r in tx.send(query)]
 
@@ -120,12 +121,100 @@ def relationships(_id, managed=False, skip=None, limit=None,
     return [parse_relationship(r) for r in tx.send(query)]
 
 
-def include(_id, revision, tx=neo4j):
-    """Includes a component or relationship to the resource. The UUID must
-    be to a revision.
+def component_count(_id, tx=neo4j):
+    "Returns the count of components included in this resource."
+    query = {
+        'statement': queries.RESOURCE_COMPONENT_COUNT,
+        'parameters': {
+            'id': utils._id(_id),
+        }
+    }
+
+    result = tx.send(query)
+
+    if result:
+        return result[0][0]
+
+
+def component_types(_id, tx=neo4j):
+    """Returns the distinct type and count of component types included in
+    this resource.
     """
     query = {
-        'statement': queries.RESOURCE_INCLUDE,
+        'statement': queries.RESOURCE_COMPONENT_TYPES,
+        'parameters': {
+            'id': utils._id(_id),
+        }
+    }
+
+    return [{'type': r[0], 'count': r[1]} for r in tx.send(query)]
+
+
+def relationship_count(_id, tx=neo4j):
+    "Returns the number of relationships this resource includes."
+    query = {
+        'statement': queries.RESOURCE_RELATIONSHIP_COUNT,
+        'parameters': {
+            'id': utils._id(_id),
+        }
+    }
+
+    result = tx.send(query)
+
+    if result:
+        return result[0][0]
+
+
+def collection_count(_id, tx=neo4j):
+    "Returns the number of collections this resource is contained in."
+    query = {
+        'statement': queries.RESOURCE_COLLECTION_COUNT,
+        'parameters': {
+            'id': utils._id(_id),
+        }
+    }
+
+    result = tx.send(query)
+
+    if result:
+        return result[0][0]
+
+
+def collections(_id, tx=neo4j):
+    "Returns all collections this resource is contained in."
+    query = {
+        'statement': queries.RESOURCE_COLLECTIONS,
+        'parameters': {
+            'id': utils._id(_id),
+        }
+    }
+
+    result = tx.send(query)
+
+    if result:
+        return result[0][0]
+
+
+def include_component(_id, revision, tx=neo4j):
+    "Includes a component to the resource. The revision must be a UUID."
+    query = {
+        'statement': queries.RESOURCE_INCLUDE_COMPONENT,
+        'parameters': {
+            'id': utils._id(_id),
+            'revision': utils._uuid(revision),
+        }
+    }
+
+    result = tx.send(query)
+
+    if result:
+        return result[0][0]
+
+
+def include_relationship(_id, revision, tx=neo4j):
+    "Includes a relationship to the resource. The revision must be a UUID."
+    query = {
+        'statement': queries.RESOURCE_INCLUDE_RELATIONSHIP,
         'parameters': {
             'id': utils._id(_id),
             'revision': utils._uuid(revision),

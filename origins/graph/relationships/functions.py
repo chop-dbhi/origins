@@ -83,9 +83,13 @@ def update(_id, properties=None, tx=neo4j):
 
     # An update performed on a relationship can only change the properties,
     # but not start, end, or type
-    properties.pop('origins:start', None)
-    properties.pop('origins:end', None)
-    properties.pop('origins:type', None)
+    if any([
+        properties.pop('origins:start', None),
+        properties.pop('origins:end', None),
+        properties.pop('origins:type', None),
+    ]):
+        raise ValueError('update can only change properties not start '
+                         'component, end component, or relationship type')
 
     result = tx.send(query)
 
@@ -101,6 +105,21 @@ def delete(_id, tx=neo4j):
 
     if result:
         return parse_relationship(result[0])
+
+
+def descends(end, start, tx=neo4j):
+    query = {
+        'statement': queries.DESCENDS_RELATIONSHIP,
+        'parameters': {
+            'start': start,
+            'end': end,
+        }
+    }
+
+    result = tx.send(query)
+
+    if result:
+        return utils.unpack(result[0])
 
 
 def derive(generated, used, type='prov:PrimarySource', tx=neo4j):
@@ -124,7 +143,7 @@ def resource(_id, tx=neo4j):
     query = {
         'statement': queries.RELATIONSHIP_RESOURCE,
         'parameters': {
-            'id': _id,
+            'id': utils._id(_id),
         }
     }
 
@@ -134,9 +153,9 @@ def resource(_id, tx=neo4j):
         return parse_resource(result[0])
 
 
-def timeline(_id, skip=None, limit=None, tx=neo4j):
+def timeline(uuid, skip=None, limit=None, tx=neo4j):
     "Gets the timeline for this relationship."
-    query = base.timeline(queries.RELATIONSHIP_TIMELINE, _id, skip, limit)
+    query = base.timeline(queries.RELATIONSHIP_TIMELINE, uuid, skip, limit)
 
     return parse_timeline(tx.send(query))
 
