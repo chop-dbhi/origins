@@ -1,0 +1,27 @@
+# Redis instance
+redis:
+    image: dockerfile/redis
+    detach: true
+    volumes:
+        - /data/redis:/data
+
+# Neo4j; pre-configured for Origins
+neo4j:
+    image: bruth/origins-neo4j
+    privileged: true
+    detach: true
+    volumes:
+        - /data/neo4j:/neo4j/data
+
+# Origins service
+origins:
+    image: bruth/origins
+    ports:
+        - 5000:5000
+    environment:
+        ORIGINS_DEBUG: 1
+        ORIGINS_NEO4J_HOST: neo4j
+        ORIGINS_REDIS_HOST: redis
+    links:
+        - redis:redis
+        - neo4j:neo4j
