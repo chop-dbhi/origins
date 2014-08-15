@@ -1,4 +1,0 @@
-ipython
-pyzmq
-tornado
-jinja2

@@ -1,11 +1,5 @@
 from __future__ import unicode_literals, absolute_import, division
 
-try:
-    import requests
-except ImportError:
-    raise ImportError('The requests library is required to use the '
-                      'Neo4j module.')
-
 # Alias str to unicode with unicode_literals imported
 try:
     str = unicode
@@ -17,14 +11,19 @@ import os
 import math
 import json
 import logging
+import requests
+from origins import config
 
 
 logger = logging.getLogger(__name__)
 
 
 # Default URI to Neo4j REST endpoint
-NEO4J_HOST = os.environ.get('ORIGINS_NEO4J_HOST', 'locahost')
-NEO4J_PORT = os.environ.get('ORIGINS_NEO4J_PORT', 7474)
+NEO4J_HOST = os.environ.get('ORIGINS_NEO4J_HOST',
+                            config.options['neo4j_host'])
+
+NEO4J_PORT = os.environ.get('ORIGINS_NEO4J_PORT',
+                            config.options['neo4j_port'])
 
 DEFAULT_URI = 'http://{}:{}/db/data/'.format(NEO4J_HOST, NEO4J_PORT)
 

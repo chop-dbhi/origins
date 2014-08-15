@@ -1,6 +1,5 @@
 from __future__ import unicode_literals, absolute_import
 
-import os
 import re
 import time
 import json
@@ -9,6 +8,7 @@ import inspect
 import logging
 import requests
 from importlib import import_module
+from . import config
 from .exceptions import OriginsError
 
 try:
@@ -24,14 +24,6 @@ except NameError:
 
 HTTP_RE = re.compile(r'^https?://', re.I)
 
-
-EVENTS_ENABLED = os.environ.get('ORIGINS_EVENTS')
-
-REDIS_HOST = os.environ.get('ORIGINS_REDIS_HOST', 'localhost')
-REDIS_PORT = os.environ.get('ORIGINS_REDIS_PORT', 6379)
-REDIS_DB = os.environ.get('ORIGINS_REDIS_DB', 0)
-
-
 logger = logging.getLogger(__name__)
 
 # Shared, in-process Redis client
@@ -41,12 +33,12 @@ _redis_client = None
 def get_redis_client():
     global _redis_client
 
-    if EVENTS_ENABLED == '0':
+    if config.options['events_enabled'] is False:
         logger.debug('events system disabled')
         return
 
     if not redis:
-        if EVENTS_ENABLED == '1':
+        if config.options['events_enabled'] is True:
             raise OriginsError('events enabled, but redis '
                                'library is not installed')
 
@@ -54,9 +46,9 @@ def get_redis_client():
         return
 
     if not _redis_client:
-        _redis_client = redis.StrictRedis(host=REDIS_HOST,
-                                          port=int(REDIS_PORT),
-                                          db=int(REDIS_DB))
+        _redis_client = redis.StrictRedis(host=config.options['redis_host'],
+                                          port=config.options['REDIS_PORT'],
+                                          db=config.options['REDIS_DB'])
 
     return _redis_client
 
