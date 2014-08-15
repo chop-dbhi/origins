@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import os
 import json
 import time
@@ -8,10 +6,7 @@ import tempfile
 import subprocess
 import requests
 from uuid import uuid4
-try:
-    from urllib.parse import urlparse  # noqa
-except ImportError:
-    from urlparse import urlparse
+from urllib.parse import urlparse
 from origins.graph import cypher, neo4j
 from .identifier import QualifiedName
 from .constants import PROV_BUNDLE, COMPONENTS, ALT_COMPONENTS, NAMESPACES, \
@@ -19,12 +14,6 @@ from .constants import PROV_BUNDLE, COMPONENTS, ALT_COMPONENTS, NAMESPACES, \
     RELATION_ATTRS, ORIGINS_ATTR_TIMESTAMP, EVENT_TYPES, \
     ORIGINS_ATTR_TYPE, PROV_RELATION, PROV_EVENT, PROV_MENTION, \
     PROV_ATTR_BUNDLE, PROV_ATTR_GENERAL_ENTITY
-
-
-try:
-    str = unicode
-except NameError:
-    pass
 
 
 logger = logging.getLogger(__name__)

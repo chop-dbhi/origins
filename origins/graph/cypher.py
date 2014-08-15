@@ -1,11 +1,3 @@
-from __future__ import unicode_literals
-
-try:
-    str = unicode
-except NameError:
-    pass
-
-
 def value_string(value):
     "Converts a native Python value into an equivalent Cypher value."
     if value is True:

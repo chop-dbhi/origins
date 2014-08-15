@@ -1,14 +1,6 @@
-from __future__ import unicode_literals
-
 import re
 import time
 from . import cypher
-
-
-try:
-    str = unicode
-except NameError:
-    pass
 
 
 UUID_RE = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}'

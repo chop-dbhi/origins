@@ -3,14 +3,6 @@ Provenance types as defined in the W3C PROV specification. Also included
 are sub-types defined by Origins.
 """
 
-from __future__ import unicode_literals
-
-try:
-    str = unicode
-except NameError:
-    pass
-
-
 from .identifier import Namespaces
 
 

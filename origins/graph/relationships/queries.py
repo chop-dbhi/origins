@@ -1,16 +1,5 @@
-from __future__ import unicode_literals, absolute_import
-
 from ..utils import _
 
-# Identifier key:
-#
-# rel - relationship
-# rev - relationship revision (of interest)
-# scp - start component
-# ecp - end component
-# scr - start component revision
-# ecr - end component revision
-# inv - invalidation
 
 RELATIONSHIP_REVISION_UUID = _('''
 (rev:`origins:RelationshipRevision` {`origins:uuid`: { uuid }})

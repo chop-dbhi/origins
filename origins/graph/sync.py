@@ -1,14 +1,9 @@
-from __future__ import unicode_literals, absolute_import
-
 from . import neo4j, utils, constraints, components, relationships, resources
 
-try:
-    str = unicode
-except NameError:
-    pass
+CONSTRAINT_ALREADY_EXISTS = 'Neo.ClientError.Schema.ConstraintAlreadyExists'
 
 
-def sync(data, add=True, remove=True, update=True, tx=None):
+def sync(data, create=True, add=True, remove=True, update=True, tx=None):
     """Syncs a local data export with the Origins graph.
 
     The export format is as follows:
@@ -31,14 +26,21 @@ def sync(data, add=True, remove=True, update=True, tx=None):
     The sync algorithm relies on the `origins:id` to compare local and remote
     states.
 
+    `create` - If true, creates a resource if it does not exists.
+
     `add` - Adds new components and relationships that are not present in the
             existing graph.
+
     `remove` - Remove old components/rels that are not present in `data`.
+
     `update` - Merges changes in new components/rels into their existing
                components/rels.
-
     """
-    constraints.ensure()
+    try:
+        constraints.ensure()
+    except neo4j.Neo4jError as e:
+        if CONSTRAINT_ALREADY_EXISTS not in e.message:
+            raise
 
     if tx is None:
         tx = neo4j.Transaction()
@@ -55,6 +57,9 @@ def sync(data, add=True, remove=True, update=True, tx=None):
         result = resources.get(resource['origins:id'], tx=tx)
 
         if not result:
+            if not create:
+                raise ValueError('resource does not exist')
+
             new = True
             result = resources.create(resource, tx=tx)
 
@@ -104,10 +109,10 @@ def sync(data, add=True, remove=True, update=True, tx=None):
                     if diff:
                         output['components']['updated'] += 1
 
-                        properties = utils.pack(local)
-                        properties['origins:id'] = remote['id']
+                        attributes = utils.pack(local)
+                        attributes['origins:id'] = remote['id']
 
-                        components.update(remote, properties, tx=tx)
+                        components.update(remote, attributes, tx=tx)
 
                 synced_components.add(remote['id'])
                 component_revisions[remote['id']] = remote['uuid']
@@ -134,18 +139,18 @@ def sync(data, add=True, remove=True, update=True, tx=None):
                     if diff:
                         output['relationships']['updated'] += 1
 
-                        properties = utils.pack(local)
-                        properties['origins:id'] = remote['id']
+                        attributes = utils.pack(local)
+                        attributes['origins:id'] = remote['id']
 
                         # Get UUID of the current start and end component
                         # revisions given the provided ID
-                        start_id = properties.pop('origins:start')
+                        start_id = attributes.pop('origins:start')
                         start = component_revisions[start_id]
 
-                        end_id = properties.pop('origins:end')
+                        end_id = attributes.pop('origins:end')
                         end = component_revisions[end_id]
 
-                        relationships.update(remote, properties, tx=tx)
+                        relationships.update(remote, attributes, tx=tx)
 
                 synced_relationships.add(remote['id'])
 
@@ -155,13 +160,14 @@ def sync(data, add=True, remove=True, update=True, tx=None):
                 if _id in synced_components:
                     continue
 
+                attributes = utils.pack(component)
+                attributes['origins:id'] = _id
+                parent = attributes.pop('origins:parent', None)
+
+                remote = components.create(attributes, parent=parent,
+                                           resource=resource, tx=tx)
+
                 output['components']['added'] += 1
-
-                properties = utils.pack(component)
-                properties['origins:id'] = _id
-
-                remote = components.create(properties, resource=resource,
-                                           tx=tx)
 
                 component_revisions[remote['id']] = remote['uuid']
 
@@ -169,23 +175,26 @@ def sync(data, add=True, remove=True, update=True, tx=None):
                 if _id in synced_relationships:
                     continue
 
-                output['relationships']['added'] += 1
+                attributes = utils.pack(rel)
 
-                properties = utils.pack(rel)
+                type = attributes.pop('origins:type')
 
                 # Get UUID of the current start and end component
                 # revisions given the provided ID
-                start_id = properties.pop('origins:start')
+                start_id = attributes.pop('origins:start')
                 start = component_revisions[start_id]
 
-                end_id = properties.pop('origins:end')
+                end_id = attributes.pop('origins:end')
                 end = component_revisions[end_id]
 
                 relationships.create(_id,
                                      start=start,
+                                     type=type,
                                      end=end,
-                                     properties=properties,
+                                     properties=attributes,
                                      resource=resource,
                                      tx=tx)
+
+                output['relationships']['added'] += 1
 
         return output

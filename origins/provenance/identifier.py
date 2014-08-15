@@ -1,11 +1,3 @@
-from __future__ import unicode_literals
-
-try:
-    str = unicode
-except NameError:
-    pass
-
-
 class QualifiedName(object):
     def __init__(self, namespace, local):
         self.namespace = namespace

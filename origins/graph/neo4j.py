@@ -1,12 +1,3 @@
-from __future__ import unicode_literals, absolute_import, division
-
-# Alias str to unicode with unicode_literals imported
-try:
-    str = unicode
-except NameError:
-    pass
-
-
 import os
 import math
 import json

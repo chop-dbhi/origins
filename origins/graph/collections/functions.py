@@ -1,13 +1,6 @@
-from __future__ import unicode_literals, absolute_import
-
 from ..parsers import parse_collection, parse_resource
 from .. import neo4j, utils, base
 from . import queries
-
-try:
-    str = unicode
-except NameError:
-    pass
 
 
 def match(predicate=None, skip=None, limit=None, tx=neo4j):

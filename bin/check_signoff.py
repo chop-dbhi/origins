@@ -2,7 +2,6 @@
 
 # Checks that all commits have been signed off and fails if not.
 # (Adapted from l33t Docker script for checking for their DCO)
-# Requires Python 2.7
 
 import re
 import os

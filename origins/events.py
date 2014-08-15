@@ -1,5 +1,3 @@
-from __future__ import unicode_literals, absolute_import
-
 import re
 import time
 import json
@@ -15,12 +13,6 @@ try:
     import redis
 except ImportError:
     redis = None
-
-try:
-    str = unicode
-except NameError:
-    pass
-
 
 HTTP_RE = re.compile(r'^https?://', re.I)
 

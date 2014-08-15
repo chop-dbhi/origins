@@ -1,5 +1,3 @@
-from __future__ import unicode_literals, absolute_import
-
 import unittest
 from origins.graph import resources, components, relationships, neo4j, utils
 

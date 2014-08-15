@@ -1,10 +1,5 @@
-from __future__ import unicode_literals, absolute_import
-
 import json
-try:
-    from urllib.parse import unquote
-except ImportError:
-    from urllib2 import unquote
+from urllib.parse import unquote
 from flask import Flask, abort, url_for, make_response, request
 from flask.ext import restful
 from flask_cors import cross_origin

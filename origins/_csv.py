@@ -1,11 +1,4 @@
-from __future__ import unicode_literals, absolute_import
-
 import csv
-
-try:
-    str = unicode
-except NameError:
-    pass
 
 
 # http://stackoverflow.com/a/6187936/407954

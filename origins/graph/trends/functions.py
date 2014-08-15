@@ -1,13 +1,6 @@
-from __future__ import unicode_literals, absolute_import
-
 from ..parsers import parse_component, parse_resource
 from .. import neo4j
 from . import queries
-
-try:
-    str = unicode
-except NameError:
-    pass
 
 
 def connected_components(limit=10, tx=neo4j):

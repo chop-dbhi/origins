@@ -1,15 +1,8 @@
-from __future__ import unicode_literals, absolute_import
-
 from origins import provenance
 from ..parsers import parse_component, parse_source, parse_timeline, \
     parse_relationship, parse_resource
 from .. import utils, neo4j, base
 from . import queries
-
-try:
-    str = unicode
-except NameError:
-    pass
 
 
 def match(predicate=None, skip=None, limit=None, tx=neo4j):

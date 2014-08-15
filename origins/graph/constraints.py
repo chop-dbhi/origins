@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from . import neo4j, utils
 
 _ = utils._
@@ -49,6 +47,15 @@ CREATE INDEX ON :`origins:Component`(`origins:uuid`)
 ''')
 
 
+COMPONENT_REVISION_UUID_INDEX = _('''
+CREATE INDEX ON :`origins:ComponentRevision`(`origins:uuid`)
+''')
+
+RELATIONSHIP_REVISION_UUID_INDEX = _('''
+CREATE INDEX ON :`origins:RelationshipRevision`(`origins:uuid`)
+''')
+
+
 _created = False
 
 
@@ -65,8 +72,10 @@ def ensure():
         RESOURCE_UUID_INDEX,
         RELATIONSHIP_ID_INDEX,
         RELATIONSHIP_UUID_INDEX,
+        RELATIONSHIP_REVISION_UUID_INDEX,
         COMPONENT_ID_INDEX,
         COMPONENT_UUID_INDEX,
+        COMPONENT_REVISION_UUID_INDEX,
     ])
 
     _created = True
