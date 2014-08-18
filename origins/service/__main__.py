@@ -1,8 +1,8 @@
-from origins import conf
-from origins.service.resources import app
+from origins import config
+from origins.service import app
 
 
 app.run(threaded=True,
-        debug=conf.options['debug'],
-        host=conf.options['host'],
-        port=conf.options['port'])
+        debug=config.options['debug'],
+        host=config.options['host'],
+        port=config.options['port'])
