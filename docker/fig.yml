@@ -25,3 +25,13 @@ origins:
     links:
         - redis:redis
         - neo4j:neo4j
+
+# Origins events daemon
+origins_events:
+    image: bruth/origins
+    environment:
+        ORIGINS_DEBUG: 1
+        ORIGINS_REDIS_HOST: redis
+    links:
+        - redis:redis
+    command: python3 -m origins.events
