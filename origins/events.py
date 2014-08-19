@@ -22,6 +22,12 @@ logger = logging.getLogger(__name__)
 _redis_client = None
 
 
+ORIGINS_TOPICS = 'origins.topics'
+ORIGINS_SUBSCRIBERS = 'origins.subscribers'
+ORIGINS_WATCHERS = 'origins.watchers'
+ORIGINS_EVENTS = 'origins.events'
+
+
 def get_redis_client():
     global _redis_client
 
@@ -48,8 +54,12 @@ def get_redis_client():
 
 def publish_web(url, event, data):
     try:
-        requests.post(url, data=json.dumps({'event': event, 'data': data}),
-                      headers={'Content-Type': 'application/json'})
+        requests.post(url, data=json.dumps({
+            'event': event,
+            'data': data,
+        }), headers={
+            'Content-Type': 'application/json',
+        })
     except requests.ConnectionError:
         pass
 
@@ -110,22 +120,13 @@ def reset():
     r.flushdb()
 
 
-def register_event(topic):
+def register_topic(topic):
     r = get_redis_client()
 
     if not r:
         return
 
-    r.sadd(topic)
-
-
-def unregister_event(topic):
-    r = get_redis_client()
-
-    if not r:
-        return
-
-    r.srem(topic)
+    r.sadd(ORIGINS_TOPICS, topic)
 
 
 def queue(topic, data=None):
@@ -135,7 +136,10 @@ def queue(topic, data=None):
     if not r:
         return
 
-    key = 'events.{}'.format(topic)
+    # Ensure the topic is registered
+    register_topic(topic)
+
+    key = '{}.{}'.format(ORIGINS_EVENTS, topic)
 
     value = {
         'event': {
@@ -156,7 +160,7 @@ def dequeue(topic):
     if not r:
         return
 
-    key = 'events.{}'.format(topic)
+    key = '{}.{}'.format(ORIGINS_EVENTS, topic)
 
     value = r.rpop(key)
 
@@ -172,9 +176,12 @@ def dequeue(topic):
     data = value['data']
 
     # Subscriptions for this event
-    key = 'subscribers.{}'.format(topic)
+    key = '{}.{}'.format(ORIGINS_SUBSCRIBERS, topic)
 
     handlers = r.smembers(key)
+
+    subscribers = len(handlers)
+    watchers = None
 
     if handlers:
         # TODO add to secondary queue for distributed work. For now
@@ -187,9 +194,10 @@ def dequeue(topic):
 
     # Event contains object UUID. Check for watchers
     if data and 'uuid' in data:
-        key = 'watchers.{}'.format(topic, data['uuid'])
+        key = '{}.{}'.format(ORIGINS_WATCHERS, data['uuid'])
 
         handlers = r.smembers(key)
+        watchers = len(handlers)
 
         if handlers:
             # TODO add to secondary queue for distributed work. For now
@@ -199,6 +207,8 @@ def dequeue(topic):
                     publish_web(handler, event, data)
                 else:
                     publish_func(handler, event, data)
+
+    return subscribers, watchers
 
 
 # Public methods
@@ -217,8 +227,10 @@ def subscribe(topic, handler):
     if inspect.isfunction(handler):
         handler = '{}.{}'.format(handler.__module__, handler.__name__)
 
+    register_topic(topic)
+
     # List of in-code subscriptions for this event
-    key = 'subscribers.{}'.format(topic)
+    key = '{}.{}'.format(ORIGINS_SUBSCRIBERS, topic)
 
     r.sadd(key, handler)
 
@@ -229,7 +241,7 @@ def unsubscribe(topic, handler):
     if not r:
         return
 
-    key = 'subscribers.{}'.format(topic)
+    key = '{}.{}'.format(ORIGINS_SUBSCRIBERS, topic)
 
     r.srem(key, handler)
 
@@ -247,7 +259,7 @@ def watch(uuid, handler):
     if inspect.isfunction(handler):
         handler = '{}.{}'.format(handler.__module__, handler.__name__)
 
-    key = 'watchers.{}'.format(uuid)
+    key = '{}.{}'.format(ORIGINS_WATCHERS, uuid)
 
     r.sadd(key, handler)
 
@@ -258,6 +270,6 @@ def unwatch(uuid, handler):
     if not r:
         return
 
-    key = 'watchers.{}'.format(uuid)
+    key = '{}.{}'.format(ORIGINS_WATCHERS, uuid)
 
     r.srem(key, handler)
