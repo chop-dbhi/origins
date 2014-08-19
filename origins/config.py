@@ -7,12 +7,13 @@ from copy import deepcopy
 # Default configuration options
 default_options = {
     'debug': None,
+    'events_enabled': None,
 
     'host': 'localhost',
     'port': 5000,
 
-    'redis_port': 'localhost',
-    'redis_host': 6379,
+    'redis_host': 'localhost',
+    'redis_port': 6379,
     'redis_db': 0,
 
     'neo4j_host': 'localhost',
@@ -24,7 +25,7 @@ options = deepcopy(default_options)
 
 
 # Fragile support for a configuration file
-if '-c' in sys.argv:
+if __name__ == '__main__' and '-c' in sys.argv:
     try:
         config_name = sys.argv[sys.argv.index('-c') + 1]
     except IndexError:

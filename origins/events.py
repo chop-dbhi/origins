@@ -39,8 +39,9 @@ def get_redis_client():
 
     if not _redis_client:
         _redis_client = redis.StrictRedis(host=config.options['redis_host'],
-                                          port=config.options['REDIS_PORT'],
-                                          db=config.options['REDIS_DB'])
+                                          port=config.options['redis_port'],
+                                          db=config.options['redis_db'],
+                                          decode_responses=True)
 
     return _redis_client
 
