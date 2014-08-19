@@ -211,8 +211,8 @@ class Transaction(object):
         batches = max(1, int(math.ceil(len(statements) / self.batch_size)))
 
         for i in range(batches):
-            logger.info('sending batch {}/{} to {}'
-                        .format(i + 1, batches, url))
+            logger.debug('sending batch {}/{} to {}'
+                         .format(i + 1, batches, url))
 
             start, end = i * self.batch_size, (i + 1) * self.batch_size
 
@@ -246,7 +246,7 @@ class Transaction(object):
 
         if 'commit' in data:
             if not self.commit_uri:
-                logger.info('begin: {}'.format(data['commit']))
+                logger.debug('begin: {}'.format(data['commit']))
 
             self.commit_uri = data['commit']
 
@@ -266,7 +266,7 @@ class Transaction(object):
         data = self._send(uri, statements, parameters=parameters,
                           formats=formats)
 
-        logger.info('commit: {}'.format(uri))
+        logger.debug('commit: {}'.format(uri))
 
         self._closed = True
 
@@ -280,7 +280,7 @@ class Transaction(object):
             raise Neo4jError('no pending transaction')
 
         requests.delete(self.transaction_uri, headers=HEADERS)
-        logger.info('rollback: {}'.format(self.transaction_uri))
+        logger.debug('rollback: {}'.format(self.transaction_uri))
 
         self._closed = True
 
@@ -318,3 +318,10 @@ def summary(pretty=False):
                 'RETURN labels(s), count(distinct s), type(r), '
                 'labels(e), count(distinct e)'
                 'ORDER BY labels(s)[0], labels(e)[0], type(r)')
+
+
+def debug(enable):
+    if enable:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
