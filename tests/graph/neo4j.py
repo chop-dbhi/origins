@@ -43,3 +43,23 @@ class Neo4jTestCase(unittest.TestCase):
 
         # Change not committed
         self.assertEqual(len(neo4j.send('MATCH (n) RETURN n')), 0)
+
+    def test_nesting(self):
+        with neo4j.Transaction() as tx1:
+            self.assertEqual(tx1._depth, 1)
+
+            with tx1 as tx2:
+                self.assertEqual(tx2._depth, 2)
+
+                with tx2 as tx3:
+                    self.assertEqual(tx3._depth, 3)
+
+                    tx3.send('CREATE (n)')
+
+                self.assertEqual(tx2._depth, 2)
+                self.assertFalse(tx2._closed)
+
+            self.assertEqual(tx1._depth, 1)
+            self.assertFalse(tx1._closed)
+
+        self.assertIsNotNone(neo4j.send('MATCH (n) RETURN id(n)')[0][0])
