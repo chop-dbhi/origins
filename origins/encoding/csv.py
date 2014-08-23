@@ -1,6 +1,6 @@
 import re
 from io import StringIO
-from .._csv import UnicodeDictReader
+from csv import DictReader
 
 
 # TODO consolidate with origins.graph.utils
@@ -103,7 +103,7 @@ def load(f, resource):
 
     fieldnames = f.readline().strip().split(',')
 
-    reader = UnicodeDictReader(f, fieldnames=fieldnames)
+    reader = DictReader(f, fieldnames=fieldnames)
 
     for row in reader:
         # Use the UUID as the local ID for remote objects
