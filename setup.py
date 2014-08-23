@@ -35,9 +35,7 @@ kwargs = {
         'flask>=0.10,<0.11',
         'flask-restful>=0.2,<0.3',
         'flask-cors>=1.7,<1.8',
-    ],
-
-    'test_suite': 'test_suite',
+    ]
 }
 
 setup(**kwargs)
