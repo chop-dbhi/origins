@@ -1,6 +1,4 @@
-from . import neo4j, utils, constraints, components, relationships, resources
-
-CONSTRAINT_ALREADY_EXISTS = 'Neo.ClientError.Schema.ConstraintAlreadyExists'
+from . import neo4j, utils, components, relationships, resources
 
 
 def sync(data, create=True, add=True, remove=True, update=True, tx=None):
@@ -36,12 +34,6 @@ def sync(data, create=True, add=True, remove=True, update=True, tx=None):
     `update` - Merges changes in new components/rels into their existing
                components/rels.
     """
-    try:
-        constraints.ensure()
-    except neo4j.Neo4jError as e:
-        if CONSTRAINT_ALREADY_EXISTS not in e.message:
-            raise
-
     if tx is None:
         tx = neo4j.Transaction()
 
