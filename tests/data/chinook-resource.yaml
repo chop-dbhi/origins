@@ -1,0 +1,863 @@
+version: 1
+resource: 
+    id: "sqlite:///chinook.sqlite"
+    label: "chinook.sqlite"
+
+relationships: 
+    Track/AlbumId:REFERENCES:Album/AlbumId: 
+        start: "Track/AlbumId"
+        end: "Album/AlbumId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Album_AlbumId"
+    PlaylistTrack/TrackId:REFERENCES:Track/TrackId: 
+        start: "PlaylistTrack/TrackId"
+        end: "Track/TrackId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Track_TrackId"
+    Invoice/CustomerId:REFERENCES:Customer/CustomerId: 
+        start: "Invoice/CustomerId"
+        end: "Customer/CustomerId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Customer_CustomerId"
+    InvoiceLine/TrackId:REFERENCES:Track/TrackId: 
+        start: "InvoiceLine/TrackId"
+        end: "Track/TrackId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Track_TrackId"
+    PlaylistTrack/PlaylistId:REFERENCES:Playlist/PlaylistId: 
+        start: "PlaylistTrack/PlaylistId"
+        end: "Playlist/PlaylistId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Playlist_PlaylistId"
+    Track/MediaTypeId:REFERENCES:MediaType/MediaTypeId: 
+        start: "Track/MediaTypeId"
+        end: "MediaType/MediaTypeId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_MediaType_MediaTypeId"
+    Track/GenreId:REFERENCES:Genre/GenreId: 
+        start: "Track/GenreId"
+        end: "Genre/GenreId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Genre_GenreId"
+    Employee/ReportsTo:REFERENCES:Employee/EmployeeId: 
+        start: "Employee/ReportsTo"
+        end: "Employee/EmployeeId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Employee_EmployeeId"
+    Customer/SupportRepId:REFERENCES:Employee/EmployeeId: 
+        start: "Customer/SupportRepId"
+        end: "Employee/EmployeeId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Employee_EmployeeId"
+    InvoiceLine/InvoiceId:REFERENCES:Invoice/InvoiceId: 
+        start: "InvoiceLine/InvoiceId"
+        end: "Invoice/InvoiceId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Invoice_InvoiceId"
+    Album/ArtistId:REFERENCES:Artist/ArtistId: 
+        start: "Album/ArtistId"
+        end: "Artist/ArtistId"
+        type: "REFERENCES"
+        properties: 
+            type: "foreignkey"
+            name: "fk_Artist_ArtistId"
+
+components: 
+    Track/AlbumId: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 2
+            primary_key: 0
+            nullable: true
+            type: "INTEGER"
+            name: "AlbumId"
+        label: "AlbumId"
+    Invoice/BillingState: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 5
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "BillingState"
+        label: "BillingState"
+    Customer/CustomerId: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "CustomerId"
+        label: "CustomerId"
+    Employee/EmployeeId: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "EmployeeId"
+        label: "EmployeeId"
+    Invoice: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Invoice"
+        label: "Invoice"
+    InvoiceLine: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "InvoiceLine"
+        label: "InvoiceLine"
+    InvoiceLine/Quantity: 
+        type: "Column"
+        parent: "InvoiceLine"
+        properties: 
+            default_value: null
+            index: 4
+            primary_key: 0
+            nullable: false
+            type: "INTEGER"
+            name: "Quantity"
+        label: "Quantity"
+    Track/Milliseconds: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 6
+            primary_key: 0
+            nullable: false
+            type: "INTEGER"
+            name: "Milliseconds"
+        label: "Milliseconds"
+    Album/ArtistId: 
+        type: "Column"
+        parent: "Album"
+        properties: 
+            default_value: null
+            index: 2
+            primary_key: 0
+            nullable: false
+            type: "INTEGER"
+            name: "ArtistId"
+        label: "ArtistId"
+    Customer/Address: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 4
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(70)"
+            name: "Address"
+        label: "Address"
+    Customer/State: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 6
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "State"
+        label: "State"
+    Album/Title: 
+        type: "Column"
+        parent: "Album"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: false
+            type: "NVARCHAR(160)"
+            name: "Title"
+        label: "Title"
+    Playlist/PlaylistId: 
+        type: "Column"
+        parent: "Playlist"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "PlaylistId"
+        label: "PlaylistId"
+    Track/UnitPrice: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 8
+            primary_key: 0
+            nullable: false
+            type: "NUMERIC(10,2)"
+            name: "UnitPrice"
+        label: "UnitPrice"
+    Invoice/Total: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 8
+            primary_key: 0
+            nullable: false
+            type: "NUMERIC(10,2)"
+            name: "Total"
+        label: "Total"
+    Employee/State: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 9
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "State"
+        label: "State"
+    InvoiceLine/InvoiceId: 
+        type: "Column"
+        parent: "InvoiceLine"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: false
+            type: "INTEGER"
+            name: "InvoiceId"
+        label: "InvoiceId"
+    Invoice/InvoiceDate: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 2
+            primary_key: 0
+            nullable: false
+            type: "DATETIME"
+            name: "InvoiceDate"
+        label: "InvoiceDate"
+    Invoice/BillingCountry: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 6
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "BillingCountry"
+        label: "BillingCountry"
+    PlaylistTrack/TrackId: 
+        type: "Column"
+        parent: "PlaylistTrack"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "TrackId"
+        label: "TrackId"
+    Track/MediaTypeId: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 3
+            primary_key: 0
+            nullable: false
+            type: "INTEGER"
+            name: "MediaTypeId"
+        label: "MediaTypeId"
+    Customer/Country: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 7
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "Country"
+        label: "Country"
+    Employee: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Employee"
+        label: "Employee"
+    Customer/Company: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 3
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(80)"
+            name: "Company"
+        label: "Company"
+    Customer/City: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 5
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "City"
+        label: "City"
+    MediaType/Name: 
+        type: "Column"
+        parent: "MediaType"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(120)"
+            name: "Name"
+        label: "Name"
+    InvoiceLine/TrackId: 
+        type: "Column"
+        parent: "InvoiceLine"
+        properties: 
+            default_value: null
+            index: 2
+            primary_key: 0
+            nullable: false
+            type: "INTEGER"
+            name: "TrackId"
+        label: "TrackId"
+    Artist/Name: 
+        type: "Column"
+        parent: "Artist"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(120)"
+            name: "Name"
+        label: "Name"
+    Album: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Album"
+        label: "Album"
+    PlaylistTrack: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "PlaylistTrack"
+        label: "PlaylistTrack"
+    Employee/Phone: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 12
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(24)"
+            name: "Phone"
+        label: "Phone"
+    Customer/LastName: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 2
+            primary_key: 0
+            nullable: false
+            type: "NVARCHAR(20)"
+            name: "LastName"
+        label: "LastName"
+    Employee/HireDate: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 6
+            primary_key: 0
+            nullable: true
+            type: "DATETIME"
+            name: "HireDate"
+        label: "HireDate"
+    Playlist/Name: 
+        type: "Column"
+        parent: "Playlist"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(120)"
+            name: "Name"
+        label: "Name"
+    Track/TrackId: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "TrackId"
+        label: "TrackId"
+    MediaType: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "MediaType"
+        label: "MediaType"
+    Playlist: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Playlist"
+        label: "Playlist"
+    Employee/PostalCode: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 11
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(10)"
+            name: "PostalCode"
+        label: "PostalCode"
+    Genre/Name: 
+        type: "Column"
+        parent: "Genre"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(120)"
+            name: "Name"
+        label: "Name"
+    Customer/Email: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 11
+            primary_key: 0
+            nullable: false
+            type: "NVARCHAR(60)"
+            name: "Email"
+        label: "Email"
+    Invoice/CustomerId: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: false
+            type: "INTEGER"
+            name: "CustomerId"
+        label: "CustomerId"
+    chinook.sqlite: 
+        type: "Database"
+        properties: 
+            path: "/Users/ruthb/Code/cbmi/origins/tests/data/chinook.sqlite"
+            version: 32
+            name: "chinook.sqlite"
+            size: 1067008
+        label: "chinook.sqlite"
+    Employee/Address: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 7
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(70)"
+            name: "Address"
+        label: "Address"
+    Employee/Title: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 3
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(30)"
+            name: "Title"
+        label: "Title"
+    Customer/Phone: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 9
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(24)"
+            name: "Phone"
+        label: "Phone"
+    Genre: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Genre"
+        label: "Genre"
+    Track/Composer: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 5
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(220)"
+            name: "Composer"
+        label: "Composer"
+    Employee/City: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 8
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "City"
+        label: "City"
+    Artist/ArtistId: 
+        type: "Column"
+        parent: "Artist"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "ArtistId"
+        label: "ArtistId"
+    Employee/ReportsTo: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 4
+            primary_key: 0
+            nullable: true
+            type: "INTEGER"
+            name: "ReportsTo"
+        label: "ReportsTo"
+    Employee/Fax: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 13
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(24)"
+            name: "Fax"
+        label: "Fax"
+    Employee/LastName: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: false
+            type: "NVARCHAR(20)"
+            name: "LastName"
+        label: "LastName"
+    Invoice/InvoiceId: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "InvoiceId"
+        label: "InvoiceId"
+    Employee/BirthDate: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 5
+            primary_key: 0
+            nullable: true
+            type: "DATETIME"
+            name: "BirthDate"
+        label: "BirthDate"
+    PlaylistTrack/PlaylistId: 
+        type: "Column"
+        parent: "PlaylistTrack"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "PlaylistId"
+        label: "PlaylistId"
+    Track: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Track"
+        label: "Track"
+    InvoiceLine/InvoiceLineId: 
+        type: "Column"
+        parent: "InvoiceLine"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "InvoiceLineId"
+        label: "InvoiceLineId"
+    Customer/Fax: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 10
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(24)"
+            name: "Fax"
+        label: "Fax"
+    Employee/Email: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 14
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(60)"
+            name: "Email"
+        label: "Email"
+    Invoice/BillingAddress: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 3
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(70)"
+            name: "BillingAddress"
+        label: "BillingAddress"
+    InvoiceLine/UnitPrice: 
+        type: "Column"
+        parent: "InvoiceLine"
+        properties: 
+            default_value: null
+            index: 3
+            primary_key: 0
+            nullable: false
+            type: "NUMERIC(10,2)"
+            name: "UnitPrice"
+        label: "UnitPrice"
+    Invoice/BillingCity: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 4
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "BillingCity"
+        label: "BillingCity"
+    Track/GenreId: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 4
+            primary_key: 0
+            nullable: true
+            type: "INTEGER"
+            name: "GenreId"
+        label: "GenreId"
+    Track/Bytes: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 7
+            primary_key: 0
+            nullable: true
+            type: "INTEGER"
+            name: "Bytes"
+        label: "Bytes"
+    Invoice/BillingPostalCode: 
+        type: "Column"
+        parent: "Invoice"
+        properties: 
+            default_value: null
+            index: 7
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(10)"
+            name: "BillingPostalCode"
+        label: "BillingPostalCode"
+    Customer/PostalCode: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 8
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(10)"
+            name: "PostalCode"
+        label: "PostalCode"
+    Track/Name: 
+        type: "Column"
+        parent: "Track"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: false
+            type: "NVARCHAR(200)"
+            name: "Name"
+        label: "Name"
+    MediaType/MediaTypeId: 
+        type: "Column"
+        parent: "MediaType"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "MediaTypeId"
+        label: "MediaTypeId"
+    Artist: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Artist"
+        label: "Artist"
+    Customer/FirstName: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 1
+            primary_key: 0
+            nullable: false
+            type: "NVARCHAR(40)"
+            name: "FirstName"
+        label: "FirstName"
+    Employee/FirstName: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 2
+            primary_key: 0
+            nullable: false
+            type: "NVARCHAR(20)"
+            name: "FirstName"
+        label: "FirstName"
+    Genre/GenreId: 
+        type: "Column"
+        parent: "Genre"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "GenreId"
+        label: "GenreId"
+    Employee/Country: 
+        type: "Column"
+        parent: "Employee"
+        properties: 
+            default_value: null
+            index: 10
+            primary_key: 0
+            nullable: true
+            type: "NVARCHAR(40)"
+            name: "Country"
+        label: "Country"
+    Album/AlbumId: 
+        type: "Column"
+        parent: "Album"
+        properties: 
+            default_value: null
+            index: 0
+            primary_key: 1
+            nullable: false
+            type: "INTEGER"
+            name: "AlbumId"
+        label: "AlbumId"
+    Customer/SupportRepId: 
+        type: "Column"
+        parent: "Customer"
+        properties: 
+            default_value: null
+            index: 12
+            primary_key: 0
+            nullable: true
+            type: "INTEGER"
+            name: "SupportRepId"
+        label: "SupportRepId"
+    Customer: 
+        type: "Table"
+        parent: "chinook.sqlite"
+        properties: 
+            name: "Customer"
+        label: "Customer"

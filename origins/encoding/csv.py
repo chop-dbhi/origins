@@ -1,12 +1,6 @@
-from __future__ import unicode_literals, absolute_import
-
 import re
+from io import StringIO
 from .._csv import UnicodeDictReader
-
-try:
-    str = unicode
-except NameError:
-    pass
 
 
 # TODO consolidate with origins.graph.utils
@@ -100,9 +94,9 @@ def parse_properties(value):
     return props
 
 
-def convert(f, resource):
-    """Takes a file-like object, reads as CSV data, and converts it into
-    the JSON format for loading.
+def load(f, resource):
+    """Loads a file-like object in the CSV resource format and converts
+    it into the native resource format.
     """
     components = {}
     relationships = {}
@@ -139,3 +133,9 @@ def convert(f, resource):
         'components': components,
         'relationships': relationships,
     }
+
+
+def loads(s, resource):
+    "Takes a string and converts it into the native resource format."
+    f = StringIO(s)
+    return load(f, resource)
