@@ -1,4 +1,3 @@
-import os
 import math
 import json
 import logging
@@ -9,14 +8,8 @@ from origins import config
 logger = logging.getLogger(__name__)
 
 
-# Default URI to Neo4j REST endpoint
-NEO4J_HOST = os.environ.get('ORIGINS_NEO4J_HOST',
-                            config.options['neo4j_host'])
-
-NEO4J_PORT = os.environ.get('ORIGINS_NEO4J_PORT',
-                            config.options['neo4j_port'])
-
-DEFAULT_URI = 'http://{}:{}/db/data/'.format(NEO4J_HOST, NEO4J_PORT)
+DEFAULT_URI = 'http://{}:{}/db/data/'.format(config.options['neo4j_host'],
+                                             config.options['neo4j_port'])
 
 # Default number of statements that will be sent in one request
 DEFAULT_BATCH_SIZE = 100
@@ -161,7 +154,7 @@ class Client(object):
 
 
 class Transaction(object):
-    def __init__(self, client=None, batch_size=None):
+    def __init__(self, client=None, batch_size=None, autocommit=False):
         if not client:
             client = Client()
         elif isinstance(client, str):
@@ -174,12 +167,16 @@ class Transaction(object):
         self.transaction_uri = TRANSACTION_URI_TMPL.format(client.uri)
         self.commit_uri = None
         self.batch_size = batch_size
-        self.batches = 0
+        self.autocommit = autocommit
 
-        # transaction is committed or rolled back
+        # Track number of batches sent
+        self._batches = 0
+
+        # Transaction is committed or rolled back
         self._closed = False
-        # track the depth of a transaction to prevent it from being comitted in
-        # sub-context managers
+
+        # Track the depth of a transaction to prevent it from being committed
+        # in sub-context managers.
         self._depth = 0
 
     def __enter__(self):
@@ -195,6 +192,13 @@ class Transaction(object):
                     self.rollback()
             else:
                 self.commit()
+
+    def _close(self):
+        if self.autocommit:
+            self.transaction_uri = TRANSACTION_URI_TMPL.format(self.client.uri)
+            self.commit_uri = None
+        else:
+            self._closed = True
 
     def _send(self, url, statements=None, parameters=None, formats=None):
         if self._closed:
@@ -222,14 +226,13 @@ class Transaction(object):
                 data['resultDataContents'] = formats
 
             resp, _resp_data = _send_request(url, data)
-
             resp_data = _merge_response(resp_data, _resp_data)
 
             # Implicit switch to transaction URL
             if 'location' in resp.headers:
                 url = self.transaction_uri = resp.headers['location']
 
-            self.batches += 1
+            self._batches += 1
 
         return resp_data
 
@@ -241,13 +244,16 @@ class Transaction(object):
         transaction, otherwise the transaction will timeout on the server
         and implicitly rolled back.
         """
+        if self.autocommit and self._depth == 0:
+            return self.commit(statements, parameters, formats, raw, keys)
+
+        if not self.commit_uri:
+            logger.debug('begin: {}'.format(self.transaction_uri))
+
         data = self._send(self.transaction_uri, statements,
                           parameters=parameters, formats=formats)
 
         if 'commit' in data:
-            if not self.commit_uri:
-                logger.debug('begin: {}'.format(data['commit']))
-
             self.commit_uri = data['commit']
 
         if raw:
@@ -266,9 +272,10 @@ class Transaction(object):
         data = self._send(uri, statements, parameters=parameters,
                           formats=formats)
 
-        logger.debug('commit: {}'.format(uri))
+        if self.commit_uri:
+            logger.debug('commit: {}'.format(uri))
 
-        self._closed = True
+        self._close()
 
         if raw:
             return data
@@ -282,42 +289,25 @@ class Transaction(object):
         requests.delete(self.transaction_uri, headers=HEADERS)
         logger.debug('rollback: {}'.format(self.transaction_uri))
 
-        self._closed = True
+        self._close()
 
 
-def send(statements, parameters=None, formats=None, uri=None, raw=False,
-         keys=False, batch_size=None):
-    """Sends a single request to the Neo4j transaction endpoint.
-
-    One or more statements can be given, formats including: `row`, `graph`,
-    and `REST` can be specified (default is `row`).
-    """
-    with Transaction(uri, batch_size) as tx:
-        return tx.commit(statements, parameters=parameters, formats=formats,
-                         raw=raw, keys=keys)
+# Default transaction with auto-commit enabled
+tx = Transaction(autocommit=True)
 
 
 def purge(*args, **kwargs):
     "Deletes all nodes and relationships."
-
-    result = send('START n=node(*) '
-                  'OPTIONAL MATCH (n)-[r]-() '
-                  'DELETE r, n '
-                  'RETURN count(distinct r), count(distinct n)',
-                  *args, **kwargs)
+    result = tx.send('START n=node(*) '
+                     'OPTIONAL MATCH (n)-[r]-() '
+                     'DELETE r, n '
+                     'RETURN count(distinct n), count(distinct r)',
+                     *args, **kwargs)
 
     return {
         'nodes': result[0][0],
         'relationships': result[0][1],
     }
-
-
-def summary(pretty=False):
-    "Returns a summary of relationships in graph."
-    return send('OPTIONAL MATCH (s)-[r]->(e) '
-                'RETURN labels(s), count(distinct s), type(r), '
-                'labels(e), count(distinct e)'
-                'ORDER BY labels(s)[0], labels(e)[0], type(r)')
 
 
 def debug(enable):

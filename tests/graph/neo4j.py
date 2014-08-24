@@ -26,8 +26,7 @@ class Neo4jTestCase(unittest.TestCase):
                 'parameters': {'props': {'foo': 3}},
             }])
 
-            self.assertEqual(tx.batches, 2)
-
+            self.assertEqual(tx._batches, 2)
             self.assertEqual(tx.send('MATCH (n) RETURN count(n)')[0][0], 3)
 
     def test_rollback(self):
@@ -42,7 +41,7 @@ class Neo4jTestCase(unittest.TestCase):
         tx.rollback()
 
         # Change not committed
-        self.assertEqual(len(neo4j.send('MATCH (n) RETURN n')), 0)
+        self.assertEqual(len(neo4j.tx.send('MATCH (n) RETURN n')), 0)
 
     def test_nesting(self):
         with neo4j.Transaction() as tx1:
@@ -62,4 +61,18 @@ class Neo4jTestCase(unittest.TestCase):
             self.assertEqual(tx1._depth, 1)
             self.assertFalse(tx1._closed)
 
-        self.assertIsNotNone(neo4j.send('MATCH (n) RETURN id(n)')[0][0])
+        self.assertIsNotNone(neo4j.tx.send('MATCH (n) RETURN id(n)')[0][0])
+
+    def test_autocommit(self):
+        with neo4j.tx as tx1:
+            tx1.send('CREATE (n)')
+
+            with tx1 as tx2:
+                tx2.send('CREATE (n)')
+
+            tx1.rollback()
+
+        neo4j.tx.send('CREATE (n)')
+        r = neo4j.tx.send('MATCH (n) RETURN n')
+
+        self.assertEqual(len(r), 1)
