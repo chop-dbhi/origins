@@ -1,17 +1,18 @@
 import os
 import json
-import time
 import logging
 import tempfile
 import subprocess
 import requests
 from uuid import uuid4
 from urllib.parse import urlparse
+from collections import OrderedDict
+from origins import utils
 from origins.graph import cypher, neo4j
 from .identifier import QualifiedName
 from .constants import PROV_BUNDLE, COMPONENTS, ALT_COMPONENTS, NAMESPACES, \
     ORIGINS_ATTR_NEO4J, ORIGINS_ATTR_UUID, RELATION_TYPES, \
-    RELATION_ATTRS, ORIGINS_ATTR_TIMESTAMP, EVENT_TYPES, \
+    RELATION_ATTRS, ORIGINS_ATTR_TIME, EVENT_TYPES, \
     ORIGINS_ATTR_TYPE, PROV_RELATION, PROV_EVENT, PROV_MENTION, \
     PROV_ATTR_BUNDLE, PROV_ATTR_GENERAL_ENTITY
 
@@ -83,7 +84,7 @@ def _parse_component(comp_id, comp_content, namespaces, default):
         else:
             qualified_attrs = _qualify(desc_attrs, namespaces, default=default)
 
-        descriptions.append((desc_name, comp_type, qualified_attrs))
+        descriptions.append((comp_id, desc_name, comp_type, qualified_attrs))
 
     return descriptions
 
@@ -109,7 +110,7 @@ def _parse_container(prov_data, namespaces, default=None):
     return descriptions
 
 
-def prepare_props(comp_type, attrs, uuid, timestamp):
+def prepare_props(comp_type, attrs, uuid, time):
     # Copy properties. For relation types, ignore relation attributes
     relations = RELATION_ATTRS.get(comp_type, {})
     props = {}
@@ -128,8 +129,8 @@ def prepare_props(comp_type, attrs, uuid, timestamp):
     props[str(ORIGINS_ATTR_UUID)] = uuid
     props[str(ORIGINS_ATTR_TYPE)] = str(comp_type)
 
-    if ORIGINS_ATTR_TIMESTAMP not in props:
-        props[str(ORIGINS_ATTR_TIMESTAMP)] = timestamp
+    if ORIGINS_ATTR_TIME not in props:
+        props[str(ORIGINS_ATTR_TIME)] = time
 
     return props
 
@@ -242,6 +243,7 @@ def prepare_query(start, rel, end, comp_neo4j, comp_uuid):
     starts = []
     matches = []
     parameters = {}
+    refs = []
 
     # For start and end nodes, use Neo4j id if available otherwise
     # rely on labels and Origins UUID for matching the node.
@@ -267,6 +269,9 @@ def prepare_query(start, rel, end, comp_neo4j, comp_uuid):
         matches.append(partial)
         parameters.update(params)
 
+    refs.append(start_ref)
+    refs.append(end_ref)
+
     if starts:
         query.append('START ' + ','.join(starts))
 
@@ -276,88 +281,95 @@ def prepare_query(start, rel, end, comp_neo4j, comp_uuid):
     query.append('CREATE ({})-[:`{}`]->({})'
                  .format(start_ref, rel, end_ref))
 
+    query.append('RETURN {{{}}}'.format(', '.join('{ref}: id({ref})'
+                 .format(ref=r) for r in refs)))
+
     return {
         'statement': ' '.join(query),
         'parameters': parameters,
     }
 
 
-def prepare_statements(data):
+def prepare_statements(bundles, time=None):
     """Takes parsed provenance bundles and loads it into the graph.
 
     It performs the following tasks:
 
-    - Creates component nodes if not already identified by a `origins:neo4j`
+    - Creates nodes if not already identified by a `origins:neo4j`
     id or `origins:uuid`
     - Creates relationships between nodes for relation types
     """
-    bundles = parse_prov_data(data)
-
-    timestamp = int(time.time() * 1000)
+    if not time:
+        time = utils.timestamp()
 
     comp_neo4j = {}
     comp_uuid = {}
-
-    # Set of (bundle, name) pairs for asserting their existence
-    comp_names = set()
+    comp_names = OrderedDict()
 
     queries = []
     relations = []
 
     for i, (bundle, descriptions) in enumerate(bundles.items()):
-        for j, (name, comp_type, attrs) in enumerate(descriptions):
-            # Generic unique reference
+        for j, (comp_id, name, comp_type, attrs) in enumerate(descriptions):
+            # Unique reference for this comp/name pair
             ref = 'n' + str(i + 1 * j)
-            pair = (bundle, name)
-            comp_names.add(pair)
+
+            # Keep track of scope of node by giving it a name relative to
+            # the bundle
+            comp_name = (bundle, name)
+            comp_names[comp_name] = ref
 
             # Neo4j or Origins UUID denotes an existing nodes and should not
-            # be created.
+            # be created. The partial statement is constructed for a START
+            # or MATCH statement downstream
             if ORIGINS_ATTR_NEO4J in attrs:
                 neo4j_id = attrs.get(ORIGINS_ATTR_NEO4J)
                 partial = '%(ref)s=node({ %(ref)s })' % {'ref': ref}
-                comp_neo4j[pair] = (ref, partial, {
+
+                comp_neo4j[comp_name] = (ref, partial, {
                     ref: neo4j_id,
                 })
             else:
-                # Create UUID for this node if one does not already exist
+                # Get UUID if present, otherwise add CREATE statement
                 if ORIGINS_ATTR_UUID in attrs:
                     uuid = attrs[ORIGINS_ATTR_UUID]
                 else:
                     uuid = str(uuid4())
 
-                props = prepare_props(comp_type, attrs, uuid, timestamp)
-                labels = cypher.labels_string(get_comp_labels(comp_type))
+                    props = prepare_props(comp_type, attrs, uuid, time)
+                    labels = cypher.labels_string(get_comp_labels(comp_type))
 
-                statement = 'CREATE (`%(ref)s`%(labels)s { props })' % {
-                    'ref': ref,
-                    'labels': labels
-                }
-
-                queries.append({
-                    'statement': statement,
-                    'parameters': {
-                        'props': props,
+                    statement = 'CREATE (`%(ref)s`%(labels)s { props })' % {
+                        'ref': ref,
+                        'labels': labels
                     }
-                })
 
+                    queries.append({
+                        'statement': statement,
+                        'parameters': {
+                            'props': props,
+                        }
+                    })
+
+                    # If a relation type, queue for defining edges
+                    if comp_type in RELATION_TYPES:
+                        relations.append((bundle, name, comp_type, attrs))
+
+                # Construct partial for matching on UUID
                 partial = '(%(ref)s%(labels)s {`%(attr)s`: { %(ref)s }})' % {
                     'attr': ORIGINS_ATTR_UUID,
                     'ref': ref,
                     'labels': labels,
                 }
 
-                comp_uuid[pair] = (ref, partial, {
+                comp_uuid[comp_name] = (ref, partial, {
                     ref: uuid,
                 })
-
-            if comp_type in RELATION_TYPES:
-                relations.append((bundle, name, comp_type, attrs))
 
             # Description defined in bundle
             if bundle:
                 start = (None, bundle)
-                end = pair
+                end = comp_name
                 query = prepare_query(start, 'origins:describes',
                                       end, comp_neo4j, comp_uuid)
                 queries.append(query)
@@ -395,17 +407,44 @@ def prepare_statements(data):
             query = prepare_query(start, attr, end, comp_neo4j, comp_uuid)
             queries.append(query)
 
-    return queries
+    return queries, comp_names
 
 
-def load_document(data, file_type=None, tx=None):
+def load_document(data, file_type=None, time=None, tx=neo4j.tx):
     "Loads prov data or from a file."
-    if tx is None:
-        tx = neo4j
-
     if isinstance(data, (str, bytes)):
         data = read_document(data, file_type=file_type)
 
-    statements = prepare_statements(data)
+    bundles = parse_prov_data(data)
+    statements, comp_names = prepare_statements(bundles, time=time)
 
-    return tx.send(statements)
+    # Creating mapping between ref and neo4j id
+    mapping = {}
+
+    for r in tx.send(statements):
+        mapping.update(r[0])
+
+    # Rebuild prov document for output
+    prov = {}
+
+    for bundle, descriptions in bundles.items():
+        for comp_id, name, comp_type, attrs in descriptions:
+
+            ref = comp_names[(bundle, name)]
+            neo4j_id = mapping[ref]
+            name = name.local
+
+            if bundle:
+                prov.setdefault('bundle', {})
+                prov['bundle'].setdefault(comp_id, {})
+
+                prov['bundle'][comp_id][name] = {
+                    'origins:neo4j': neo4j_id,
+                }
+            else:
+                prov.setdefault(comp_id, {})
+                prov[comp_id][name] = {
+                    'origins:neo4j': neo4j_id,
+                }
+
+    return prov
