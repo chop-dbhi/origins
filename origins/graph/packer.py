@@ -43,11 +43,9 @@ def unpack(b):
     a = {}
     p = {}
 
-    # Includes Neo4j id; this is a result from most queries
+    # Most Neo4j results are nested as lists
     if isinstance(b, (list, tuple)):
-        _id, b = b
-
-        a['neo4j'] = _id
+        b = b[0]
 
     low = len(PACK_PREFIX)
 

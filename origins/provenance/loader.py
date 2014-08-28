@@ -6,7 +6,6 @@ import subprocess
 import requests
 from uuid import uuid4
 from urllib.parse import urlparse
-from collections import OrderedDict
 from origins import utils
 from origins.graph import cypher, neo4j
 from .identifier import QualifiedName
@@ -281,9 +280,6 @@ def prepare_query(start, rel, end, comp_neo4j, comp_uuid):
     query.append('CREATE ({})-[:`{}`]->({})'
                  .format(start_ref, rel, end_ref))
 
-    query.append('RETURN {{{}}}'.format(', '.join('{ref}: id({ref})'
-                 .format(ref=r) for r in refs)))
-
     return {
         'statement': ' '.join(query),
         'parameters': parameters,
@@ -304,7 +300,8 @@ def prepare_statements(bundles, time=None):
 
     comp_neo4j = {}
     comp_uuid = {}
-    comp_names = OrderedDict()
+    comp_names = {}
+    mapping = {}
 
     queries = []
     relations = []
@@ -330,14 +327,15 @@ def prepare_statements(bundles, time=None):
                     ref: neo4j_id,
                 })
             else:
+                labels = cypher.labels_string(get_comp_labels(comp_type))
+
                 # Get UUID if present, otherwise add CREATE statement
                 if ORIGINS_ATTR_UUID in attrs:
-                    uuid = attrs[ORIGINS_ATTR_UUID]
+                    uuid = str(attrs[ORIGINS_ATTR_UUID])
                 else:
                     uuid = str(uuid4())
 
                     props = prepare_props(comp_type, attrs, uuid, time)
-                    labels = cypher.labels_string(get_comp_labels(comp_type))
 
                     statement = 'CREATE (`%(ref)s`%(labels)s { props })' % {
                         'ref': ref,
@@ -354,6 +352,8 @@ def prepare_statements(bundles, time=None):
                     # If a relation type, queue for defining edges
                     if comp_type in RELATION_TYPES:
                         relations.append((bundle, name, comp_type, attrs))
+
+                mapping[comp_name] = uuid
 
                 # Construct partial for matching on UUID
                 partial = '(%(ref)s%(labels)s {`%(attr)s`: { %(ref)s }})' % {
@@ -407,7 +407,7 @@ def prepare_statements(bundles, time=None):
             query = prepare_query(start, attr, end, comp_neo4j, comp_uuid)
             queries.append(query)
 
-    return queries, comp_names
+    return queries, mapping
 
 
 def load_document(data, file_type=None, time=None, tx=neo4j.tx):
@@ -416,13 +416,9 @@ def load_document(data, file_type=None, time=None, tx=neo4j.tx):
         data = read_document(data, file_type=file_type)
 
     bundles = parse_prov_data(data)
-    statements, comp_names = prepare_statements(bundles, time=time)
+    statements, mapping = prepare_statements(bundles, time=time)
 
-    # Creating mapping between ref and neo4j id
-    mapping = {}
-
-    for r in tx.send(statements):
-        mapping.update(r[0])
+    tx.send(statements)
 
     # Rebuild prov document for output
     prov = {}
@@ -430,8 +426,7 @@ def load_document(data, file_type=None, time=None, tx=neo4j.tx):
     for bundle, descriptions in bundles.items():
         for comp_id, name, comp_type, attrs in descriptions:
 
-            ref = comp_names[(bundle, name)]
-            neo4j_id = mapping[ref]
+            uuid = mapping[(bundle, name)]
             name = name.local
 
             if bundle:
@@ -439,12 +434,12 @@ def load_document(data, file_type=None, time=None, tx=neo4j.tx):
                 prov['bundle'].setdefault(comp_id, {})
 
                 prov['bundle'][comp_id][name] = {
-                    'origins:neo4j': neo4j_id,
+                    'origins:uuid': uuid,
                 }
             else:
                 prov.setdefault(comp_id, {})
                 prov[comp_id][name] = {
-                    'origins:neo4j': neo4j_id,
+                    'origins:uuid': uuid,
                 }
 
     return prov

@@ -7,7 +7,7 @@ class NodeTestCase(unittest.TestCase):
         neo4j.purge()
 
     def test_get_node(self):
-        self.assertRaises(ValueError, core.get_node, 1)
+        self.assertRaises(ValueError, core.get_node, 'abc123')
 
         n = core.add_node()
         _n = core.get_node(n)
@@ -55,7 +55,7 @@ class EdgeTestCase(unittest.TestCase):
         self.b0 = core.add_node()
 
     def test_get_edge(self):
-        self.assertRaises(ValueError, core.get_edge, 1)
+        self.assertRaises(ValueError, core.get_edge, 'abc123')
 
         e = core.add_edge(self.a0, self.b0)
         _e = core.get_edge(e)

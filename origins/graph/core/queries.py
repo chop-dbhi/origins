@@ -1,37 +1,38 @@
 from string import Template as T
 
 
-# Returns single node by it's internal ID
-GET_NODE = T('''
-START n=node({ node })
-RETURN id(n), n
+# Returns single node by UUID
+GET_NODE = '''
+MATCH (n:`origins:Node` {`origins:uuid`: { uuid }})
+RETURN n
 LIMIT 1
-''')
+'''
 
 # Returns the latest node by ID
 GET_NODE_BY_ID = T('''
 MATCH (n:`origins:Node`$labels {`origins:id`: { id }})
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-RETURN id(n), n
+RETURN n
 LIMIT 1
 ''')
 
 
 # Creates and returns a node
+# The `prov:Entity` label is added to hook into the provenance data model
 ADD_NODE = T('''
-CREATE (n:`origins:Node`$labels { attrs })
-RETURN id(n), n
+CREATE (n:`origins:Node`:`prov:Entity`$labels { attrs })
+RETURN n
 ''')
 
 
-# Returns a single edge with the start and end nodes by it's internal ID
-GET_EDGE = T('''
-START n=node({ edge })
+# Returns a single edge with the start and end nodes by it's UUID
+GET_EDGE = '''
+MATCH (n:`origins:Edge` {`origins:uuid`: { uuid }})
 MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
       (n)-[:`origins:end`]->(e:`origins:Node`)
-RETURN id(n), n, id(s), s, id(e), e
+RETURN n, s, e
 LIMIT 1
-''')
+'''
 
 # Returns the latest edge by ID
 GET_EDGE_BY_ID = T('''
@@ -40,31 +41,32 @@ WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
 WITH n
 MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
       (n)-[:`origins:end`]->(e:`origins:Node`)
-RETURN id(n), n, id(s), s, id(e), e
+RETURN n, s, e
 LIMIT 1
 ''')
 
 
 # Creates and returns an edge
+# The `prov:Entity` label is added to hook into the provenance data model
 ADD_EDGE = T('''
-START s=node({ start }), e=node({ end })
-CREATE (n:`origins:Edge`$labels { attrs }),
+MATCH (s:`origins:Node` {`origins:uuid`: { start }}),
+      (e:`origins:Node` {`origins:uuid`: { end }})
+CREATE (n:`origins:Edge`:`prov:Entity`$labels { attrs }),
        (n)-[:`origins:start`]->(s),
        (n)-[:`origins:end`]->(e)
-RETURN id(n), n, id(s), s, id(e), e
+RETURN n, s, e
 ''')
 
 
 # Returns all outbound edges of the node. That is, the node
 # is the start of a directed edge.
 NODE_OUTBOUND_EDGES = '''
-START n=node({ node })
-MATCH (n)<-[:`origins:start`]-(e:`origins:Edge`)
+MATCH (n:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:start`]-(e:`origins:Edge`)
 WHERE NOT (e)<-[:`prov:entity`]-(:`prov:Invalidation`)
 WITH e
 MATCH (e)-[:`origins:end`]->(o:`origins:Node`)
-RETURN id(e), labels(e), e, id(o)
-'''
+RETURN e, labels(e), o
+'''  # noqa
 
 # Finds outdated dependencies.
 # Matches all valid edges that have a invalid end node and finds the latest
@@ -84,5 +86,5 @@ MATCH (d)-[:`prov:generatedEntity`|`prov:usedEntity`*]-(l:`origins:Node` {`origi
 WITH e, l
 WHERE NOT (l)<-[:`prov:entity`]-(:`prov:Invalidation`)
 MATCH (e)-[:`origins:start`]->(s:`origins:Node`)
-RETURN id(s), s, id(e), e, id(l), l
+RETURN s, e, l
 '''  # noqa

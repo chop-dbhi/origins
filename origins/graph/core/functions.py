@@ -1,7 +1,7 @@
 from uuid import uuid4
 from origins import utils, provenance
 from origins.graph import neo4j
-from origins.model import Result, Node, Edge
+from ..model import Result, Node, Edge
 from ..utils import merge_attrs
 from ..packer import pack, unpack
 from ..cypher import labels_string
@@ -22,10 +22,6 @@ __all__ = (
 )
 
 
-NODE_LABEL = 'origins:Node'
-EDGE_LABEL = 'origins:Edge'
-
-
 def _prepare_attrs(attrs=None):
     if attrs is None:
         attrs = {}
@@ -44,28 +40,26 @@ def _prepare_statement(statement, labels=None, **mapping):
     return statement.safe_substitute(mapping)
 
 
-def get_node(_id, labels=None, tx=neo4j.tx):
+def get_node(uuid, labels=None, tx=neo4j.tx):
     t = utils.Timer()
 
-    if isinstance(_id, Node):
-        _id = _id['neo4j']
-    elif isinstance(_id, Result):
-        _id = _id['data']['neo4j']
+    if isinstance(uuid, Node):
+        uuid = uuid['uuid']
+    elif isinstance(uuid, Result):
+        uuid = uuid['data']['uuid']
 
     with t('prep'):
-        statement = _prepare_statement(queries.GET_NODE, labels=labels)
-
         query = {
-            'statement': statement,
+            'statement': queries.GET_NODE,
             'parameters': {
-                'node': _id,
+                'uuid': uuid,
             }
         }
 
     with t('exec'):
-        try:
-            result = tx.send(query)
-        except neo4j.Neo4jError:
+        result = tx.send(query)
+
+        if not result:
             raise ValueError('node does not exist')
 
     return Result(
@@ -137,7 +131,7 @@ def add_node(attrs=None, new=True, labels=None, tx=neo4j.tx):
 
         # Provenance for add
         with t('prov'):
-            prov_spec = provenance.add(data['neo4j'], new=new)
+            prov_spec = provenance.add(data['uuid'], new=new)
             prov = provenance.load(prov_spec, tx=tx)
 
         return Result(
@@ -148,21 +142,23 @@ def add_node(attrs=None, new=True, labels=None, tx=neo4j.tx):
         )
 
 
-def _update_edge(previous, labels, attrs, start, end, tx):
+def _update_edge(attrs, labels, start, end, tx):
     """Updates an edge with new start and end nodes.
 
     This creates a new revision of the edge.
     """
     t = utils.Timer()
 
-    attrs.pop('uuid')
+    previous = attrs.pop('uuid')
 
     with t('add'):
         edge = add_edge(start, end, attrs=attrs, labels=labels, tx=tx)
 
     with t('prov'):
-        prov_spec = provenance.change(previous, edge['data']['neo4j'],
+        prov_spec = provenance.change(previous, edge['data']['uuid'],
                                       reason='origins:NodeChange')
+        prov_spec['wasGeneratedBy'] = edge['prov']['wasGeneratedBy']
+        prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
         prov = provenance.load(prov_spec, tx=tx)
 
     return Result(
@@ -180,7 +176,7 @@ def _update_node_edges(old, new, tx):
     query = {
         'statement': queries.NODE_OUTBOUND_EDGES,
         'parameters': {
-            'node': old,
+            'uuid': old,
         }
     }
 
@@ -188,25 +184,27 @@ def _update_node_edges(old, new, tx):
 
     results = []
 
-    for (edge_id, edge_labels, edge, end_id) in result:
-        result = _update_edge(edge_id, edge_labels, unpack(edge), new,
-                              end_id, tx)
+    # TODO, handle incoming edges
+    for (edge, edge_labels, end) in result:
+        edge = unpack(edge)
+        end = unpack(end)['uuid']
+        result = _update_edge(edge, edge_labels, new, end, tx)
         results.append(result)
 
     return results
 
 
-def change_node(_id, attrs=None, new=True, labels=None, tx=neo4j.tx):
+def change_node(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
     t = utils.Timer()
 
-    if isinstance(_id, Node):
-        _id = _id['neo4j']
-    elif isinstance(_id, Result):
-        _id = _id['data']['neo4j']
+    if isinstance(uuid, Node):
+        uuid = uuid['uuid']
+    elif isinstance(uuid, Result):
+        uuid = uuid['data']['uuid']
 
     with tx as tx:
         with t('get'):
-            prev = get_node(_id, tx=tx)
+            prev = get_node(uuid, tx=tx)
 
         with t('prep'):
             # Merge the new into the old ones
@@ -219,13 +217,13 @@ def change_node(_id, attrs=None, new=True, labels=None, tx=neo4j.tx):
 
         with t('update_edges'):
             # Copy outbound relationships from the previous version
-            _update_node_edges(prev['data']['neo4j'],
-                               rev['data']['neo4j'], tx=tx)
+            _update_node_edges(prev['data']['uuid'],
+                               rev['data']['uuid'], tx=tx)
 
         # Provenance for change
         with t('prov'):
-            prov_spec = provenance.change(prev['data']['neo4j'],
-                                          rev['data']['neo4j'])
+            prov_spec = provenance.change(prev['data']['uuid'],
+                                          rev['data']['uuid'])
             prov_spec['wasGeneratedBy'] = rev['prov']['wasGeneratedBy']
             prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
 
@@ -239,21 +237,21 @@ def change_node(_id, attrs=None, new=True, labels=None, tx=neo4j.tx):
         )
 
 
-def remove_node(_id, reason=None, tx=neo4j.tx):
+def remove_node(uuid, reason=None, tx=neo4j.tx):
     t = utils.Timer()
 
-    if isinstance(_id, Node):
-        _id = _id['neo4j']
-    elif isinstance(_id, Result):
-        _id = _id['data']['neo4j']
+    if isinstance(uuid, Node):
+        uuid = uuid['uuid']
+    elif isinstance(uuid, Result):
+        uuid = uuid['data']['uuid']
 
     with tx as tx:
         with t('get'):
-            node = get_node(_id, tx=tx)
+            node = get_node(uuid, tx=tx)
 
         # Provenance for remove
         with t('prov'):
-            prov_spec = provenance.remove(node['data']['neo4j'], reason=reason)
+            prov_spec = provenance.remove(node['data']['uuid'], reason=reason)
             prov = provenance.load(prov_spec, tx=tx)
 
         return Result(
@@ -264,28 +262,26 @@ def remove_node(_id, reason=None, tx=neo4j.tx):
         )
 
 
-def get_edge(_id, labels=None, tx=neo4j.tx):
+def get_edge(uuid, labels=None, tx=neo4j.tx):
     t = utils.Timer()
 
-    if isinstance(_id, Edge):
-        _id = _id['neo4j']
-    elif isinstance(_id, Result):
-        _id = _id['data']['neo4j']
+    if isinstance(uuid, Edge):
+        uuid = uuid['uuid']
+    elif isinstance(uuid, Result):
+        uuid = uuid['data']['uuid']
 
     with t('prep'):
-        statement = _prepare_statement(queries.GET_EDGE, labels=labels)
-
         query = {
-            'statement': statement,
+            'statement': queries.GET_EDGE,
             'parameters': {
-                'edge': _id,
+                'uuid': uuid,
             }
         }
 
     with t('exec'):
-        try:
-            result = tx.send(query)
-        except neo4j.Neo4jError:
+        result = tx.send(query)
+
+        if not result:
             raise ValueError('edge does not exist')
 
     return Result(
@@ -335,14 +331,14 @@ def add_edge(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(start, Node):
-        start = start['neo4j']
+        start = start['uuid']
     elif isinstance(start, Result):
-        start = start['data']['neo4j']
+        start = start['data']['uuid']
 
     if isinstance(end, Node):
-        end = end['neo4j']
+        end = end['uuid']
     elif isinstance(end, Result):
-        end = end['data']['neo4j']
+        end = end['data']['uuid']
 
     with tx as tx:
         with t('prep'):
@@ -373,7 +369,7 @@ def add_edge(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
             data = parse_edge(result)
 
         with t('prov'):
-            prov_spec = provenance.add(data['neo4j'], new=new)
+            prov_spec = provenance.add(data['uuid'], new=new)
             prov = provenance.load(prov_spec, tx=tx)
 
         return Result(
@@ -384,26 +380,26 @@ def add_edge(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
         )
 
 
-def change_edge(_id, attrs=None, new=True, labels=None, tx=neo4j.tx):
+def change_edge(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
     t = utils.Timer()
 
-    if isinstance(_id, Edge):
-        _id = _id['neo4j']
-    elif isinstance(_id, Result):
-        _id = _id['data']['neo4j']
+    if isinstance(uuid, Edge):
+        uuid = uuid['uuid']
+    elif isinstance(uuid, Result):
+        uuid = uuid['data']['uuid']
 
     with tx as tx:
         # Get the entity being updated
         with t('get'):
-            prev = get_edge(_id, tx=tx)
+            prev = get_edge(uuid, tx=tx)
 
         with t('prep'):
             # Merge the new into the old ones
             attrs = merge_attrs(prev['data'], attrs)
 
         # Create a new version of the entity
-        rev = add_edge(start=prev['data']['start']['neo4j'],
-                       end=prev['data']['end']['neo4j'],
+        rev = add_edge(start=prev['data']['start']['uuid'],
+                       end=prev['data']['end']['uuid'],
                        attrs=attrs,
                        new=new,
                        labels=labels,
@@ -413,8 +409,8 @@ def change_edge(_id, attrs=None, new=True, labels=None, tx=neo4j.tx):
 
         # Provenance for change
         with t('prov'):
-            prov_spec = provenance.change(prev['data']['neo4j'],
-                                          rev['data']['neo4j'])
+            prov_spec = provenance.change(prev['data']['uuid'],
+                                          rev['data']['uuid'])
             prov_spec['wasGeneratedBy'] = rev['prov']['wasGeneratedBy']
             prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
 
@@ -428,21 +424,21 @@ def change_edge(_id, attrs=None, new=True, labels=None, tx=neo4j.tx):
         )
 
 
-def remove_edge(_id, reason=None, tx=neo4j.tx):
+def remove_edge(uuid, reason=None, tx=neo4j.tx):
     t = utils.Timer()
 
-    if isinstance(_id, Edge):
-        _id = _id['neo4j']
-    elif isinstance(_id, Result):
-        _id = _id['data']['neo4j']
+    if isinstance(uuid, Edge):
+        uuid = uuid['uuid']
+    elif isinstance(uuid, Result):
+        uuid = uuid['data']['uuid']
 
     with tx as tx:
         with t('get'):
-            edge = get_edge(_id, tx=tx)
+            edge = get_edge(uuid, tx=tx)
 
         # Provenance for remove
         with t('prov'):
-            prov_spec = provenance.remove(edge['data']['neo4j'], reason=reason)
+            prov_spec = provenance.remove(edge['data']['uuid'], reason=reason)
             prov = provenance.load(prov_spec, tx=tx)
 
         return Result(

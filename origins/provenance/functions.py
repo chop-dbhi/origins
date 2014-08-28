@@ -10,7 +10,7 @@ def add(entity, new=False):
     prov = {
         'entity': {
             'entity': {
-                'origins:neo4j': entity,
+                'origins:uuid': entity,
             },
         },
         'wasGeneratedBy': {
@@ -38,10 +38,10 @@ def change(previous, entity, method=None, reason=None):
     prov = {
         'entity': {
             'entity': {
-                'origins:neo4j': entity,
+                'origins:uuid': entity,
             },
             'previous': {
-                'origins:neo4j': previous,
+                'origins:uuid': previous,
             }
         },
         'wasInvalidatedBy': {
@@ -69,7 +69,7 @@ def remove(entity, reason=None):
     prov = {
         'entity': {
             'entity': {
-                'origins:neo4j': entity,
+                'origins:uuid': entity,
             },
         },
         'wasInvalidatedBy': {
