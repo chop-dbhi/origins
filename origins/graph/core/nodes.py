@@ -13,9 +13,15 @@ __all__ = (
     'get',
     'get_by_id',
     'add',
-    'change',
+    'set',
     'remove',
 )
+
+DIFF_IGNORE = {
+    'id',
+    'uuid',
+    'time',
+}
 
 
 # Returns single node by UUID
@@ -225,7 +231,7 @@ def _update_edges(old, new, tx):
     return results
 
 
-def change(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
+def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(uuid, Node):
@@ -240,6 +246,12 @@ def change(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
         with t('prep'):
             # Merge the new into the old ones
             attrs = merge_attrs(prev['data'], attrs)
+
+            # Calculate diff
+            diff = utils.diff(attrs, prev['data'], ignore=DIFF_IGNORE)
+
+            if not diff and not force:
+                return
 
         with t('add'):
             # Create a new version of the entity
@@ -264,6 +276,7 @@ def change(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
             perf=t.results,
             time=utils.timestamp(),
             data=rev['data'],
+            diff=diff,
             prov=prov,
         )
 

@@ -13,10 +13,19 @@ __all__ = (
     'get',
     'get_by_id',
     'add',
-    'change',
+    'set',
     'remove',
     'get_outdated',
 )
+
+
+DIFF_IGNORE = {
+    'id',
+    'uuid',
+    'time',
+    'start',
+    'end',
+}
 
 
 # Returns a single edge with the start and end nodes by it's UUID
@@ -213,7 +222,7 @@ def add(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
         )
 
 
-def change(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
+def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(uuid, Edge):
@@ -229,6 +238,12 @@ def change(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
         with t('prep'):
             # Merge the new into the old ones
             attrs = merge_attrs(prev['data'], attrs)
+
+            # Calculate diff
+            diff = utils.diff(attrs, prev['data'], ignore=DIFF_IGNORE)
+
+            if not diff and not force:
+                return
 
         # Create a new version of the entity
         rev = add(start=prev['data']['start']['uuid'],
@@ -254,6 +269,7 @@ def change(uuid, attrs=None, new=True, labels=None, tx=neo4j.tx):
             time=utils.timestamp(),
             data=rev['data'],
             prov=prov,
+            diff=diff,
         )
 
 
