@@ -54,11 +54,21 @@ LIMIT 1
 ADD_EDGE = T('''
 MATCH (s:`origins:Node` {`origins:uuid`: { start }}),
       (e:`origins:Node` {`origins:uuid`: { end }})
+
 CREATE (n:`origins:Edge`:`prov:Entity`$labels { attrs }),
        (n)-[:`origins:start`]->(s),
        (n)-[:`origins:end`]->(e)
+
+CREATE (s)-[r:`$etype` { props }]->(e)
+
 RETURN n, s, e
 ''')
+
+
+DELETE_EDGE = T('''
+MATCH (s:`origins:Node` {`origins:uuid`: { start }})-[r:`$etype`]->(e:`origins:Node` {`origins:uuid`: { end }})
+DELETE r
+''')  # noqa
 
 
 # Finds "outdated edges"
@@ -189,12 +199,14 @@ def add(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
             if 'id' not in attrs:
                 attrs['id'] = attrs['uuid']
 
-            statement = _prepare_statement(ADD_EDGE, labels=labels)
+            statement = _prepare_statement(ADD_EDGE, labels=labels,
+                                           etype=attrs.get('type', 'null'))
 
             parameters = {
                 'attrs': pack(attrs),
                 'start': start,
                 'end': end,
+                'props': attrs.get('properties', {})
             }
 
             query = {
@@ -245,6 +257,21 @@ def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
             if not diff and not force:
                 return
 
+        # Removes the physical edge between the two nodes
+        with t('exec'):
+            etype = prev['data'].get('type', 'null')
+            statement = _prepare_statement(DELETE_EDGE, etype=etype)
+
+            query = {
+                'statement': statement,
+                'parameters': {
+                    'start': prev['data']['start']['uuid'],
+                    'end': prev['data']['end']['uuid'],
+                }
+            }
+
+            tx.send(query)
+
         # Create a new version of the entity
         rev = add(start=prev['data']['start']['uuid'],
                   end=prev['data']['end']['uuid'],
@@ -284,6 +311,21 @@ def remove(uuid, reason=None, tx=neo4j.tx):
     with tx as tx:
         with t('get'):
             edge = get(uuid, tx=tx)
+
+        # Removes the physical edge between the two nodes
+        with t('exec'):
+            etype = edge['data'].get('type', 'null')
+            statement = _prepare_statement(DELETE_EDGE, etype=etype)
+
+            query = {
+                'statement': statement,
+                'parameters': {
+                    'start': edge['data']['start']['uuid'],
+                    'end': edge['data']['end']['uuid'],
+                }
+            }
+
+            tx.send(query)
 
         # Provenance for remove
         with t('prov'):

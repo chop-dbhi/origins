@@ -94,6 +94,33 @@ class EdgeTestCase(unittest.TestCase):
         self.assertIn('uuid', e['data'])
         self.assertIn('id', e['data'])
 
+    def test_real_edge(self):
+        e = edges.add(self.a0, self.b0, {
+            'type': 'LIKES',
+            'properties': {'foo': 1}
+        })
+
+        query = {
+            'statement': '''
+                MATCH (:`origins:Node` {`origins:uuid`: { start }})-[r:LIKES]->(:`origins:Node` {`origins:uuid`: { end }})
+                RETURN r
+            ''',  # noqa
+            'parameters': {
+                'start': self.a0['data']['uuid'],
+                'end': self.b0['data']['uuid'],
+            }
+        }
+
+        # Created
+        result = neo4j.tx.send(query)
+        self.assertEqual(result[0][0], {'foo': 1})
+
+        edges.remove(e)
+
+        # Deleted
+        result = neo4j.tx.send(query)
+        self.assertEqual(result, [])
+
     def test_set(self):
         e0 = edges.add(self.a0, self.b0)
         e0_ = edges.set(e0)

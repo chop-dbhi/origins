@@ -4,9 +4,9 @@ from origins import utils, provenance
 from origins.graph import neo4j
 from ..model import Result, Node
 from ..utils import merge_attrs
-from ..packer import pack, unpack
+from ..packer import pack
 from ..cypher import labels_string
-from .parsers import parse_node
+from .parsers import parse_node, parse_edge
 from . import edges
 
 __all__ = (
@@ -51,11 +51,11 @@ RETURN n
 # Returns all outbound edges of the node. That is, the node
 # is the start of a directed edge.
 NODE_OUTBOUND_EDGES = '''
-MATCH (n:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:start`]-(e:`origins:Edge`)
-WHERE NOT (e)<-[:`prov:entity`]-(:`prov:Invalidation`)
-WITH e
-MATCH (e)-[:`origins:end`]->(o:`origins:Node`)
-RETURN e, labels(e), o
+MATCH (s:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:start`]-(n:`origins:Edge`)
+WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+WITH n, s
+MATCH (n)-[:`origins:end`]->(e:`origins:Node`)
+RETURN n, s, e, labels(n)
 '''  # noqa
 
 
@@ -179,7 +179,7 @@ def add(attrs=None, new=True, labels=None, tx=neo4j.tx):
         )
 
 
-def _update_edge(attrs, labels, start, end, tx):
+def _update_edge(attrs, labels, new, tx):
     """Updates an edge with new start and end nodes.
 
     This creates a new revision of the edge.
@@ -188,8 +188,24 @@ def _update_edge(attrs, labels, start, end, tx):
 
     previous = attrs.pop('uuid')
 
+    # Removes the physical edge between the two nodes
+    with t('exec'):
+        etype = attrs.get('type', 'null')
+        statement = edges._prepare_statement(edges.DELETE_EDGE, etype=etype)
+
+        query = {
+            'statement': statement,
+            'parameters': {
+                'start': attrs['start']['uuid'],
+                'end': attrs['end']['uuid'],
+            }
+        }
+
+        tx.send(query)
+
     with t('add'):
-        edge = edges.add(start, end, attrs=attrs, labels=labels, tx=tx)
+        edge = edges.add(new, attrs['end'], attrs=attrs, labels=labels,
+                         tx=tx)
 
     with t('prov'):
         prov_spec = provenance.change(previous, edge['data']['uuid'],
@@ -222,10 +238,9 @@ def _update_edges(old, new, tx):
     results = []
 
     # TODO, handle incoming edges
-    for (edge, edge_labels, end) in result:
-        edge = unpack(edge)
-        end = unpack(end)['uuid']
-        result = _update_edge(edge, edge_labels, new, end, tx)
+    for (edge, start, end, edge_labels) in result:
+        edge = parse_edge([edge, start, end])
+        result = _update_edge(edge, edge_labels, new, tx)
         results.append(result)
 
     return results
