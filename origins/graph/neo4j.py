@@ -1,3 +1,4 @@
+import time
 import math
 import json
 import logging
@@ -6,6 +7,10 @@ from origins import config
 
 
 logger = logging.getLogger(__name__)
+mlogger = logging.getLogger(__name__ + ':metrics')
+
+logger.setLevel(logging.INFO)
+mlogger.setLevel(logging.INFO)
 
 
 DEFAULT_URI = 'http://{}:{}/db/data/'.format(config.options['neo4j_host'],
@@ -29,6 +34,12 @@ HEADERS = {
     'content-type': 'application/json',
     'x-stream': 'true',
 }
+
+
+TIME_LOG_STR = '''
+total time: {tt:0.2f}
+request time: {ar:0.2f} x {nr} ({rt:0.2f})
+other time: {ot:0.2f}'''
 
 
 class Neo4jError(Exception):
@@ -122,24 +133,6 @@ def _merge_response(output, data):
     return output
 
 
-def _send_request(url, payload):
-    "Sends a request to the server."
-    # Prevent overhead of serialization
-    if logger.level <= logging.DEBUG:
-        logger.debug(json.dumps(payload, indent=4))
-
-    data = json.dumps(payload)
-    resp = requests.post(url, data=data, headers=HEADERS)
-
-    resp.raise_for_status()
-    resp_data = resp.json()
-
-    if resp_data['errors']:
-        raise Neo4jError(resp_data['errors'])
-
-    return resp, resp_data
-
-
 class Client(object):
     def __init__(self, uri=DEFAULT_URI):
         self.uri = uri
@@ -172,6 +165,10 @@ class Transaction(object):
         # Track number of batches sent
         self._batches = 0
 
+        # Elapsed time of transaction
+        self._begin_time = None
+        self._request_times = []
+
         # Transaction is committed or rolled back
         self._closed = False
 
@@ -194,15 +191,48 @@ class Transaction(object):
                 self.commit()
 
     def _close(self):
+        tt = (time.time() - self._begin_time) * 1000
+        rt = sum(self._request_times) * 1000
+        ot = tt - rt
+        nr = len(self._request_times)
+        ar = rt / nr
+
+        mlogger.info(TIME_LOG_STR.format(ot=ot, ar=ar, rt=rt, nr=nr, tt=tt))
+
         if self.autocommit:
             self.transaction_uri = TRANSACTION_URI_TMPL.format(self.client.uri)
             self.commit_uri = None
+            self._request_times = []
+            self._begin_time = None
         else:
             self._closed = True
+
+    def _send_request(self, url, payload):
+        "Sends a request to the server."
+        # Prevent overhead of serialization
+        if logger.level <= logging.DEBUG:
+            logger.debug(json.dumps(payload, indent=4))
+
+        data = json.dumps(payload)
+        resp = requests.post(url, data=data, headers=HEADERS)
+
+        # Increment total request time
+        self._request_times.append(resp.elapsed.total_seconds())
+
+        resp.raise_for_status()
+        resp_data = resp.json()
+
+        if resp_data['errors']:
+            raise Neo4jError(resp_data['errors'])
+
+        return resp, resp_data,
 
     def _send(self, url, statements=None, parameters=None, formats=None):
         if self._closed:
             raise Neo4jError('transaction closed')
+
+        if self._begin_time is None:
+            self._begin_time = time.time()
 
         statements = _normalize_statements(statements, parameters)
 
@@ -225,7 +255,7 @@ class Transaction(object):
             if formats:
                 data['resultDataContents'] = formats
 
-            resp, _resp_data = _send_request(url, data)
+            resp, _resp_data = self._send_request(url, data)
             resp_data = _merge_response(resp_data, _resp_data)
 
             # Implicit switch to transaction URL
@@ -310,8 +340,6 @@ def purge(*args, **kwargs):
     }
 
 
-def debug(enable):
-    if enable:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
+def debug():
+    logger.setLevel(logging.DEBUG)
+    mlogger.setLevel(logging.DEBUG)
