@@ -2,7 +2,6 @@ import json
 import uuid
 import inspect
 import logging
-from functools import wraps
 from ..utils import timestamp
 from ._redis import client as redis
 from . import utils
