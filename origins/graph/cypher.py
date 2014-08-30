@@ -93,4 +93,7 @@ def labels_string(labels):
     if not labels:
         return ''
 
+    if isinstance(labels, str):
+        labels = [labels]
+
     return ':' + ':'.join(['`{}`'.format(l) for l in labels])
