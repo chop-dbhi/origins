@@ -89,20 +89,20 @@ class NodeTestCase(unittest.TestCase):
 
     def test_labels(self):
         # Create node with custom labels
-        n = nodes.add(labels=('Foo', 'Bar'))
+        n = nodes.add(label=('Foo', 'Bar'))
 
         # Normall UUID-based lookup still works (since it is unique)
         n_ = nodes.get(n)
         self.assertEqual(n['data'], n_['data'])
 
         # Combination of labels work
-        n_ = nodes.get_by_id(n, labels=('Foo', 'Bar'))
+        n_ = nodes.get_by_id(n, label=('Foo', 'Bar'))
         self.assertEqual(n['data'], n_['data'])
 
-        n_ = nodes.get_by_id(n, labels=('Foo',))
+        n_ = nodes.get_by_id(n, label=('Foo',))
         self.assertEqual(n['data'], n_['data'])
 
-        n_ = nodes.get_by_id(n, labels=('Bar',))
+        n_ = nodes.get_by_id(n, label=('Bar',))
         self.assertEqual(n['data'], n_['data'])
 
         self.assertEqual(_nodes('Foo'), 1)
@@ -206,20 +206,20 @@ class EdgeTestCase(unittest.TestCase):
 
     def test_labels(self):
         # Create edge with custom labels
-        n = edges.add(self.a0, self.b0, labels=('Foo', 'Bar'))
+        n = edges.add(self.a0, self.b0, label=('Foo', 'Bar'))
 
         # Normall UUID-based lookup still works (since it is unique)
         n_ = edges.get(n)
         self.assertEqual(n['data'], n_['data'])
 
         # Combination of labels work
-        n_ = edges.get_by_id(n, labels=('Foo', 'Bar'))
+        n_ = edges.get_by_id(n, label=('Foo', 'Bar'))
         self.assertEqual(n['data'], n_['data'])
 
-        n_ = edges.get_by_id(n, labels=('Foo',))
+        n_ = edges.get_by_id(n, label=('Foo',))
         self.assertEqual(n['data'], n_['data'])
 
-        n_ = edges.get_by_id(n, labels=('Bar',))
+        n_ = edges.get_by_id(n, label=('Bar',))
         self.assertEqual(n['data'], n_['data'])
 
         self.assertEqual(_nodes('Foo'), 1)

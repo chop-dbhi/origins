@@ -51,8 +51,8 @@ RETURN n, s, e, labels(n)
 '''  # noqa
 
 
-def _prepare_statement(statement, labels=None, **mapping):
-    mapping['labels'] = labels_string(labels)
+def _prepare_statement(statement, label=None, **mapping):
+    mapping['labels'] = labels_string(label)
 
     return statement.safe_substitute(mapping)
 
@@ -87,7 +87,7 @@ def get(uuid, labels=None, tx=neo4j.tx):
     )
 
 
-def get_by_id(_id, labels=None, tx=neo4j.tx):
+def get_by_id(_id, label=None, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(_id, Node):
@@ -97,7 +97,7 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
 
     with t('prep'):
         statement = _prepare_statement(GET_NODE_BY_ID,
-                                       labels=labels)
+                                       label=label)
 
         query = {
             'statement': statement,
@@ -122,14 +122,14 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
     )
 
 
-def add(attrs=None, new=True, labels=None, tx=neo4j.tx):
+def add(attrs=None, new=True, label=None, tx=neo4j.tx):
     t = utils.Timer()
 
     with tx as tx:
         with t('prep'):
             node = Node.new(attrs)
 
-            statement = _prepare_statement(ADD_NODE, labels=labels)
+            statement = _prepare_statement(ADD_NODE, label=label)
 
             parameters = {
                 'attrs': pack(node),
@@ -156,7 +156,7 @@ def add(attrs=None, new=True, labels=None, tx=neo4j.tx):
         )
 
 
-def _update_edge(attrs, labels, new, tx):
+def _update_edge(attrs, label, new, tx):
     """Updates an edge with new start and end nodes.
 
     This creates a new revision of the edge.
@@ -181,7 +181,7 @@ def _update_edge(attrs, labels, new, tx):
         tx.send(query)
 
     with t('add'):
-        edge = edges.add(new, attrs['end'], attrs=attrs, labels=labels,
+        edge = edges.add(new, attrs['end'], attrs=attrs, label=label,
                          tx=tx)
 
     with t('prov'):
@@ -223,7 +223,7 @@ def _update_edges(old, new, tx):
     return results
 
 
-def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
+def set(uuid, attrs=None, new=True, label=None, force=False, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(uuid, Node):
@@ -247,7 +247,7 @@ def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
 
         with t('add'):
             # Create a new version of the entity
-            rev = add(node, new=new, labels=labels, tx=tx)
+            rev = add(node, new=new, label=label, tx=tx)
             t.add_results('add', rev['perf'])
 
         with t('update_edges'):

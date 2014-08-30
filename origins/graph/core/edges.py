@@ -84,13 +84,13 @@ RETURN n, s, e, l
 '''  # noqa
 
 
-def _prepare_statement(statement, labels=None, **mapping):
-    mapping['labels'] = labels_string(labels)
+def _prepare_statement(statement, label=None, **mapping):
+    mapping['labels'] = labels_string(label)
 
     return statement.safe_substitute(mapping)
 
 
-def get(uuid, labels=None, tx=neo4j.tx):
+def get(uuid, label=None, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(uuid, Edge):
@@ -120,7 +120,7 @@ def get(uuid, labels=None, tx=neo4j.tx):
     )
 
 
-def get_by_id(_id, labels=None, tx=neo4j.tx):
+def get_by_id(_id, label=None, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(_id, Edge):
@@ -130,7 +130,7 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
 
     with t('prep'):
         statement = _prepare_statement(GET_EDGE_BY_ID,
-                                       labels=labels)
+                                       label=label)
 
         query = {
             'statement': statement,
@@ -155,7 +155,7 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
     )
 
 
-def add(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
+def add(start, end, attrs=None, label=None, new=True, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(start, Node):
@@ -172,7 +172,7 @@ def add(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
         with t('prep'):
             edge = Edge.new(attrs)
 
-            statement = _prepare_statement(ADD_EDGE, labels=labels,
+            statement = _prepare_statement(ADD_EDGE, label=label,
                                            etype=edge.get('type', 'null'))
 
             parameters = {
@@ -207,7 +207,7 @@ def add(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
         )
 
 
-def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
+def set(uuid, attrs=None, new=True, label=None, force=False, tx=neo4j.tx):
     t = utils.Timer()
 
     if isinstance(uuid, Edge):
@@ -249,7 +249,7 @@ def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
                   end=prev['data']['end']['uuid'],
                   attrs=edge,
                   new=new,
-                  labels=labels,
+                  label=label,
                   tx=tx)
 
         t.add_results('add', rev['perf'])
