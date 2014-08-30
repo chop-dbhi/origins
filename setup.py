@@ -1,7 +1,7 @@
 import sys
 from setuptools import setup, find_packages
 
-if sys.version_info < (3, 2, 0):
+if sys.version_info < (3, 3, 0):
     raise EnvironmentError('Python version not supported')
 
 
@@ -25,7 +25,6 @@ kwargs = {
         'License :: OSI Approved :: BSD License',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
     ],
