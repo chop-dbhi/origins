@@ -1,9 +1,10 @@
 from string import Template as T
 from origins import utils, provenance
-from origins.graph import neo4j
+from origins.exceptions import DoesNotExist
 from ..model import Result, Node, Edge
 from ..packer import pack
 from ..cypher import labels_string
+from .. import neo4j
 
 
 __all__ = (
@@ -110,7 +111,7 @@ def get(uuid, label=None, tx=neo4j.tx):
         result = tx.send(query)
 
         if not result:
-            raise ValueError('edge does not exist')
+            raise DoesNotExist('edge does not exist')
 
     return Result(
         data=Edge.parse(result[0]),
@@ -143,7 +144,7 @@ def get_by_id(_id, label=None, tx=neo4j.tx):
         result = tx.send(query)
 
         if not result:
-            raise ValueError('edge does not exist')
+            raise DoesNotExist('edge does not exist')
 
         data = Edge.parse(result[0])
 

@@ -1,10 +1,12 @@
 from string import Template as T
 from origins import utils, provenance
-from origins.graph import neo4j
+from origins.exceptions import DoesNotExist
 from ..model import Result, Node, Edge
 from ..packer import pack
 from ..cypher import labels_string
+from .. import neo4j
 from . import edges
+
 
 __all__ = (
     'get',
@@ -77,7 +79,7 @@ def get(uuid, labels=None, tx=neo4j.tx):
         result = tx.send(query)
 
         if not result:
-            raise ValueError('node does not exist')
+            raise DoesNotExist('node does not exist')
 
     return Result(
         data=Node.parse(result[0]),
@@ -110,7 +112,7 @@ def get_by_id(_id, label=None, tx=neo4j.tx):
         result = tx.send(query)
 
         if not result:
-            raise ValueError('node does not exist')
+            raise DoesNotExist('node does not exist')
 
         data = Node.parse(result[0])
 

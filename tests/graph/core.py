@@ -1,5 +1,6 @@
 import unittest
 from origins.graph import neo4j, nodes, edges
+from origins.exceptions import DoesNotExist
 from origins.graph.cypher import labels_string
 
 
@@ -47,7 +48,7 @@ class NodeTestCase(unittest.TestCase):
         neo4j.purge()
 
     def test_get(self):
-        self.assertRaises(ValueError, nodes.get, 'abc123')
+        self.assertRaises(DoesNotExist, nodes.get, 'abc123')
 
         n = nodes.add()
         _n = nodes.get(n)
@@ -55,7 +56,7 @@ class NodeTestCase(unittest.TestCase):
         self.assertEqual(n['data'], _n['data'])
 
     def test_get_by_id(self):
-        self.assertRaises(ValueError, nodes.get_by_id, 'abc123')
+        self.assertRaises(DoesNotExist, nodes.get_by_id, 'abc123')
 
         # Adding one makes it visible
         n0 = nodes.add()
@@ -71,7 +72,7 @@ class NodeTestCase(unittest.TestCase):
 
         # Remove makes it no longer visible
         nodes.remove(n1)
-        self.assertRaises(ValueError, nodes.get_by_id, n0)
+        self.assertRaises(DoesNotExist, nodes.get_by_id, n0)
 
     def test_add(self):
         n = nodes.add()
@@ -148,7 +149,7 @@ class EdgeTestCase(unittest.TestCase):
         self.b0 = nodes.add()
 
     def test_get(self):
-        self.assertRaises(ValueError, edges.get, 'abc123')
+        self.assertRaises(DoesNotExist, edges.get, 'abc123')
 
         e = edges.add(self.a0, self.b0)
         _e = edges.get(e)
@@ -170,7 +171,7 @@ class EdgeTestCase(unittest.TestCase):
 
         # Remove makes it no longer visible
         edges.remove(n1)
-        self.assertRaises(ValueError, edges.get_by_id, n0)
+        self.assertRaises(DoesNotExist, edges.get_by_id, n0)
 
     def test_add(self):
         e = edges.add(self.a0, self.b0)
