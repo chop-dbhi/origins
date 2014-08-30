@@ -124,3 +124,30 @@ def diff(a, b, ignore=None, encoding='utf-8'):
             d[k] = (b[k], None)
 
     return d
+
+
+def merge_attrs(old, new, ignore=None):
+    """Merges attributes of new into old.
+
+    Attributes that are explicitly `None` in new will be used to 'unset'
+    attributes that have a value in old.
+    """
+    if not ignore:
+        ignore = set()
+
+    attrs = {}
+
+    if new is None:
+        new = {}
+
+    for k, v in old.items():
+        if k == 'properties' and v:
+            attrs[k] = merge_attrs(v, new.get(k, {}))
+        elif k not in ignore and k not in new:
+            attrs[k] = v
+
+    for k, v in new.items():
+        if k != 'properties' and v is not None:
+            attrs[k] = v
+
+    return attrs

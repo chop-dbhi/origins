@@ -1,12 +1,9 @@
-from uuid import uuid4
 from string import Template as T
 from origins import utils, provenance
 from origins.graph import neo4j
 from ..model import Result, Node, Edge
-from ..utils import merge_attrs
 from ..packer import pack
 from ..cypher import labels_string
-from .parsers import parse_node, parse_edge
 
 
 __all__ = (
@@ -17,15 +14,6 @@ __all__ = (
     'remove',
     'get_outdated',
 )
-
-
-DIFF_IGNORE = {
-    'id',
-    'uuid',
-    'time',
-    'start',
-    'end',
-}
 
 
 # Returns a single edge with the start and end nodes by it's UUID
@@ -39,7 +27,7 @@ LIMIT 1
 
 # Returns the latest edge by ID
 GET_EDGE_BY_ID = T('''
-MATCH (n:`origins:Edge`$labels {`origins:id`: { id }})
+MATCH (n$labels {`origins:id`: { id }})
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
 WITH n
 MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
@@ -96,18 +84,6 @@ RETURN n, s, e, l
 '''  # noqa
 
 
-def _prepare_attrs(attrs=None):
-    if attrs is None:
-        attrs = {}
-    elif 'uuid' in attrs:
-        raise KeyError('UUID cannot be provided')
-
-    attrs['uuid'] = str(uuid4())
-    attrs['time'] = utils.timestamp()
-
-    return attrs
-
-
 def _prepare_statement(statement, labels=None, **mapping):
     mapping['labels'] = labels_string(labels)
 
@@ -137,7 +113,7 @@ def get(uuid, labels=None, tx=neo4j.tx):
             raise ValueError('edge does not exist')
 
     return Result(
-        data=parse_edge(result[0]),
+        data=Edge.parse(result[0]),
         perf=t.results,
         prov=None,
         time=utils.timestamp(),
@@ -153,6 +129,9 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
         _id = _id['data']['id']
 
     with t('prep'):
+        if not labels:
+            labels = ('origins:Edge',)
+
         statement = _prepare_statement(GET_EDGE_BY_ID,
                                        labels=labels)
 
@@ -169,7 +148,7 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
         if not result:
             raise ValueError('edge does not exist')
 
-        data = parse_edge(result[0])
+        data = Edge.parse(result[0])
 
     return Result(
         data=data,
@@ -194,19 +173,16 @@ def add(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
 
     with tx as tx:
         with t('prep'):
-            attrs = _prepare_attrs(attrs)
-
-            if 'id' not in attrs:
-                attrs['id'] = attrs['uuid']
+            edge = Edge.new(attrs)
 
             statement = _prepare_statement(ADD_EDGE, labels=labels,
-                                           etype=attrs.get('type', 'null'))
+                                           etype=edge.get('type', 'null'))
 
             parameters = {
-                'attrs': pack(attrs),
+                'attrs': pack(edge),
                 'start': start,
                 'end': end,
-                'props': attrs.get('properties', {})
+                'props': edge.get('properties', {})
             }
 
             query = {
@@ -220,16 +196,16 @@ def add(start, end, attrs=None, labels=None, new=True, tx=neo4j.tx):
             if not result:
                 raise ValueError('start or end node does not exist')
 
-            data = parse_edge(result)
+            edge = Edge.parse(result)
 
         with t('prov'):
-            prov_spec = provenance.add(data['uuid'], new=new)
+            prov_spec = provenance.add(edge['uuid'], new=new)
             prov = provenance.load(prov_spec, tx=tx)
 
         return Result(
             perf=t.results,
             time=utils.timestamp(),
-            data=data,
+            data=edge,
             prov=prov,
         )
 
@@ -243,16 +219,15 @@ def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
         uuid = uuid['data']['uuid']
 
     with tx as tx:
-        # Get the entity being updated
         with t('get'):
             prev = get(uuid, tx=tx)
 
         with t('prep'):
-            # Merge the new into the old ones
-            attrs = merge_attrs(prev['data'], attrs)
+            # Create new edge merged into the previous attributes
+            edge = Edge.new(attrs, merge=prev['data'])
 
             # Calculate diff
-            diff = utils.diff(attrs, prev['data'], ignore=DIFF_IGNORE)
+            diff = edge.diff(prev['data'])
 
             if not diff and not force:
                 return
@@ -275,7 +250,7 @@ def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
         # Create a new version of the entity
         rev = add(start=prev['data']['start']['uuid'],
                   end=prev['data']['end']['uuid'],
-                  attrs=attrs,
+                  attrs=edge,
                   new=new,
                   labels=labels,
                   tx=tx)
@@ -349,8 +324,8 @@ def get_outdated(tx=neo4j.tx):
 
     for r in tx.send(query):
         results.append({
-            'edge': parse_edge(r[:3]),
-            'latest': parse_node(r[-1]),
+            'edge': Edge.parse(r[:3]),
+            'latest': Node.parse(r[-1]),
         })
 
     return results

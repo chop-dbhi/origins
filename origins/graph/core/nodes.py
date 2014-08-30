@@ -1,12 +1,9 @@
-from uuid import uuid4
 from string import Template as T
 from origins import utils, provenance
 from origins.graph import neo4j
-from ..model import Result, Node
-from ..utils import merge_attrs
+from ..model import Result, Node, Edge
 from ..packer import pack
 from ..cypher import labels_string
-from .parsers import parse_node, parse_edge
 from . import edges
 
 __all__ = (
@@ -17,12 +14,6 @@ __all__ = (
     'remove',
 )
 
-DIFF_IGNORE = {
-    'id',
-    'uuid',
-    'time',
-}
-
 
 # Returns single node by UUID
 GET_NODE = '''
@@ -31,9 +22,11 @@ RETURN n
 LIMIT 1
 '''
 
-# Returns the latest node by ID
+# Returns the latest node by ID. This uses labels to constrain
+# the lookup. If none are supplied, the general `origins:Node`
+# will be used.
 GET_NODE_BY_ID = T('''
-MATCH (n:`origins:Node`$labels {`origins:id`: { id }})
+MATCH (n$labels {`origins:id`: { id }})
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
 RETURN n
 LIMIT 1
@@ -44,7 +37,6 @@ LIMIT 1
 # The `prov:Entity` label is added to hook into the provenance data model
 ADD_NODE = T('''
 CREATE (n:`origins:Node`:`prov:Entity`$labels { attrs })
-RETURN n
 ''')
 
 
@@ -57,18 +49,6 @@ WITH n, s
 MATCH (n)-[:`origins:end`]->(e:`origins:Node`)
 RETURN n, s, e, labels(n)
 '''  # noqa
-
-
-def _prepare_attrs(attrs=None):
-    if attrs is None:
-        attrs = {}
-    elif 'uuid' in attrs:
-        raise KeyError('UUID cannot be provided')
-
-    attrs['uuid'] = str(uuid4())
-    attrs['time'] = utils.timestamp()
-
-    return attrs
 
 
 def _prepare_statement(statement, labels=None, **mapping):
@@ -100,7 +80,7 @@ def get(uuid, labels=None, tx=neo4j.tx):
             raise ValueError('node does not exist')
 
     return Result(
-        data=parse_node(result[0]),
+        data=Node.parse(result[0]),
         perf=t.results,
         prov=None,
         time=utils.timestamp(),
@@ -116,6 +96,10 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
         _id = _id['data']['id']
 
     with t('prep'):
+        # Ensure the base label is defined if none other are
+        if not labels:
+            labels = ('origins:Node',)
+
         statement = _prepare_statement(GET_NODE_BY_ID,
                                        labels=labels)
 
@@ -132,7 +116,7 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
         if not result:
             raise ValueError('node does not exist')
 
-        data = parse_node(result[0])
+        data = Node.parse(result[0])
 
     return Result(
         data=data,
@@ -147,15 +131,12 @@ def add(attrs=None, new=True, labels=None, tx=neo4j.tx):
 
     with tx as tx:
         with t('prep'):
-            attrs = _prepare_attrs(attrs)
-
-            if 'id' not in attrs:
-                attrs['id'] = attrs['uuid']
+            node = Node.new(attrs)
 
             statement = _prepare_statement(ADD_NODE, labels=labels)
 
             parameters = {
-                'attrs': pack(attrs),
+                'attrs': pack(node),
             }
 
             query = {
@@ -164,17 +145,17 @@ def add(attrs=None, new=True, labels=None, tx=neo4j.tx):
             }
 
         with t('exec'):
-            data = parse_node(tx.send(query)[0])
+            tx.send(query)
 
         # Provenance for add
         with t('prov'):
-            prov_spec = provenance.add(data['uuid'], new=new)
+            prov_spec = provenance.add(node['uuid'], new=new)
             prov = provenance.load(prov_spec, tx=tx)
 
         return Result(
             perf=t.results,
             time=utils.timestamp(),
-            data=data,
+            data=node,
             prov=prov,
         )
 
@@ -239,7 +220,7 @@ def _update_edges(old, new, tx):
 
     # TODO, handle incoming edges
     for (edge, start, end, edge_labels) in result:
-        edge = parse_edge([edge, start, end])
+        edge = Edge.parse([edge, start, end])
         result = _update_edge(edge, edge_labels, new, tx)
         results.append(result)
 
@@ -259,18 +240,18 @@ def set(uuid, attrs=None, new=True, labels=None, force=False, tx=neo4j.tx):
             prev = get(uuid, tx=tx)
 
         with t('prep'):
-            # Merge the new into the old ones
-            attrs = merge_attrs(prev['data'], attrs)
+            # Create new node merged into the previous attributes
+            node = Node.new(attrs, merge=prev['data'])
 
             # Calculate diff
-            diff = utils.diff(attrs, prev['data'], ignore=DIFF_IGNORE)
+            diff = node.diff(prev['data'])
 
             if not diff and not force:
                 return
 
         with t('add'):
             # Create a new version of the entity
-            rev = add(attrs, new=new, labels=labels, tx=tx)
+            rev = add(node, new=new, labels=labels, tx=tx)
             t.add_results('add', rev['perf'])
 
         with t('update_edges'):
