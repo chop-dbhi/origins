@@ -26,7 +26,7 @@ LIMIT 1
 # the lookup. If none are supplied, the general `origins:Node`
 # will be used.
 GET_NODE_BY_ID = T('''
-MATCH (n$labels {`origins:id`: { id }})
+MATCH (n:`origins:Node`$labels {`origins:id`: { id }})
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
 RETURN n
 LIMIT 1
@@ -96,10 +96,6 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
         _id = _id['data']['id']
 
     with t('prep'):
-        # Ensure the base label is defined if none other are
-        if not labels:
-            labels = ('origins:Node',)
-
         statement = _prepare_statement(GET_NODE_BY_ID,
                                        labels=labels)
 

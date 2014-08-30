@@ -27,7 +27,7 @@ LIMIT 1
 
 # Returns the latest edge by ID
 GET_EDGE_BY_ID = T('''
-MATCH (n$labels {`origins:id`: { id }})
+MATCH (n:`origins:Edge`$labels {`origins:id`: { id }})
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
 WITH n
 MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
@@ -129,9 +129,6 @@ def get_by_id(_id, labels=None, tx=neo4j.tx):
         _id = _id['data']['id']
 
     with t('prep'):
-        if not labels:
-            labels = ('origins:Edge',)
-
         statement = _prepare_statement(GET_EDGE_BY_ID,
                                        labels=labels)
 
