@@ -1,6 +1,9 @@
 [run]
 branch = True
 source = origins
+omit =
+    origins/events/__main__.py
+    origins/service/__main__.py
 
 [report]
 exclude_lines =
@@ -10,6 +13,7 @@ exclude_lines =
     def __bytes__
     def __unicode__
     except NameError:
+    raise EnvironmentError
     raise AssertionError
     raise NotImplemented(Error)?
     if 0:
