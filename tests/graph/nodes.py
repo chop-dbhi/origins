@@ -1,7 +1,7 @@
 from origins.graph import neo4j, nodes
 from origins.exceptions import DoesNotExist
 from origins.graph import cypher
-from ._base import TestCase
+from .base import TestCase
 
 
 # Utilities for nodes and edges in the graph

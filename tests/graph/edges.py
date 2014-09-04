@@ -2,7 +2,7 @@ from origins.exceptions import DoesNotExist
 from origins.graph import neo4j, edges, nodes
 from origins.graph.model import Edge
 from .nodes import _nodes
-from ._base import TestCase
+from .base import TestCase
 
 
 def _edges(type, start=None, end=None, count=True):
