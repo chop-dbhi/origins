@@ -55,6 +55,6 @@ def unpack(b):
         else:
             p[k] = v
 
-    a['properties'] = p
+    a['properties'] = p or None
 
     return a

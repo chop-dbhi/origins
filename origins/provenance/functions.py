@@ -1,4 +1,4 @@
-from .. import utils
+import time
 
 
 def add(entity, new=False):
@@ -22,8 +22,7 @@ def add(entity, new=False):
 
     # New object, mark it's generation time
     if new:
-        timestamp = utils.timestamp()
-        prov['wasGeneratedBy']['wgb']['prov:time'] = timestamp
+        prov['wasGeneratedBy']['wgb']['prov:time'] = time.time() * 1000
 
     return prov
 

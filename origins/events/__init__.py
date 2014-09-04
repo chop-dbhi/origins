@@ -1,8 +1,8 @@
 import json
 import uuid
+import time
 import inspect
 import logging
-from ..utils import timestamp
 from ._redis import client as redis
 from . import utils
 
@@ -14,7 +14,7 @@ def _make_event(topic, data):
         'event': {
             'topic': topic,
             'uuid': str(uuid.uuid4()),
-            'timestamp': timestamp(),
+            'time': int(time.time() * 1000),
         },
         'data': data,
     }

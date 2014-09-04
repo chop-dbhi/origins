@@ -4,3 +4,11 @@ class OriginsError(Exception):
 
 class DoesNotExist(OriginsError):
     pass
+
+
+class ValidationError(OriginsError):
+    pass
+
+
+class InvalidState(OriginsError):
+    pass

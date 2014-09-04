@@ -6,8 +6,7 @@ import subprocess
 import requests
 from uuid import uuid4
 from urllib.parse import urlparse
-from origins import utils
-from origins.graph import cypher, neo4j
+from origins.graph import cypher, neo4j, utils
 from .identifier import QualifiedName
 from .constants import PROV_BUNDLE, COMPONENTS, ALT_COMPONENTS, NAMESPACES, \
     ORIGINS_ATTR_NEO4J, ORIGINS_ATTR_UUID, RELATION_TYPES, \
@@ -327,7 +326,7 @@ def prepare_statements(bundles, time=None):
                     ref: neo4j_id,
                 })
             else:
-                labels = cypher.labels_string(get_comp_labels(comp_type))
+                labels = cypher.labels(get_comp_labels(comp_type))
 
                 # Get UUID if present, otherwise add CREATE statement
                 if ORIGINS_ATTR_UUID in attrs:
