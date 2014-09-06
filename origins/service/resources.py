@@ -1,6 +1,7 @@
-from flask import abort, request
+from flask import request
 from flask.ext import restful
-from origins.graph import resources, components, relationships
+from origins.exceptions import DoesNotExist, InvalidState, ValidationError
+from origins.graph import resources, components
 from . import utils
 
 
@@ -16,17 +17,20 @@ class Resources(restful.Resource):
         except TypeError:
             skip = 0
 
+        type = request.args.get('type')
         query = request.args.getlist('query')
 
         if query:
             param = '(?i)' + '|'.join(['.*' + q + '.*' for q in query])
 
             predicate = {
-                'origins:label': param,
+                'label': param,
+                'description': param,
             }
+
             cursor = resources.search(predicate, limit=limit, skip=skip)
         else:
-            cursor = resources.match(limit=limit, skip=skip)
+            cursor = resources.match(type=type, limit=limit, skip=skip)
 
         result = []
 
@@ -37,43 +41,68 @@ class Resources(restful.Resource):
         return result
 
     def post(self):
-        attrs = utils.pack(request.json)
-        r = resources.create(attrs)
+        data = request.json
+
+        attrs = {
+            'id': data.get('id'),
+            'type': data.get('type'),
+            'label': data.get('label'),
+            'description': data.get('description'),
+            'properties': data.get('properties'),
+        }
+
+        try:
+            r = resources.add(**attrs)
+        except ValidationError as e:
+            return {'message': e.message}, 422
+
         return utils.add_resource_data(r), 201
 
 
 class Resource(restful.Resource):
     def get(self, uuid):
-        r = resources.get(uuid)
+        try:
+            r = resources.get(uuid)
+        except DoesNotExist:
+            return {'message': 'resource does not exist'}, 404
 
-        if not r:
-            abort(404)
-
-        r = utils.add_resource_data(r)
-
-        return r
+        return utils.add_resource_data(r), 200
 
     def put(self, uuid):
-        r = resources.get(uuid)
+        data = request.json
 
-        if not r:
-            abort(404)
+        attrs = {
+            'label': data.get('label'),
+            'type': data.get('type'),
+            'description': data.get('description'),
+            'properties': data.get('properties'),
+        }
 
-        r = resources.update(r, request.json)
+        try:
+            r = resources.set(uuid, **attrs)
+        except DoesNotExist:
+            return {'message': 'resource does not exist'}, 404
+        except InvalidState:
+            return {'message': 'invalid resource cannot be updated'}, 422
 
         if request.args.get('quiet') == '1':
             return '', 204
 
         return utils.add_resource_data(r), 200
 
+    def delete(self, uuid):
+        try:
+            resources.remove(uuid)
+        except DoesNotExist:
+            return {'message': 'resource does not exist'}, 404
+        except InvalidState:
+            pass
+
+        return '', 204
+
 
 class ResourceComponents(restful.Resource):
     def get(self, uuid):
-        r = resources.get(uuid)
-
-        if not r:
-            abort(404)
-
         try:
             limit = int(request.args.get('limit'))
         except TypeError:
@@ -84,81 +113,23 @@ class ResourceComponents(restful.Resource):
         except TypeError:
             skip = 0
 
-        cursor = resources.components(r, limit=limit, skip=skip)
+        try:
+            cursor = resources.components(uuid, limit=limit, skip=skip)
+        except ValidationError:
+            return {'message': 'resources does not exist'}, 404
 
         result = []
 
         for c in cursor:
-            c['resource'] = r
-            c = utils.add_component_data(c)
+            # c = utils.add_component_data(c)
             result.append(c)
 
         return result
 
     def post(self, uuid):
-        r = resources.get(uuid)
+        c = components.add(resource=uuid)
 
-        if not r:
-            abort(404)
+        if c is None:
+            return {'message': 'resources does not exist'}, 404
 
-        c = components.create(request.json, resource=r)
-
-        return utils.add_component_data(c), 201
-
-
-class ResourceRelationships(restful.Resource):
-    def get(self, uuid):
-        r = resources.get(uuid)
-
-        if not r:
-            abort(404)
-
-        try:
-            limit = int(request.args.get('limit'))
-        except TypeError:
-            limit = utils.DEFAULT_PAGE_LIMIT
-
-        try:
-            skip = int(request.args.get('skip'))
-        except TypeError:
-            skip = 0
-
-        cursor = resources.relationships(r, limit=limit, skip=skip)
-
-        result = []
-
-        for c in cursor:
-            c = utils.add_relationship_data(c)
-            result.append(c)
-
-        return result
-
-    def post(self, uuid):
-        r = resources.get(uuid)
-
-        if not r:
-            abort(404)
-
-        c = relationships.create(request.json, resource=r)
-
-        return utils.add_relationship_data(c), 201
-
-
-class ResourceTimeline(restful.Resource):
-    def get(self, uuid):
-        r = resources.get(uuid)
-
-        if not r:
-            abort(404)
-
-        try:
-            limit = int(request.args.get('limit'))
-        except TypeError:
-            limit = utils.DEFAULT_PAGE_LIMIT
-
-        try:
-            skip = int(request.args.get('skip'))
-        except TypeError:
-            skip = 0
-
-        return resources.timeline(r, limit=limit, skip=skip)
+        return c, 201

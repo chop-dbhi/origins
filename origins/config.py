@@ -24,15 +24,7 @@ default_options = {
 options = deepcopy(default_options)
 
 
-# Fragile support for a configuration file
-if __name__ == '__main__' and '-c' in sys.argv:
-    try:
-        config_name = sys.argv[sys.argv.index('-c') + 1]
-    except IndexError:
-        print('-c flag requires a path to a configuration file')
-        sys.exit(1)
-else:
-    config_name = os.environ.get('ORIGINS_CONFIG')
+config_name = os.environ.get('ORIGINS_CONFIG')
 
 
 # Update configuration if available

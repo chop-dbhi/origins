@@ -11,8 +11,8 @@ DIFF_ATTRS = {
     'type',
     'label',
     'description',
-    'change_dependence',
-    'remove_dependence',
+    'direction',
+    'dependence',
 }
 
 
@@ -25,12 +25,17 @@ def _dict_sha1(d):
 
 class Node(object):
     DEFAULT_TYPE = 'Node'
+    DEFAULT_MODEL = 'origins:Node'
 
     def __init__(self, id=None, type=None, label=None, description=None,
-                 properties=None, uuid=None, time=None, sha1=None):
+                 properties=None, uuid=None, time=None, sha1=None,
+                 model=None):
 
         if not type:
             type = self.DEFAULT_TYPE
+
+        if not model:
+            model = self.DEFAULT_MODEL
 
         if not sha1:
             sha1 = _dict_sha1(properties)
@@ -48,10 +53,14 @@ class Node(object):
         self.id = id
         self.time = time
         self.type = type
+        self.model = model
         self.label = label
         self.description = description
         self.properties = properties
         self.sha1 = sha1
+
+    def __hash__(self):
+        return hash(self.uuid)
 
     def __str__(self):
         return '{} ({})'.format(self.uuid, self.label or self.id)
@@ -73,6 +82,7 @@ class Node(object):
             'id': self.id,
             'label': self.label,
             'type': self.type,
+            'model': self.model,
             'description': self.description,
         }
 
@@ -115,37 +125,56 @@ class Node(object):
 
 class Edge(Node):
     DEFAULT_TYPE = 'related'
+    DEFAULT_MODEL = 'origins:Edge'
 
-    NO_DEPENDENCE = 0
-    DIRECTED_DEPENDENCE = 1
-    MUTUAL_DEPENDENCE = 2
+    NO_DEPENDENCE = 'none'
+    FORWARD_DEPENDENCE = 'forward'
+    INVERSE_DEPENDENCE = 'inverse'
+    MUTUAL_DEPENDENCE = 'mutual'
 
-    DEPENDENCE_TYPES = {
+    DEPENDENCE_TYPES = (
         NO_DEPENDENCE,
-        DIRECTED_DEPENDENCE,
-        MUTUAL_DEPENDENCE
-    }
+        FORWARD_DEPENDENCE,
+        INVERSE_DEPENDENCE,
+        MUTUAL_DEPENDENCE,
+    )
+
+    BIDIRECTED = 'bidirected'
+    DIRECTED = 'directed'
+    UNDIRECTED = 'undirected'
+
+    DIRECTION_TYPES = (
+        BIDIRECTED,
+        DIRECTED,
+        UNDIRECTED,
+    )
 
     def __init__(self, id=None, label=None, description=None, type=None,
-                 uuid=None, time=None, sha1=None, properties=None,
-                 start=None, end=None, change_dependence=None,
-                 remove_dependence=None):
+                 uuid=None, time=None, sha1=None, properties=None, model=None,
+                 start=None, end=None, dependence=None, direction=None,
+                 optimistic=None):
 
-        if change_dependence is None:
-            change_dependence = self.DIRECTED_DEPENDENCE
-        elif change_dependence not in self.DEPENDENCE_TYPES:
-            raise ValidationError('change dependence must be 0 (none), '
-                                  '1 (directed), or 2 (mutual)')
+        if direction is None:
+            direction = self.DIRECTED
+        elif direction not in self.DIRECTION_TYPES:
+            raise ValidationError('direction not valid. choices are: {}'
+                                  .format(', '.join(self.DIRECTION_TYPES)))
 
-        if remove_dependence is None:
-            remove_dependence = self.NO_DEPENDENCE
-        elif remove_dependence not in self.DEPENDENCE_TYPES:
-            raise ValidationError('remove dependence must be 0 (none), '
-                                  '1 (directed), or 2 (mutual)')
+        if dependence is None:
+            dependence = self.NO_DEPENDENCE
+        elif dependence not in self.DEPENDENCE_TYPES:
+            raise ValidationError('dependence not valid: choices are: {}'
+                                  .format(', '.join(self.DEPENDENCE_TYPES)))
+
+        if optimistic is None:
+            optimistic = False
+        elif not isinstance(optimistic, bool):
+            raise ValidationError('optimistic must be a boolean')
 
         super(Edge, self).__init__(
             id=id,
             type=type,
+            model=model,
             label=label,
             description=description,
             uuid=uuid,
@@ -154,33 +183,42 @@ class Edge(Node):
             properties=properties
         )
 
-        self.change_dependence = change_dependence
-        self.remove_dependence = remove_dependence
+        self.direction = direction
+        self.dependence = dependence
+        self.optimistic = optimistic
+
+        # Initialize as nodes assuming these are UUIDs
+        if not isinstance(start, Node):
+            start = Node(uuid=start)
+
+        if not isinstance(end, Node):
+            end = Node(uuid=end)
 
         self.start = start
         self.end = end
 
     @classmethod
-    def parse(cls, row):
-        if len(row) > 1:
-            start = Node.parse(row[1])
-            end = Node.parse(row[2])
-        else:
-            start = None
-            end = None
+    def parse(cls, attrs, start=None, end=None):
+        if isinstance(start, dict):
+            start = Node.parse(start)
 
-        return cls(start=start, end=end, **unpack(row[0]))
+        if isinstance(end, dict):
+            end = Node.parse(end)
+
+        return cls(start=start, end=end, **unpack(attrs))
 
     def _derive_attrs(self):
         return {
             'id': self.id,
             'label': self.label,
             'type': self.type,
+            'model': self.model,
             'start': self.start,
             'end': self.end,
             'description': self.description,
-            'change_dependence': self.change_dependence,
-            'remove_dependence': self.remove_dependence,
+            'direction': self.direction,
+            'dependence': self.dependence,
+            'optimistic': self.optimistic,
         }
 
     def to_dict(self):

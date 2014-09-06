@@ -25,9 +25,6 @@ TRANSACTION_URI_TMPL = '{}transaction'
 # Endpoint for the single transaction
 SINGLE_TRANSACTION_URI_TMPL = '{}transaction/commit'
 
-# Supported result formats
-RESULT_FORMATS = {'row', 'graph', 'REST'}
-
 # Required headers
 HEADERS = {
     'accept': 'application/json; charset=utf-8',
@@ -60,6 +57,17 @@ class Neo4jError(Exception):
 
 
 def _normalize_results(response, keys=True):
+    """Neo4j REST response has the format:
+
+        [{
+            "columns": [...],
+            "data": [{
+                "row": [{ ... }, ...],
+            }]
+        }, ...]
+
+    This extracts the data each object and maps them to the columns.
+    """
     if not response:
         return
 
@@ -105,19 +113,6 @@ def _normalize_statements(statements, parameters):
         'statement': str(statements),
         'parameters': parameters,
     }]
-
-
-def _normalize_formats(formats):
-    if isinstance(formats, str):
-        formats = [formats]
-
-    invalid = [f for f in formats if f not in RESULT_FORMATS]
-
-    if invalid:
-        raise Neo4jError('unkown support format(s): {}'
-                         .format(', '.join(invalid)))
-
-    return formats
 
 
 def _merge_response(output, data):
@@ -227,7 +222,7 @@ class Transaction(object):
 
         return resp, resp_data,
 
-    def _send(self, url, statements=None, parameters=None, formats=None):
+    def _send(self, url, statements=None, parameters=None):
         if self._closed:
             raise Neo4jError('transaction closed')
 
@@ -235,9 +230,6 @@ class Transaction(object):
             self._begin_time = time.time()
 
         statements = _normalize_statements(statements, parameters)
-
-        if formats:
-            formats = _normalize_formats(formats)
 
         resp_data = None
 
@@ -252,9 +244,6 @@ class Transaction(object):
 
             data = {'statements': statements[start:end]}
 
-            if formats:
-                data['resultDataContents'] = formats
-
             resp, _resp_data = self._send_request(url, data)
             resp_data = _merge_response(resp_data, _resp_data)
 
@@ -266,7 +255,7 @@ class Transaction(object):
 
         return resp_data
 
-    def send(self, statements, parameters=None, formats=None, raw=False,
+    def send(self, statements, parameters=None, raw=False,
              keys=False):
         """Sends statements to an existing transaction or opens a new one.
 
@@ -275,13 +264,13 @@ class Transaction(object):
         and implicitly rolled back.
         """
         if self.autocommit and self._depth == 0:
-            return self.commit(statements, parameters, formats, raw, keys)
+            return self.commit(statements, parameters, raw, keys)
 
         if not self.commit_uri:
             logger.debug('begin: {}'.format(self.transaction_uri))
 
         data = self._send(self.transaction_uri, statements,
-                          parameters=parameters, formats=formats)
+                          parameters=parameters)
 
         if 'commit' in data:
             self.commit_uri = data['commit']
@@ -291,7 +280,7 @@ class Transaction(object):
 
         return _normalize_results(data['results'], keys=keys)
 
-    def commit(self, statements=None, parameters=None, formats=None, raw=False,
+    def commit(self, statements=None, parameters=None, raw=False,
                keys=False):
         "Commits an open transaction or performs a single transaction request."
         if self.commit_uri:
@@ -299,8 +288,7 @@ class Transaction(object):
         else:
             uri = SINGLE_TRANSACTION_URI_TMPL.format(self.client.uri)
 
-        data = self._send(uri, statements, parameters=parameters,
-                          formats=formats)
+        data = self._send(uri, statements, parameters=parameters)
 
         if self.commit_uri:
             logger.debug('commit: {}'.format(uri))
@@ -328,16 +316,10 @@ tx = Transaction(autocommit=True)
 
 def purge(*args, **kwargs):
     "Deletes all nodes and relationships."
-    result = tx.send('START n=node(*) '
-                     'OPTIONAL MATCH (n)-[r]-() '
-                     'DELETE r, n '
-                     'RETURN count(distinct n), count(distinct r)',
-                     *args, **kwargs)
-
-    return {
-        'nodes': result[0][0],
-        'relationships': result[0][1],
-    }
+    tx.send('MATCH (n) '
+            'OPTIONAL MATCH (n)-[r]-() '
+            'DELETE r, n ',
+            *args, **kwargs)
 
 
 def debug():

@@ -1,9 +1,11 @@
 from string import Template as T
+from collections import defaultdict
 from origins import provenance, events
-from origins.exceptions import DoesNotExist, InvalidState
+from origins.exceptions import DoesNotExist, InvalidState, ValidationError
 from ..model import Node, Edge
 from ..packer import pack
-from .. import neo4j, utils, cypher
+from .. import neo4j, utils
+from . import traverse
 
 
 __all__ = (
@@ -13,54 +15,46 @@ __all__ = (
     'add',
     'set',
     'remove',
-    'update',
-    'outdated',
 )
 
+# Do not shadow
+pyset = set
 
-DEFAULT_TYPE = Edge.DEFAULT_TYPE
+
+EDGE_MODEL = 'origins:Edge'
+EDGE_TYPE = 'Edge'
 
 
 # Match edges with optional predicate
 MATCH_EDGES = T('''
-MATCH (n:`origins:Edge`$labels $predicate)
-
+MATCH (n$model$type $predicate)
+WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
 WITH n
-
 MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
       (n)-[:`origins:end`]->(e:`origins:Node`)
-
 RETURN n, s, e
 ''')
+
 
 # Returns a single edge with the start and end nodes by it's UUID
-GET_EDGE = '''
+GET_EDGE = T('''
 MATCH (n:`origins:Edge` {`origins:uuid`: { uuid }}),
-      (n)-[:`origins:start`]->(s:`origins:Node`),
-      (n)-[:`origins:end`]->(e:`origins:Node`)
-RETURN n, s, e
-LIMIT 1
-'''
-
-# Returns a single edge by UUID and includes the invalidation state
-GET_EDGE_FOR_UPDATE = '''
-MATCH (n:`origins:Edge` {`origins:uuid`: { uuid }}),
-      (n)-[:`origins:start`]->(s:`origins:Node`),
-      (n)-[:`origins:end`]->(e:`origins:Node`)
-OPTIONAL MATCH (n)<-[:`prov:entity`]-(i:`prov:Invalidation`)
-RETURN n, s, e, i
-LIMIT 1
-'''
-
-# Returns the latest edge by ID
-GET_EDGE_BY_ID = T('''
-MATCH (n:`origins:Edge`$labels {`origins:id`: { id }}),
       (n)-[:`origins:start`]->(s:`origins:Node`),
       (n)-[:`origins:end`]->(e:`origins:Node`)
 RETURN n, s, e
 LIMIT 1
 ''')
 
+# Returns a single edge by UUID and includes the invalidation state
+GET_EDGE_FOR_UPDATE = T('''
+MATCH (n:`origins:Edge` {`origins:uuid`: { uuid }})
+OPTIONAL MATCH (n)<-[:`prov:entity`]-(i:`prov:Invalidation`)
+WITH n, i
+MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
+      (n)-[:`origins:end`]->(e:`origins:Node`)
+RETURN n, s, e, i
+LIMIT 1
+''')
 
 # Creates and returns an edge
 # The `prov:Entity` label is added to hook into the provenance data model
@@ -68,143 +62,195 @@ ADD_EDGE = T('''
 MATCH (s:`origins:Node` {`origins:uuid`: { start }}),
       (e:`origins:Node` {`origins:uuid`: { end }})
 
-CREATE (n:`origins:Edge`:`prov:Entity`$labels { attrs }),
+CREATE (n$type$model:`origins:Edge`:`prov:Entity` { attrs }),
        (n)-[:`origins:start`]->(s),
        (n)-[:`origins:end`]->(e)
 
-CREATE (s)-[r:`$etype` { props }]->(e)
+CREATE (s)-[r$type { props }]->(e)
 
 RETURN n, s, e
 ''')
 
 
-# Finds "all outdated edges"
-# Matches all valid edges that have a invalid end node and finds the latest
-# non-invalid revision of that node. The start node, edge and new end node
-# is returned.
-OUTDATED_EDGES = '''
-// Valid edges
-MATCH (s:`origins:Node`)<-[:`origins:start`]-(n:`origins:Edge`)
-WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-    AND n.`origins:change_dependence` > 0
-WITH n, s
-
-// Pointing to an invalid end node
-MATCH (n)<-[:`origins:end`]->(e:`origins:Node`)<-[:`prov:entity`]-(:`prov:Invalidation`)
-WITH n, s, e
-
-// That has a revision
-MATCH (e)<-[:`prov:usedEntity`]-(:`prov:Derivation` {`prov:type`: 'prov:Revision'})-[:`prov:generatedEntity`|`prov:usedEntity`*]-(l:`origins:Node` {`origins:id`: e.`origins:id`})
-WHERE NOT (l)<-[:`prov:entity`]-(:`prov:Invalidation`)
-
-// Edge, start, end (current), latest
-RETURN n, s, e, l
-'''  # noqa
-
-
-# Finds "outdated edges" for a node
-# Matches all valid edges that have a invalid end node and finds the latest
-# non-invalid revision of that node. The start node, edge and new end node
-# is returned.
-NODE_OUTDATED_EDGES = '''
-MATCH (s:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:start`]-(n:`origins:Edge`)
-WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-    AND n.`origins:change_dependence` > 0
-WITH n, s
-
-MATCH (n)<-[:`origins:end`]->(e:`origins:Node`)<-[:`prov:entity`]-(:`prov:Invalidation`)
-WITH n, s, e
-
-MATCH (e)<-[:`prov:usedEntity`]-(:`prov:Derivation` {`prov:type`: 'prov:Revision'})-[:`prov:generatedEntity`|`prov:usedEntity`*]-(l:`origins:Node` {`origins:id`: e.`origins:id`})
-WHERE NOT (l)<-[:`prov:entity`]-(:`prov:Invalidation`)
-
-RETURN n, s, e, l
-'''  # noqa
-
-
-# Returns all edges of a node with dependence
+# Returns all edges and the *other* node of the edge
 NODE_EDGES = '''
-MATCH (s:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:start`]-(n:`origins:Edge`)
+MATCH (s:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:start`|`origins:end`]-(n:`origins:Edge`)
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-    AND n.`origins:change_dependence` > 0
 WITH n, s
 
-MATCH (n)-[:`origins:end`]->(e:`origins:Node`)
-RETURN n, s, e
+MATCH (n)-[r:`origins:end`|`origins:start`]->(o:`origins:Node`)
+    WHERE o <> s
 
-UNION
+RETURN n, type(r), o
+'''  # noqa
 
-MATCH (e:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:end`]-(n:`origins:Edge`)
-WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-    AND n.`origins:change_dependence` > 0
 
-WITH n, e
-MATCH (n)-[:`origins:start`]->(s:`origins:Node`)
+DEPENDENT_EDGES = '''
+MATCH (n:`origins:Node` {`origins:uuid`: { uuid }}),
+	(n)-[:`origins:start`|`origins:end`*]-(e:`origins:Edge`)
+WHERE NOT (e)<-[:`prov:entity`]-(:`prov:Invalidation`)
+WITH e AS n
+MATCH (n)-[:`origins:start`]-(s:`origins:Node`),
+	  (n)-[:`origins:end`]-(e:`origins:Node`)
 RETURN n, s, e
 '''  # noqa
 
 
-UNSET_EDGE_LABEL = T('''
+# Removes the `$type` label for an edge. Type labels are only set while
+# the node is valid.
+REMOVE_EDGE_TYPE = T('''
 MATCH (n:`origins:Edge` {`origins:uuid`: { uuid }})
-REMOVE n$labels
+REMOVE n$type
 ''')
 
 
 DELETE_EDGE = T('''
-MATCH (s:`origins:Node` {`origins:uuid`: { start }})-[r:`$etype`]->(e:`origins:Node` {`origins:uuid`: { end }})
+MATCH (s:`origins:Node` {`origins:uuid`: { start }})-[r$type]->(e:`origins:Node` {`origins:uuid`: { end }})
 DELETE r
 ''')  # noqa
 
 
-def _deference_edge(edge, tx):
-    # Remove label from old node and physical edge between the two nodes
-    queries = [{
-        'statement': utils.prep(UNSET_EDGE_LABEL, label=edge.type),
-        'parameters': {'uuid': edge.uuid},
-    }, {
-        'statement': utils.prep(DELETE_EDGE, etype=edge.type),
-        'parameters': {
-            'start': edge.start.uuid,
-            'end': edge.end.uuid,
-        },
-    }]
-
-    tx.send(queries)
-
-
-def match(predicate=None, type=DEFAULT_TYPE, limit=None, skip=None,
+def match(predicate=None, limit=None, skip=None, type=None, model=None,
           tx=neo4j.tx):
 
-    if predicate:
-        placeholder = cypher.map(predicate.keys(), 'pred')
-        parameters = {'pred': predicate}
-    else:
-        placeholder = ''
-        parameters = {}
+    if not model:
+        model = EDGE_MODEL
 
-    statement = utils.prep(MATCH_EDGES, label=type, predicate=placeholder)
+    query = traverse.match(MATCH_EDGES,
+                           predicate=pack(predicate),
+                           limit=limit,
+                           skip=skip,
+                           type=type,
+                           model=model)
 
-    if skip:
-        statement += ' SKIP { skip }'
-        parameters['skip'] = skip
+    result = tx.send(query)
 
-    if limit:
-        statement += ' LIMIT { limit }'
-        parameters['limit'] = limit
+    return [Edge.parse(*r) for r in result]
+
+
+def get_by_id(id, type=None, model=None, tx=neo4j.tx):
+    result = match({'id': id}, type=type, model=model, tx=tx)
+
+    if not result:
+        raise DoesNotExist('edge does not exist')
+
+    return result[0]
+
+
+def get(uuid, tx=neo4j.tx):
+    statement = utils.prep(GET_EDGE)
 
     query = {
         'statement': statement,
-        'parameters': parameters,
+        'parameters': {
+            'uuid': uuid,
+        }
     }
 
     result = tx.send(query)
 
-    return [Edge.parse(r) for r in result]
+    if not result:
+        raise DoesNotExist('edge does not exist')
+
+    return Edge.parse(*result[0])
+
+
+def add(start, end, id=None, label=None, description=None, properties=None,
+        direction=None, dependence=None, optimistic=None, type=None,
+        model=None, tx=neo4j.tx):
+
+    edge = Edge(start=start,
+                end=end,
+                id=id,
+                label=label,
+                description=description,
+                properties=properties,
+                type=type,
+                model=model,
+                direction=direction,
+                dependence=dependence,
+                optimistic=optimistic)
+
+    with tx as tx:
+        prov = _add(edge, tx)
+
+        events.publish('edge.add', {
+            'edge': edge.to_dict(),
+            'prov': prov,
+        })
+
+        return edge
+
+
+def set(uuid, label=None, description=None, properties=None,
+        direction=None, dependence=None, optimistic=None, type=None,
+        model=None, tx=neo4j.tx):
+
+    with tx as tx:
+        current, invalid = _get_for_update(uuid, tx=tx)
+
+        if not current:
+            raise DoesNotExist('edge does not exist')
+
+        if invalid:
+            raise InvalidState('cannot set invalid edge: {}'
+                               .format(invalid['origins:reason']))
+
+        # Create new edge merged into the previous attributes
+        edge = Edge.derive(current, {
+            'label': label,
+            'description': description,
+            'properties': properties,
+            'type': type,
+            'model': model,
+            'direction': direction,
+            'dependence': dependence,
+            'optimistic': optimistic,
+        })
+
+        # Compare the new edge with the previous
+        diff = current.diff(edge)
+
+        if not diff:
+            return
+
+        prov = _add(edge, tx=tx)
+
+        _dereference_edge(current, tx)
+
+        # Provenance for change
+        prov_spec = provenance.change(current.uuid, edge.uuid)
+        prov_spec['wasGeneratedBy'] = prov['wasGeneratedBy']
+        prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
+        prov = provenance.load(prov_spec, tx=tx)
+
+        events.publish('edge.change', {
+            'node': edge.to_dict(),
+            'prov': prov,
+        })
+
+        return edge
+
+
+def remove(uuid, reason=None, tx=neo4j.tx):
+    with tx as tx:
+        edge, invalid = _get_for_update(uuid, tx=tx)
+
+        if not edge:
+            raise DoesNotExist('edge does not exist')
+
+        if invalid:
+            raise InvalidState('cannot set invalid edge: {}'
+                               .format(invalid['origins:reason']))
+
+        return _remove(edge, reason, tx)
 
 
 def _get_for_update(uuid, tx):
+    statement = utils.prep(GET_EDGE_FOR_UPDATE)
+
     query = {
-        'statement': GET_EDGE_FOR_UPDATE,
+        'statement': statement,
         'parameters': {
             'uuid': uuid,
         }
@@ -213,47 +259,13 @@ def _get_for_update(uuid, tx):
     result = tx.send(query)
 
     if result:
-        return Edge.parse(result[0][:3]), result[0][3]
+        return Edge.parse(*result[0][:3]), result[0][3]
 
     return None, None
 
 
-def get(uuid, tx=neo4j.tx):
-    query = {
-        'statement': GET_EDGE,
-        'parameters': {
-            'uuid': uuid,
-        }
-    }
-
-    result = tx.send(query)
-
-    if not result:
-        raise DoesNotExist('edge does not exist')
-
-    return Edge.parse(result[0])
-
-
-def get_by_id(id, type=DEFAULT_TYPE, tx=neo4j.tx):
-    statement = utils.prep(GET_EDGE_BY_ID, label=type)
-
-    query = {
-        'statement': statement,
-        'parameters': {
-            'id': id,
-        }
-    }
-
-    result = tx.send(query)
-
-    if not result:
-        raise DoesNotExist('edge does not exist')
-
-    return Edge.parse(result[0])
-
-
 def _add(edge, tx):
-    statement = utils.prep(ADD_EDGE, etype=edge.type, label=edge.type)
+    statement = utils.prep(ADD_EDGE, model=edge.model, type=edge.type)
 
     # Properties for the physical edge
     if edge.properties:
@@ -276,9 +288,10 @@ def _add(edge, tx):
     result = tx.send(query)
 
     if not result:
-        raise ValueError('start or end node does not exist')
+        raise ValidationError('start or end node does not exist')
 
-    # Attach the start and end nodes
+    # Attach the start and end nodes in case the current
+    # nodes are placeholders with only a UUID
     edge.start = Node.parse(result[0][1])
     edge.end = Node.parse(result[0][2])
 
@@ -286,91 +299,11 @@ def _add(edge, tx):
     return provenance.load(prov_spec, tx=tx)
 
 
-def add(start, end, id=None, type=DEFAULT_TYPE, label=None, description=None,
-        change_dependence=None, remove_dependence=None, properties=None,
-        tx=neo4j.tx):
-
-    if not isinstance(start, Node):
-        start = Node(uuid=start)
-
-    if not isinstance(end, Node):
-        end = Node(uuid=end)
-
+def _remove(edge, reason, tx, trigger=None):
     with tx as tx:
-        edge = Edge(id=id,
-                    type=type,
-                    label=label,
-                    start=start,
-                    end=end,
-                    description=description,
-                    change_dependence=change_dependence,
-                    remove_dependence=remove_dependence,
-                    properties=properties)
+        _dereference_edge(edge, tx)
 
-        prov = _add(edge, tx)
-
-        events.publish('edge.add', {
-            'edge': edge.to_dict(),
-            'prov': prov,
-        })
-
-        return edge
-
-
-def set(uuid, label=None, description=None, properties=None, type=DEFAULT_TYPE,
-        change_dependence=None, remove_dependence=None, tx=neo4j.tx):
-
-    with tx as tx:
-        current, invalid = _get_for_update(uuid, tx=tx)
-
-        if invalid:
-            raise InvalidState('cannot set invalid edge: {}'
-                               .format(invalid['origins:reason']))
-
-        # Create new edge merged into the previous attributes
-        edge = Edge.derive(current, {
-            'label': label,
-            'description': description,
-            'properties': properties,
-            'type': type,
-            'change_dependence': change_dependence,
-            'remove_dependence': remove_dependence,
-        })
-
-        # Compare the new edge with the previous
-        diff = current.diff(edge)
-
-        if not diff:
-            return
-
-        _deference_edge(current, tx)
-
-        prov = _add(edge, tx=tx)
-
-        # Provenance for change
-        prov_spec = provenance.change(current.uuid, edge.uuid)
-        prov_spec['wasGeneratedBy'] = prov['wasGeneratedBy']
-        prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
-        prov = provenance.load(prov_spec, tx=tx)
-
-        events.publish('edge.change', {
-            'node': edge.to_dict(),
-            'prov': prov,
-        })
-
-        return edge
-
-
-def remove(uuid, reason=None, tx=neo4j.tx):
-    with tx as tx:
-        edge, invalid = _get_for_update(uuid, tx=tx)
-
-        # Already removed, just ignore
-        if not edge:
-            return
-
-        _deference_edge(edge, tx)
-
+        # TODO add trigger
         # Provenance for remove
         prov_spec = provenance.remove(edge.uuid, reason=reason)
         prov = provenance.load(prov_spec, tx=tx)
@@ -383,9 +316,32 @@ def remove(uuid, reason=None, tx=neo4j.tx):
         return edge
 
 
+def _dereference_edge(edge, tx):
+    # Remove label from old node and physical edge between the two nodes
+    queries = [{
+        'statement': utils.prep(REMOVE_EDGE_TYPE, type=edge.type),
+        'parameters': {'uuid': edge.uuid},
+    }, {
+        'statement': utils.prep(DELETE_EDGE, type=edge.type),
+        'parameters': {
+            'start': edge.start.uuid,
+            'end': edge.end.uuid,
+        },
+    }]
+
+    tx.send(queries)
+
+
 def _update(current, start, end, tx):
     # Removes the physical edge between the two nodes
-    _deference_edge(current, tx)
+    _dereference_edge(current, tx)
+
+    if current.start != start:
+        trigger = start
+    elif current.end != end:
+        trigger = end
+    else:
+        trigger = None  # noqa
 
     edge = Edge.derive(current, {
         'start': start,
@@ -394,6 +350,7 @@ def _update(current, start, end, tx):
 
     prov = _add(edge, tx)
 
+    # TODO add trigger
     prov_spec = provenance.change(current.uuid, edge.uuid,
                                   reason='origins:NodeChange')
     prov_spec['wasGeneratedBy'] = prov['wasGeneratedBy']
@@ -408,7 +365,7 @@ def _update(current, start, end, tx):
     return edge
 
 
-def _set_dependents(old, new, tx):
+def _update_edges(old, new, tx):
     """Get all edges with a declared dependence for the `old` node
     and creates an edge to the `new` node.
     """
@@ -419,58 +376,58 @@ def _set_dependents(old, new, tx):
         }
     }
 
-    results = []
-
-    for row in tx.send(query):
-        edge = Edge.parse(row)
-
-        # Mutual and directed dependence apply to start nodes
-        if edge.start == old:
-            r = _update(edge, new, edge.end, tx=tx)
-        elif edge.change_dependence == Edge.MUTUAL_DEPENDENCE:
-            r = _update(edge, edge.start, new, tx=tx)
+    for e, t, o in tx.send(query):
+        if t == 'origins:start':
+            edge = Edge.parse(e, o, old)
         else:
-            # TODO notify of dependency update
-            continue
+            edge = Edge.parse(e, old, o)
 
-        results.append(r)
+        # Forward trigger
+        if edge.start == old and edge.direction in ('directed', 'bidirected'):
+            _update(edge, new, edge.end, tx=tx)
 
-    return results
+        # Reverse trigger
+        elif edge.end == old and (edge.direction == 'bidirected' or edge.optimistic):  # noqa
+            _update(edge, edge.start, new, tx=tx)
+
+        # No updates, remove
+        else:
+            _remove(edge, reason='origins:NodeChange', trigger=new, tx=tx)
 
 
-def outdated(uuid=None, tx=neo4j.tx):
-    """Returns a list of all outdated nodes or for a specific node. The format
-    is the list of pairs containing the edge and the latest dependency.
+def _cascade_remove(node, tx):
+    """Finds all edges and nodes that depend on the passed node for
+    removal.
     """
-    if uuid:
-        query = {
-            'statement': NODE_OUTDATED_EDGES,
-            'parameters': {
-                'uuid': uuid,
-            }
+
+    query = {
+        'statement': DEPENDENT_EDGES,
+        'parameters': {
+            'uuid': node.uuid,
         }
-    else:
-        query = {
-            'statement': OUTDATED_EDGES,
-        }
+    }
 
-    results = []
+    # Map of nodes and edges to the triggers
+    nodes = defaultdict(pyset)
+    edges = {}
 
-    for r in tx.send(query):
-        results.append((Edge.parse(r[:3]), Node.parse(r[-1])))
+    # No triggers for initial node
+    nodes[node] = pyset()
 
-    return results
+    for n, s, e in tx.send(query):
+        edge = Edge.parse(n, s, e)
+        edges.setdefault(edge, pyset())
 
+        # Mutual dependence or inverse will remove the end node
+        if edge.start in nodes and edge.dependence in ('mutual', 'inverse'):
+            nodes[edge.end].add(edge.start)
+            edges[edge].add(edge.start)
 
-def update(uuid=None, tx=neo4j.tx):
-    """Updates all outdated edges or edges for a specific node to the latest
-    revision of the dependency.
-    """
-    with tx as tx:
-        results = []
+        elif edge.end in nodes and edge.dependence in ('mutual', 'forward'):
+            nodes[edge.start].add(edge.end)
+            edges[edge].add(edge.end)
 
-        for edge, latest in outdated(uuid, tx=tx):
-            r = _update(edge, edge.start, latest, tx=tx)
-            results.append(r)
+    for edge, triggers in edges.items():
+        _remove(edge, reason='origins:NodeRemoved', tx=tx)
 
-        return results
+    return nodes

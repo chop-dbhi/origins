@@ -3,7 +3,6 @@ import logging
 IGNORED_ATTRS = {
     'start',
     'end',
-    'parent',
     'resource',
 }
 
@@ -18,6 +17,9 @@ def pack(a):
     Top-level keys are put in the `origins` namespace.
     """
     b = {}
+
+    if not a:
+        return b
 
     for k, v in a.items():
         if v is None:

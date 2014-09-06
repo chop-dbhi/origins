@@ -1,6 +1,7 @@
-from flask import abort, request
+from flask import request
 from flask.ext import restful
 from origins.graph import components
+from origins.exceptions import ValidationError, DoesNotExist, InvalidState
 from . import utils
 
 
@@ -16,17 +17,20 @@ class Components(restful.Resource):
         except TypeError:
             skip = 0
 
+        type = request.args.get('type')
         query = request.args.getlist('query')
 
         if query:
             param = '(?i)' + '|'.join(['.*' + q + '.*' for q in query])
 
             predicate = {
-                'origins:label': param,
+                'label': param,
+                'description': param,
             }
+
             cursor = components.search(predicate, limit=limit, skip=skip)
         else:
-            cursor = components.match(limit=limit, skip=skip)
+            cursor = components.match(type=type, limit=limit, skip=skip)
 
         result = []
 
@@ -36,135 +40,64 @@ class Components(restful.Resource):
 
         return result
 
+    def post(self):
+        data = request.json
+
+        attrs = {
+            'id': data.get('id'),
+            'type': data.get('type'),
+            'label': data.get('label'),
+            'description': data.get('description'),
+            'properties': data.get('properties'),
+            'resource': data.get('resource'),
+        }
+
+        try:
+            c = components.add(**attrs)
+        except ValidationError as e:
+            return {'message': e.message}, 422
+
+        return utils.add_component_data(c), 201
+
 
 class Component(restful.Resource):
     def get(self, uuid):
-        c = components.revision(uuid)
 
-        if not c:
-            abort(404)
+        try:
+            c = components.get(uuid)
+        except DoesNotExist:
+            return {'message': 'component does not exist'}, 404
 
-        return utils.add_component_data(c)
+        return utils.add_component_data(c), 200
 
     def put(self, uuid):
-        c = components.get(uuid)
+        data = request.json
 
-        if not c:
-            abort(404)
+        attrs = {
+            'type': data.get('type'),
+            'label': data.get('label'),
+            'description': data.get('description'),
+            'properties': data.get('properties'),
+        }
 
-        c = components.update(c, request.json)
+        try:
+            c = components.set(uuid, **attrs)
+        except DoesNotExist:
+            return {'message': 'component does not exist'}, 404
+        except InvalidState:
+            return {'message': 'invalid component cannot be updated'}, 422
 
         if request.args.get('quiet') == '1':
             return '', 204
 
         return utils.add_component_data(c), 200
 
+    def delete(self, uuid):
+        try:
+            components.remove(uuid)
+        except DoesNotExist:
+            return {'message': 'components does not exist'}, 404
+        except InvalidState:
+            pass
 
-class ComponentSources(restful.Resource):
-    def get(self, uuid):
-        c = components.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = components.sources(c)
-
-        result = []
-
-        for s in cursor:
-            s = utils.add_component_data(s)
-            result.append(s)
-
-        return result
-
-
-class ComponentChildren(restful.Resource):
-    def get(self, uuid):
-        c = components.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = components.children(c)
-
-        result = []
-
-        for s in cursor:
-            s = utils.add_component_data(s)
-            result.append(s)
-
-        return result
-
-
-class ComponentLineage(restful.Resource):
-    def get(self, uuid):
-        c = components.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = components.lineage(c)
-
-        result = []
-
-        for s in cursor:
-            s['component'] = utils.add_component_data(s['component'])
-            result.append(s)
-
-        return result
-
-
-class ComponentRevisions(restful.Resource):
-    def get(self, uuid):
-        c = components.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = components.revisions(c)
-
-        result = []
-
-        for r in cursor:
-            r = utils.add_component_data(r)
-            result.append(r)
-
-        return result
-
-
-class ComponentRevision(restful.Resource):
-    def get(self, uuid):
-        c = components.revision(uuid)
-
-        if not c:
-            abort(404)
-
-        return utils.add_component_data(c)
-
-
-class ComponentTimeline(restful.Resource):
-    def get(self, uuid):
-        c = components.revision(uuid)
-
-        if not c:
-            abort(404)
-
-        return components.timeline(c)
-
-
-class ComponentRelationships(restful.Resource):
-    def get(self, uuid):
-        c = components.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = components.relationships(c)
-
-        result = []
-
-        for r in cursor:
-            r = utils.add_relationship_data(r)
-            result.append(r)
-
-        return result
+        return '', 204
