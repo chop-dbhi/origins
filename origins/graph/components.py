@@ -14,6 +14,7 @@ __all__ = (
     'add',
     'set',
     'remove',
+    'resource',
 )
 
 
@@ -25,6 +26,14 @@ GET_COMPONENT_BY_ID = T('''
 MATCH (:`origins:Node` {`origins:uuid`: { resource }})-[:manages]->(n$model {`origins:id`: { id }})
 RETURN n
 ''')  # noqa
+
+
+# Gets the component's resource. This does not use the physical edge since
+# the component being looked up may be invalid
+GET_COMPONENT_RESOURCE = '''
+MATCH (:`origins:Node` {`origins:uuid`: { uuid }})<-[:`origins:end`]-(:`origins:Edge` {`origins:type`: 'manages'})-[:`origins:start`]->(n:`origins:Resource`)
+RETURN n
+'''  # noqa
 
 
 match = partial(nodes.match, model=COMPONENT_MODEL)
@@ -116,3 +125,19 @@ def set(uuid, label=None, description=None, properties=None, type=None,
                      type=type,
                      model=COMPONENT_MODEL,
                      tx=tx)
+
+
+def resource(uuid, tx=neo4j.tx):
+    query = {
+        'statement': GET_COMPONENT_RESOURCE,
+        'parameters': {
+            'uuid': uuid,
+        }
+    }
+
+    result = tx.send(query)
+
+    if not result:
+        raise DoesNotExist('component does not exist')
+
+    return Node.parse(result[0][0])

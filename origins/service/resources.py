@@ -1,49 +1,35 @@
-from flask import request
-from flask.ext import restful
-from origins.exceptions import DoesNotExist, InvalidState, ValidationError
+from flask import request, url_for
+from origins.exceptions import ValidationError
 from origins.graph import resources, components
-from . import utils
+from .nodes import Nodes, Node
+from .components import Component
 
 
-class Resources(restful.Resource):
-    def get(self):
-        try:
-            limit = int(request.args.get('limit'))
-        except TypeError:
-            limit = utils.DEFAULT_PAGE_LIMIT
+def prepare(n):
+    n = n.to_dict()
 
-        try:
-            skip = int(request.args.get('skip'))
-        except TypeError:
-            skip = 0
+    n['links'] = {
+        'self': {
+            'href': url_for('resource', uuid=n['uuid'],
+                            _external=True),
+        },
+        'components': {
+            'href': url_for('resource-components', uuid=n['uuid'],
+                            _external=True),
+        },
+    }
 
-        type = request.args.get('type')
-        query = request.args.getlist('query')
+    return n
 
-        if query:
-            param = '(?i)' + '|'.join(['.*' + q + '.*' for q in query])
 
-            predicate = {
-                'label': param,
-                'description': param,
-            }
+class Resources(Nodes):
+    module = resources
 
-            cursor = resources.search(predicate, limit=limit, skip=skip)
-        else:
-            cursor = resources.match(type=type, limit=limit, skip=skip)
+    def prepare(self, n):
+        return prepare(n)
 
-        result = []
-
-        for r in cursor:
-            r = utils.add_resource_data(r)
-            result.append(r)
-
-        return result
-
-    def post(self):
-        data = request.json
-
-        attrs = {
+    def get_attrs(self, data):
+        return {
             'id': data.get('id'),
             'type': data.get('type'),
             'label': data.get('label'),
@@ -51,85 +37,71 @@ class Resources(restful.Resource):
             'properties': data.get('properties'),
         }
 
-        try:
-            r = resources.add(**attrs)
-        except ValidationError as e:
-            return {'message': e.message}, 422
 
-        return utils.add_resource_data(r), 201
+class Resource(Node):
+    module = resources
 
+    def prepare(self, n):
+        return prepare(n)
 
-class Resource(restful.Resource):
-    def get(self, uuid):
-        try:
-            r = resources.get(uuid)
-        except DoesNotExist:
-            return {'message': 'resource does not exist'}, 404
-
-        return utils.add_resource_data(r), 200
-
-    def put(self, uuid):
-        data = request.json
-
-        attrs = {
+    def get_attrs(self, data):
+        return {
             'label': data.get('label'),
             'type': data.get('type'),
             'description': data.get('description'),
             'properties': data.get('properties'),
         }
 
-        try:
-            r = resources.set(uuid, **attrs)
-        except DoesNotExist:
-            return {'message': 'resource does not exist'}, 404
-        except InvalidState:
-            return {'message': 'invalid resource cannot be updated'}, 422
 
-        if request.args.get('quiet') == '1':
-            return '', 204
+class ResourceComponents(Nodes):
+    def prepare(self, uuid, n):
+        n = n.to_dict()
 
-        return utils.add_resource_data(r), 200
+        n['_links'] = {
+            'self': {
+                'href': url_for('component', uuid=n['uuid'],
+                                _external=True),
+            },
+            'resource': {
+                'href': url_for('resource', uuid=uuid,
+                                _external=True),
+            },
+        }
 
-    def delete(self, uuid):
-        try:
-            resources.remove(uuid)
-        except DoesNotExist:
-            return {'message': 'resource does not exist'}, 404
-        except InvalidState:
-            pass
+        return n
 
-        return '', 204
-
-
-class ResourceComponents(restful.Resource):
     def get(self, uuid):
-        try:
-            limit = int(request.args.get('limit'))
-        except TypeError:
-            limit = utils.DEFAULT_PAGE_LIMIT
+        params = self.get_params()
+
+        if params['query']:
+            predicate = self.get_search_predicate(params['query'])
+        else:
+            predicate = None
 
         try:
-            skip = int(request.args.get('skip'))
-        except TypeError:
-            skip = 0
-
-        try:
-            cursor = resources.components(uuid, limit=limit, skip=skip)
-        except ValidationError:
-            return {'message': 'resources does not exist'}, 404
+            cursor = resources.components(uuid,
+                                          predicate=predicate,
+                                          limit=params['limit'],
+                                          skip=params['skip'])
+        except ValidationError as e:
+            return {'message': str(e)}, 404
 
         result = []
 
-        for c in cursor:
-            # c = utils.add_component_data(c)
-            result.append(c)
+        for n in cursor:
+            result.append(self.prepare(uuid, n))
 
-        return result
+        return result, 200
 
     def post(self, uuid):
-        c = components.add(resource=uuid)
+        handler = Component()
 
-        if c is None:
-            return {'message': 'resources does not exist'}, 404
+        attrs = handler.get_attrs(request.json)
+        attrs['resource'] = uuid
 
-        return c, 201
+        try:
+            n = components.add(**attrs)
+        except ValidationError as e:
+            return {'message': str(e)}, 404
+
+        return handler.prepare(n, resource=uuid), 201

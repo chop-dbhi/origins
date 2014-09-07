@@ -42,6 +42,12 @@ class ComponentTestCase(unittest.TestCase):
         self.assertRaises(DoesNotExist, components.get_by_id, self.r.uuid,
                           id=c.id)
 
+    def test_resource(self):
+        c = components.add(self.r.uuid)
+        r = components.resource(c.uuid)
+
+        self.assertEqual(r, self.r)
+
     def test_resource_dependence(self):
         c = components.add(self.r.uuid)
 

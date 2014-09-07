@@ -27,6 +27,12 @@ MATCH (n:`origins:Component`$type $predicate)<-[:includes]-(:`origins:Node` {`or
 RETURN n
 ''')  # noqa
 
+SEARCH_RESOURCE_COMPONENTS = T('''
+MATCH (n:`origins:Component`$type)<-[:includes]-(:`origins:Node` {`origins:uuid`: { uuid }})
+WHERE $predicate
+RETURN n
+''')  # noqa
+
 
 match = partial(nodes.match, model=RESOURCE_MODEL)
 search = partial(nodes.search, model=RESOURCE_MODEL)
@@ -73,11 +79,17 @@ def components(uuid, predicate=None, type=None, limit=None, skip=None,
         except DoesNotExist:
             raise ValidationError('resource does not exist')
 
-        query = traverse.match(MATCH_RESOURCE_COMPONENTS,
-                               predicate=predicate,
-                               type=type,
-                               limit=limit,
-                               skip=skip)
+        if predicate:
+            query = traverse.search(SEARCH_RESOURCE_COMPONENTS,
+                                    predicate=predicate,
+                                    type=type,
+                                    limit=limit,
+                                    skip=skip)
+        else:
+            query = traverse.match(MATCH_RESOURCE_COMPONENTS,
+                                   type=type,
+                                   limit=limit,
+                                   skip=skip)
 
         query['parameters']['uuid'] = uuid
 

@@ -1,8 +1,14 @@
 from .base import ServiceTestCase
 
 
-class NodesTestCase(ServiceTestCase):
-    path = '/nodes/'
+class EdgesTestCase(ServiceTestCase):
+    path = '/edges/'
+
+    def setUp(self):
+        super(EdgesTestCase, self).setUp()
+
+        _, self.a = self.post('/nodes/', data={})
+        _, self.b = self.post('/nodes/', data={})
 
     def test_get(self):
         r, d = self.get()
@@ -10,21 +16,11 @@ class NodesTestCase(ServiceTestCase):
         self.assertEqual(d, [])
         self.assertEqual(r.status_code, 200)
 
-    def test_get_search(self):
-        _, ben = self.post(data={'label': 'Ben'})
-        _, bella = self.post(data={'label': 'Bella'})
-        _, jen = self.post(data={'label': 'Jen'})
-
-        r, d = self.get(params={'query': 'be'})
-
-        self.assertCountEqual(d, [ben, bella])
-
-        r, d = self.get(params={'query': 'en'})
-
-        self.assertCountEqual(d, [ben, jen])
-
     def test_post(self):
-        r, n = self.post(data={})
+        r, n = self.post(data={
+            'start': self.a['uuid'],
+            'end': self.b['uuid'],
+        })
 
         self.assertEqual(r.status_code, 201)
         self.assertIn('uuid', n)
@@ -34,13 +30,19 @@ class NodesTestCase(ServiceTestCase):
         self.assertEqual(d, [n])
 
 
-class NodeTestCase(ServiceTestCase):
-    path = '/nodes/{uuid}/'
+class EdgeTestCase(ServiceTestCase):
+    path = '/edges/{uuid}/'
 
     def setUp(self):
-        super(NodeTestCase, self).setUp()
+        super(EdgeTestCase, self).setUp()
 
-        _, self.d = self.post('/nodes/', data={})
+        _, self.a = self.post('/nodes/', data={})
+        _, self.b = self.post('/nodes/', data={})
+
+        _, self.d = self.post('/edges/', data={
+            'start': self.a['uuid'],
+            'end': self.b['uuid'],
+        })
 
     def test_get(self):
         r, d = self.get({
@@ -71,5 +73,5 @@ class NodeTestCase(ServiceTestCase):
         self.assertEqual(d, self.d)
 
         # Not in the set
-        _, d = self.get('/nodes/')
+        _, d = self.get('/edges/')
         self.assertEqual(d, [])
