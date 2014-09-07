@@ -1,3 +1,4 @@
+import re
 import json
 from copy import deepcopy
 from hashlib import sha1
@@ -14,6 +15,15 @@ DIFF_ATTRS = {
     'direction',
     'dependence',
 }
+
+UUID_RE = re.compile(r'^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$')
+
+
+def is_uuid(s):
+    if not isinstance(s, str):
+        return False
+
+    return UUID_RE.match(s) is not None
 
 
 def _dict_sha1(d):
@@ -63,7 +73,14 @@ class Node(object):
         return hash(self.uuid)
 
     def __str__(self):
-        return '{} ({})'.format(self.uuid, self.label or self.id)
+        if self.label:
+            label = self.label
+        elif is_uuid(self.id):
+            label = self.id[:8]
+        else:
+            label = self.id
+
+        return '{} ({})'.format(label, self.uuid[:8])
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, str(self))
