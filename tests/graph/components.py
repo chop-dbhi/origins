@@ -12,16 +12,17 @@ class ComponentTestCase(unittest.TestCase):
     def test_match(self):
         r0 = components.add(self.r.uuid)
         p0 = components.add(self.r.uuid, type='Database')
+
         self.assertEqual(components.match(), [r0, p0])
 
     def test_add(self):
         # Without ID
-        r = components.add(self.r.uuid)
-        self.assertTrue(r.type, components.COMPONENT_TYPE)
+        c = components.add(self.r.uuid)
+        self.assertTrue(c.type, components.COMPONENT_TYPE)
 
         # With ID
-        r = components.add(self.r.uuid, id='component')
-        self.assertTrue(r.type, components.COMPONENT_TYPE)
+        c = components.add(self.r.uuid, id='component')
+        self.assertTrue(c.type, components.COMPONENT_TYPE)
 
         # Cannot add with same ID
         self.assertRaises(ValidationError, components.add, self.r.uuid,
@@ -35,8 +36,17 @@ class ComponentTestCase(unittest.TestCase):
         self.assertNotEqual(r0.uuid, r1.uuid)
 
     def test_remove(self):
-        r = components.add(self.r.uuid)
-        components.remove(r.uuid)
+        c = components.add(self.r.uuid)
+        components.remove(c.uuid)
 
         self.assertRaises(DoesNotExist, components.get_by_id, self.r.uuid,
-                          id=r.id)
+                          id=c.id)
+
+    def test_resource_dependence(self):
+        c = components.add(self.r.uuid)
+
+        # Remove resource
+        resources.remove(self.r.uuid)
+
+        self.assertRaises(DoesNotExist, components.get_by_id, self.r.uuid,
+                          c.id)

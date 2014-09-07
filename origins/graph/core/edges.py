@@ -435,23 +435,27 @@ def _cascade_remove(node, tx):
 
     # Map of nodes and edges to the triggers
     nodes = defaultdict(pyset)
-    edges = {}
+    edges = defaultdict(pyset)
 
     # No triggers for initial node
     nodes[node] = pyset()
 
     for n, s, e in tx.send(query):
         edge = Edge.parse(n, s, e)
-        edges.setdefault(edge, pyset())
 
-        # Mutual dependence or inverse will remove the end node
-        if edge.start in nodes and edge.dependence in ('mutual', 'inverse'):
-            nodes[edge.end].add(edge.start)
+        # Node is being removed, remove the edge
+        if edge.start in nodes:
             edges[edge].add(edge.start)
 
-        elif edge.end in nodes and edge.dependence in ('mutual', 'forward'):
-            nodes[edge.start].add(edge.end)
+            # Mutual dependence or inverse will remove the end node
+            if edge.dependence in ('mutual', 'inverse'):
+                nodes[edge.end].add(edge.start)
+
+        elif edge.end in nodes:
             edges[edge].add(edge.end)
+
+            if edge.dependence in ('mutual', 'forward'):
+                nodes[edge.start].add(edge.end)
 
     for edge, triggers in edges.items():
         _remove(edge, reason='origins:NodeRemoved', tx=tx)

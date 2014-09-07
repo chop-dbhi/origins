@@ -22,7 +22,7 @@ COMPONENT_TYPE = 'Component'
 
 
 GET_COMPONENT_BY_ID = T('''
-MATCH (:`origins:Node` {`origins:uuid`: { resource }})<-[:managed_by]-(n$model {`origins:id`: { id }})
+MATCH (:`origins:Node` {`origins:uuid`: { resource }})-[:manages]->(n$model {`origins:id`: { id }})
 RETURN n
 ''')  # noqa
 
@@ -85,15 +85,19 @@ def add(resource, id=None, label=None, description=None, type=None,
                          tx=tx)
 
         # Define managing relationship
-        edges.add(start=node,
-                  end=resource,
-                  type='managed_by',
+        edges.add(start=resource,
+                  end=node,
+                  type='manages',
+                  direction='bidirected',
+                  dependence='inverse',
                   tx=tx)
 
         # Defining inclusion to resource
         edges.add(start=resource,
                   end=node,
                   type='includes',
+                  direction='bidirected',
+                  dependence='none',
                   tx=tx)
 
         return node
