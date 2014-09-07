@@ -1,13 +1,11 @@
-import os
 import json
 import unittest
-import requests
-from urllib.parse import urljoin
 from uritemplate import expand
+from origins.service import app
 from origins.graph import neo4j
 
 
-TEST_URL = os.environ.get('ORIGINS_TEST_URL', 'http://localhost:5000')
+test_client = app.test_client()
 
 
 class ServiceTestCase(unittest.TestCase):
@@ -39,14 +37,12 @@ class ServiceTestCase(unittest.TestCase):
             data = json.dumps(data)
             headers.setdefault('Content-Type', 'application/json')
 
-        url = urljoin(TEST_URL, path)
-
         # Call requests method
-        func = getattr(requests, method.lower())
-        resp = func(url, params=params, data=data, headers=headers)
+        func = getattr(test_client, method.lower())
+        resp = func(path, query_string=params, data=data, headers=headers)
 
-        if resp.content:
-            data = resp.json()
+        if resp.data:
+            data = json.loads(resp.data.decode('utf8'))
         else:
             data = None
 

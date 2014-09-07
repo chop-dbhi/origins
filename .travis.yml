@@ -18,7 +18,6 @@ install:
 before_script:
     - flake8
     - sh tests/start-neo4j.sh
-    - origins serve --debug &
 
 script:
     - coverage run test_suite.py
