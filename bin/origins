@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+# vim:ft=python
+
+"""Origins CLI
+
+Usage:
+    origins serve [--debug] [--host HOST] [--port PORT] [--config PATH]
+
+Options:
+    -h --help           Show this screen.
+    -v --version        Show version.
+    --config PATH       Specify path to configuration.
+"""
+
+if __name__ == '__main__':
+    import sys
+    from docopt import docopt
+    from origins import config
+
+    opts = docopt(__doc__, version='Origins 0.1.0')
+
+    if opts['--config']:
+        import json
+
+        try:
+            with open(opts['--config'], 'rU') as f:
+                config.options.update(json.load(f))
+        except Exception:
+            print('could not read configuration file.')
+            sys.exit(1)
+
+    if opts['serve']:
+        from origins.service import app
+
+        debug = opts['--debug'] or config.options['debug']
+        host = opts['--host'] or config.options['host']
+        port = opts['--port'] or config.options['port']
+
+        app.run(threaded=True, debug=debug, host=host, port=port)

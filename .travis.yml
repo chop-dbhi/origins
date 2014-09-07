@@ -9,7 +9,6 @@ services:
 
 before_install:
     - sh bin/check_signoff.sh
-    - sh tests/start-neo4j.sh
 
 install:
     - pip install -q coveralls flake8
@@ -18,6 +17,8 @@ install:
 
 before_script:
     - flake8
+    - sh tests/start-neo4j.sh
+    - origins serve --debug &
 
 script:
     - coverage run test_suite.py
