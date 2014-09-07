@@ -48,6 +48,23 @@ class EdgeTestCase(TestCase):
         self.assertEqual(edges.match(type='related'), [e0])
         self.assertEqual(edges.match(type='likes'), [f0])
 
+    def test_search(self):
+        n0 = edges.add(self.a0, self.b0, label='Hello world')
+        m0 = edges.add(self.a0, self.b0, label='Hello moto')
+
+        # Metadata
+        predicate = {'label': 'Hello.*'}
+        self.assertEqual(edges.search(predicate), [n0, m0])
+
+        p0 = edges.add(self.a0, self.b0, properties={
+            'color': 'blue',
+            'size': 10,
+        })
+
+        # Properties
+        predicate = {'properties': {'color': 'bl.*', 'size': 10}}
+        self.assertEqual(edges.search(predicate), [p0])
+
     def test_get(self):
         self.assertRaises(DoesNotExist, edges.get, 'abc123')
 

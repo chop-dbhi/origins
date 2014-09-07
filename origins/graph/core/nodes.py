@@ -10,6 +10,7 @@ from . import traverse
 
 __all__ = (
     'match',
+    'search',
     'get',
     'get_by_id',
     'add',
@@ -23,11 +24,18 @@ NODE_TYPE = 'Node'
 
 
 # Match nodes with optional predicate.
-# The model should be supplied
-# TODO is this sane?
 MATCH_NODES = T('''
-MATCH (n$model$type $predicate)
+MATCH (n:`origins:Node`$model$type $predicate)
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+RETURN n
+''')
+
+
+# Search nodes with predicate
+SEARCH_NODES = T('''
+MATCH (n:`origins:Node`$model$type)
+WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+    AND $predicate
 RETURN n
 ''')
 
@@ -54,7 +62,7 @@ LIMIT 1
 # Creates a node
 # The `prov:Entity` and `origins:Node` labels are fixed.
 ADD_NODE = T('''
-CREATE (n$model$type:`prov:Entity`:`origins:Node` { attrs })
+CREATE (n:`origins:Node`:`prov:Entity`$model$type { attrs })
 ''')
 
 
@@ -69,15 +77,28 @@ REMOVE n$type
 def match(predicate=None, limit=None, skip=None, type=None, model=None,
           tx=neo4j.tx):
 
-    if not model:
-        model = NODE_MODEL
-
     query = traverse.match(MATCH_NODES,
                            predicate=pack(predicate),
                            limit=limit,
                            skip=skip,
                            type=type,
                            model=model)
+
+    result = tx.send(query)
+
+    return [Node.parse(r) for r in result]
+
+
+def search(predicate, operator=None, limit=None, skip=None, type=None,
+           model=None, tx=neo4j.tx):
+
+    query = traverse.search(SEARCH_NODES,
+                            predicate=pack(predicate),
+                            operator=operator,
+                            limit=limit,
+                            skip=skip,
+                            type=type,
+                            model=model)
 
     result = tx.send(query)
 

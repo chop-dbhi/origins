@@ -25,6 +25,23 @@ class NodeTestCase(TestCase):
         self.assertEqual(nodes.match(type='Foo'), [n0])
         self.assertEqual(nodes.match(type='Bar'), [m0])
 
+    def test_search(self):
+        n0 = nodes.add(label='Hello world')
+        m0 = nodes.add(label='Hello moto')
+
+        # Metadata
+        predicate = {'label': 'Hello.*'}
+        self.assertEqual(nodes.search(predicate), [n0, m0])
+
+        p0 = nodes.add(properties={
+            'color': 'blue',
+            'size': 10,
+        })
+
+        # Properties
+        predicate = {'properties': {'color': 'bl.*', 'size': 10}}
+        self.assertEqual(nodes.search(predicate), [p0])
+
     def test_get(self):
         self.assertRaises(DoesNotExist, nodes.get, 'abc123')
 

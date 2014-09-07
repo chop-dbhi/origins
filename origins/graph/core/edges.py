@@ -10,6 +10,7 @@ from . import traverse
 
 __all__ = (
     'match',
+    'search',
     'get',
     'get_by_id',
     'add',
@@ -27,8 +28,20 @@ EDGE_TYPE = 'Edge'
 
 # Match edges with optional predicate
 MATCH_EDGES = T('''
-MATCH (n$model$type $predicate)
+MATCH (n:`origins:Edge`$model$type $predicate)
 WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+WITH n
+MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
+      (n)-[:`origins:end`]->(e:`origins:Node`)
+RETURN n, s, e
+''')
+
+
+# Search edges with predicate
+SEARCH_EDGES = T('''
+MATCH (n:`origins:Edge`$model$type)
+WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+    AND $predicate
 WITH n
 MATCH (n)-[:`origins:start`]->(s:`origins:Node`),
       (n)-[:`origins:end`]->(e:`origins:Node`)
@@ -113,15 +126,28 @@ DELETE r
 def match(predicate=None, limit=None, skip=None, type=None, model=None,
           tx=neo4j.tx):
 
-    if not model:
-        model = EDGE_MODEL
-
     query = traverse.match(MATCH_EDGES,
                            predicate=pack(predicate),
                            limit=limit,
                            skip=skip,
                            type=type,
                            model=model)
+
+    result = tx.send(query)
+
+    return [Edge.parse(*r) for r in result]
+
+
+def search(predicate, operator=None, limit=None, skip=None, type=None,
+           model=None, tx=neo4j.tx):
+
+    query = traverse.search(SEARCH_EDGES,
+                            predicate=pack(predicate),
+                            operator=operator,
+                            limit=limit,
+                            skip=skip,
+                            type=type,
+                            model=model)
 
     result = tx.send(query)
 

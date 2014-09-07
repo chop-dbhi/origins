@@ -1,11 +1,21 @@
+from functools import partial
 from string import Template as T
 from origins.exceptions import ValidationError, DoesNotExist
 from .core import nodes, traverse
 from .model import Node
 from . import neo4j
 
-# Do not shadow
-pyset = set
+
+__all__ = (
+    'match',
+    'search',
+    'get',
+    'get_by_id',
+    'add',
+    'set',
+    'remove',
+    'components',
+)
 
 
 RESOURCE_MODEL = 'origins:Resource'
@@ -18,24 +28,14 @@ RETURN n
 ''')  # noqa
 
 
+match = partial(nodes.match, model=RESOURCE_MODEL)
+search = partial(nodes.search, model=RESOURCE_MODEL)
+
+get_by_id = partial(nodes.get_by_id, model=RESOURCE_MODEL)
 get = nodes.get
+
 set = nodes.set
 remove = nodes.remove
-
-
-def match(predicate=None, type=None, limit=None, skip=None, tx=neo4j.tx):
-    return nodes.match(predicate,
-                       limit=limit,
-                       skip=skip,
-                       type=type,
-                       model=RESOURCE_MODEL,
-                       tx=tx)
-
-
-def get_by_id(id, tx=neo4j.tx):
-    return nodes.get_by_id(id,
-                           model=RESOURCE_MODEL,
-                           tx=tx)
 
 
 def add(id=None, label=None, description=None, properties=None, type=None,

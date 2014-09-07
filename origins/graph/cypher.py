@@ -11,13 +11,18 @@ def map(keys, parameter):
     return '{' + ', '.join(toks) + '}'
 
 
-def search(keys, var, parameter, operator='OR'):
+def search(predicate, variable, parameter, operator='OR'):
     "Returns a parametized set of regexp-based expressions."
     toks = []
 
-    for k in keys:
-        toks.append('`{v}`.`{k}` =~ {{ {p} }}.`{k}`'
-                    .format(k=k, v=var, p=parameter))
+    for k, v in predicate.items():
+        if isinstance(v, str):
+            o = '=~'
+        else:
+            o = '='
+
+        toks.append('`{v}`.`{k}` {o} {{ {p} }}.`{k}`'
+                    .format(o=o, k=k, v=variable, p=parameter))
 
     # Add spaces around operator
     operator = ' ' + operator + ' '

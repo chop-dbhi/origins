@@ -1,8 +1,20 @@
+from functools import partial
 from string import Template as T
 from origins.exceptions import ValidationError, DoesNotExist
 from .core import nodes, edges
 from .model import Node
 from . import neo4j, utils, resources
+
+
+__all__ = (
+    'match',
+    'search',
+    'get',
+    'get_by_id',
+    'add',
+    'set',
+    'remove',
+)
 
 
 COMPONENT_MODEL = 'origins:Component'
@@ -15,18 +27,12 @@ RETURN n
 ''')  # noqa
 
 
+match = partial(nodes.match, model=COMPONENT_MODEL)
+search = partial(nodes.search, model=COMPONENT_MODEL)
+
 get = nodes.get
 set = nodes.set
 remove = nodes.remove
-
-
-def match(predicate=None, type=None, limit=None, skip=None, tx=neo4j.tx):
-    return nodes.match(predicate,
-                       limit=limit,
-                       skip=skip,
-                       type=type,
-                       model=COMPONENT_MODEL,
-                       tx=tx)
 
 
 def get_by_id(resource, id, tx=neo4j.tx):
