@@ -1,4 +1,3 @@
-import time
 import math
 import json
 import logging
@@ -7,10 +6,8 @@ from origins import config
 
 
 logger = logging.getLogger(__name__)
-mlogger = logging.getLogger(__name__ + ':metrics')
 
 logger.setLevel(logging.INFO)
-mlogger.setLevel(logging.INFO)
 
 # Default number of statements that will be sent in one request
 DEFAULT_BATCH_SIZE = 100
@@ -32,12 +29,6 @@ HEADERS = {
 }
 
 
-TIME_LOG_STR = '''
-total time: {tt:0.2f}
-request time: {ar:0.2f} x {nr} ({rt:0.2f})
-other time: {ot:0.2f}'''
-
-
 class Neo4jError(Exception):
     def __init__(self, errors, *args):
         if isinstance(errors, list):
@@ -55,38 +46,16 @@ class Neo4jError(Exception):
         super(Neo4jError, self).__init__(message, *args)
 
 
-def _normalize_results(response, keys=True):
-    """Neo4j REST response has the format:
-
-        [{
-            "columns": [...],
-            "data": [{
-                "row": [{ ... }, ...],
-            }]
-        }, ...]
-
-    This extracts the data each object and maps them to the columns.
-    """
+def _normalize_results(response):
+    "Flattens the results of the Neo4j REST response."
     if not response:
         return
 
     result = []
 
-    # Raw results contained in a list..
     for results in response:
-        data = results['data']
-        columns = results['columns']
-
-        for row in data:
-            row = row['row']
-
-            if keys:
-                if row and isinstance(row[0], dict):
-                    row = row[0]
-                elif isinstance(row, list):
-                    row = dict(zip(columns, row))
-
-            result.append(row)
+        for row in results['data']:
+            result.append(row['row'])
 
     return result
 
@@ -152,9 +121,6 @@ class Transaction(object):
         # Track number of batches sent
         self._batches = 0
 
-        # Elapsed time of transaction
-        self._begin_time = None
-        self._request_times = []
 
         # Transaction is committed or rolled back
         self._closed = False
@@ -178,19 +144,9 @@ class Transaction(object):
                 self.commit()
 
     def _close(self):
-        tt = (time.time() - self._begin_time) * 1000
-        rt = sum(self._request_times) * 1000
-        ot = tt - rt
-        nr = len(self._request_times)
-        ar = rt / nr
-
-        mlogger.info(TIME_LOG_STR.format(ot=ot, ar=ar, rt=rt, nr=nr, tt=tt))
-
         if self.autocommit:
             self.transaction_uri = TRANSACTION_URI_TMPL.format(self.client.uri)
             self.commit_uri = None
-            self._request_times = []
-            self._begin_time = None
         else:
             self._closed = True
 
@@ -203,9 +159,6 @@ class Transaction(object):
         data = json.dumps(payload)
         resp = requests.post(url, data=data, headers=HEADERS)
 
-        # Increment total request time
-        self._request_times.append(resp.elapsed.total_seconds())
-
         resp.raise_for_status()
         resp_data = resp.json()
 
@@ -217,9 +170,6 @@ class Transaction(object):
     def _send(self, url, statements=None, parameters=None):
         if self._closed:
             raise Neo4jError('transaction closed')
-
-        if self._begin_time is None:
-            self._begin_time = time.time()
 
         statements = _normalize_statements(statements, parameters)
 
@@ -247,8 +197,7 @@ class Transaction(object):
 
         return resp_data
 
-    def send(self, statements, parameters=None, raw=False,
-             keys=False):
+    def send(self, statements, parameters=None):
         """Sends statements to an existing transaction or opens a new one.
 
         This must be followed by `commit` or `rollback` to close the
@@ -256,7 +205,7 @@ class Transaction(object):
         and implicitly rolled back.
         """
         if self.autocommit and self._depth == 0:
-            return self.commit(statements, parameters, raw, keys)
+            return self.commit(statements, parameters)
 
         if not self.commit_uri:
             logger.debug('begin: {}'.format(self.transaction_uri))
@@ -267,13 +216,9 @@ class Transaction(object):
         if 'commit' in data:
             self.commit_uri = data['commit']
 
-        if raw:
-            return data
+        return _normalize_results(data['results'])
 
-        return _normalize_results(data['results'], keys=keys)
-
-    def commit(self, statements=None, parameters=None, raw=False,
-               keys=False):
+    def commit(self, statements=None, parameters=None):
         "Commits an open transaction or performs a single transaction request."
         if self.commit_uri:
             uri = self.commit_uri
@@ -287,10 +232,7 @@ class Transaction(object):
 
         self._close()
 
-        if raw:
-            return data
-
-        return _normalize_results(data['results'], keys=keys)
+        return _normalize_results(data['results'])
 
     def rollback(self):
         if not self.commit_uri:
@@ -312,7 +254,6 @@ def purge(*args, **kwargs):
 
 def debug():
     logger.setLevel(logging.DEBUG)
-    mlogger.setLevel(logging.DEBUG)
 
 
 # Initialize the default client
