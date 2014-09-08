@@ -129,9 +129,10 @@ class Transaction(object):
         self.batch_size = batch_size
         self.autocommit = autocommit
 
-        # Track number of batches sent
+        # The current queue of statements and number of batches that have
+        # been sent by this transaction.
+        self._queue = []
         self._batches = 0
-
 
         # Transaction is committed or rolled back
         self._closed = False
@@ -146,6 +147,7 @@ class Transaction(object):
 
     def __enter__(self):
         self._depth += 1
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -164,6 +166,7 @@ class Transaction(object):
         if self.autocommit:
             self.transaction_uri = TRANSACTION_URI_TMPL.format(self.client.uri)
             self.commit_uri = None
+            self._batches = 0
         else:
             self._closed = True
 
@@ -184,12 +187,21 @@ class Transaction(object):
 
         return resp, resp_data,
 
-    def _send(self, url, statements=None, parameters=None):
+    def _send(self, url, statements=None, parameters=None, defer=False):
+
         if self._closed:
             raise Neo4jError('transaction closed')
 
         statements = _normalize_statements(statements, parameters)
 
+        self._queue.extend(statements)
+
+        # Wait to send the requests
+        if defer:
+            return
+
+        statements = self._queue
+        self._queue = []
         resp_data = None
 
         # Send at least one request
@@ -217,17 +229,17 @@ class Transaction(object):
 
         return resp_data
 
-    def send(self, statements, parameters=None):
+    def send(self, statements, parameters=None, defer=False):
         """Sends statements to an existing transaction or opens a new one.
 
         This must be followed by `commit` or `rollback` to close the
         transaction, otherwise the transaction will timeout on the server
         and implicitly rolled back.
         """
-        if self.autocommit and self._depth == 0:
+        if not defer and self.autocommit and self._depth == 0:
             return self.commit(statements, parameters)
 
-        if not self.commit_uri:
+        if not defer and not self.commit_uri:
             logger.debug('begin: {}'.format(self.transaction_uri))
 
         try:
@@ -238,6 +250,9 @@ class Transaction(object):
                 self.rollback()
             raise
 
+        if defer:
+            return
+
         if 'commit' in data:
             self.commit_uri = data['commit']
 
@@ -247,8 +262,10 @@ class Transaction(object):
         "Commits an open transaction or performs a single transaction request."
         if self.commit_uri:
             uri = self.commit_uri
-        else:
+        elif not self._queue:
             uri = SINGLE_TRANSACTION_URI_TMPL.format(self.client.uri)
+        else:
+            uri = self.transaction_uri
 
         try:
             data = self._send(uri, statements, parameters=parameters)

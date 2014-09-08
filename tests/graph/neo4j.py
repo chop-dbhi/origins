@@ -89,6 +89,20 @@ class Neo4jTestCase(unittest.TestCase):
 
         self.assertEqual(len(r), 1)
 
+    def test_defer(self):
+        data = neo4j.tx.send('CREATE (n {foo: 1}) RETURN n', defer=True)
+        self.assertIsNone(data)
+
+        data = neo4j.tx.send('CREATE (n {foo: 2}) RETURN n', defer=True)
+        self.assertIsNone(data)
+
+        self.assertEqual(len(neo4j.tx._queue), 2)
+
+        data = neo4j.tx.commit()
+
+        self.assertEqual(len(neo4j.tx._queue), 0)
+        self.assertEqual(len(data), 2)
+
     def test_uncommitted(self):
         handler = MockHandler(logging.ERROR)
         neo4j.logger.addHandler(handler)
@@ -98,7 +112,7 @@ class Neo4jTestCase(unittest.TestCase):
         # Uncommitted
         tx.send('CREATE (n)')
         # Unsent
-        tx.send('CREATE (n)', wait=True)
+        tx.send('CREATE (n)', defer=True)
 
         # Mimic call on exit
         neo4j._transaction_exit(tx)
