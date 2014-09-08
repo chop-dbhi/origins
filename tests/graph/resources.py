@@ -44,5 +44,9 @@ class ResourceTestCase(unittest.TestCase):
         c = components.add(r.uuid)
         d = components.add(p.uuid)
 
-        self.assertEqual(resources.components(r.uuid), [c])
+        resources.include_component(r.uuid, d.uuid)
+
+        self.assertEqual(resources.components(r.uuid), [c, d])
         self.assertEqual(resources.components(p.uuid), [d])
+        self.assertEqual(resources.managed_components(r.uuid), [c])
+        self.assertEqual(resources.managed_components(p.uuid), [d])

@@ -71,14 +71,14 @@ def add(resource, id=None, label=None, description=None, type=None,
 
     with tx as tx:
         try:
-            resource = resources.get(resource)
+            resources.get(resource)
         except DoesNotExist:
             raise ValidationError('resource does not exist')
 
         # Check for conflict
         if id is not None:
             try:
-                node = get_by_id(resource.uuid, id=id, tx=tx)
+                node = get_by_id(resource, id=id, tx=tx)
             except DoesNotExist:
                 node = None
 
@@ -103,7 +103,7 @@ def add(resource, id=None, label=None, description=None, type=None,
 
         # Defining inclusion to resource
         edges.add(start=resource,
-                  end=node,
+                  end=node.uuid,
                   type='includes',
                   direction='bidirected',
                   dependence='none',

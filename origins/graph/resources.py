@@ -1,7 +1,7 @@
 from functools import partial
 from string import Template as T
 from origins.exceptions import ValidationError, DoesNotExist
-from .core import nodes, traverse
+from .core import edges, nodes, traverse
 from .model import Node
 from . import neo4j
 
@@ -26,6 +26,13 @@ MATCH_RESOURCE_COMPONENTS = T('''
 MATCH (n:`origins:Component`$type $predicate)<-[:includes]-(:`origins:Node` {`origins:uuid`: { uuid }})
 RETURN n
 ''')  # noqa
+
+
+MATCH_RESOURCE_MANAGED_COMPONENTS = T('''
+MATCH (n:`origins:Component`$type $predicate)<-[:manages]-(:`origins:Node` {`origins:uuid`: { uuid }})
+RETURN n
+''')  # noqa
+
 
 SEARCH_RESOURCE_COMPONENTS = T('''
 MATCH (n:`origins:Component`$type)<-[:includes]-(:`origins:Node` {`origins:uuid`: { uuid }})
@@ -96,3 +103,42 @@ def components(uuid, predicate=None, type=None, limit=None, skip=None,
         result = tx.send(query)
 
         return [Node.parse(r) for r in result]
+
+
+def managed_components(uuid, type=None, limit=None, skip=None, tx=neo4j.tx):
+    with tx as tx:
+        try:
+            get(uuid, tx=tx)
+        except DoesNotExist:
+            raise ValidationError('resource does not exist')
+
+        query = traverse.match(MATCH_RESOURCE_MANAGED_COMPONENTS,
+                               type=type,
+                               limit=limit,
+                               skip=skip)
+
+        query['parameters']['uuid'] = uuid
+
+        result = tx.send(query)
+
+        return [Node.parse(r) for r in result]
+
+
+def include_component(uuid, component, tx=neo4j.tx):
+    from . import components
+
+    with tx as tx:
+        try:
+            get(uuid, tx=tx)
+        except DoesNotExist:
+            raise ValidationError('resource does not exist')
+
+        try:
+            components.get(component, tx=tx)
+        except DoesNotExist:
+            raise ValidationError('component does not exist')
+
+        return edges.add(start=uuid,
+                         end=component,
+                         type='includes',
+                         tx=tx)
