@@ -95,7 +95,7 @@ def add(resource, id=None, label=None, description=None, type=None,
 
         # Define managing relationship
         edges.add(start=resource,
-                  end=node,
+                  end=node.uuid,
                   type='manages',
                   direction='bidirected',
                   dependence='inverse',

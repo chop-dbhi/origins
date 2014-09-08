@@ -4,7 +4,7 @@ from origins.exceptions import DoesNotExist, InvalidState
 from ..model import Node
 from ..packer import pack
 from .. import neo4j, utils
-from .edges import _cascade_remove, _update_edges
+from .deps import cascade_remove, update_edges
 from . import traverse
 
 
@@ -187,7 +187,7 @@ def set(uuid, label=None, description=None, properties=None, type=None,
 
         _dereference_node(current, tx)
 
-        _update_edges(current, node, tx)
+        update_edges(current, node, tx)
 
         # Provenance for change
         prov_spec = provenance.change(current.uuid, node.uuid)
@@ -213,7 +213,7 @@ def remove(uuid, reason=None, tx=neo4j.tx):
         if invalid:
             raise InvalidState('cannot remove and invalid node')
 
-        nodes = _cascade_remove(node, tx=tx)
+        nodes = cascade_remove(node, tx=tx)
 
         # Remove all nodes
         for n, triggers in nodes.items():
