@@ -47,7 +47,7 @@ def load_options(path):
     "Loads configuration options from path."
     try:
         with open(path, 'rU') as f:
-            return make_options(json.load(f))
+            return set_options(json.load(f))
     except (ValueError, IOError):
         sys.stderr.write('Error loading configuration file {}\n'.format(path))
         raise
