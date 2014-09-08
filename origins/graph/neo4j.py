@@ -2,6 +2,7 @@ import math
 import json
 import logging
 import requests
+import atexit
 from origins import config
 
 
@@ -96,6 +97,16 @@ def _merge_response(output, data):
     return output
 
 
+def _transaction_exit(tx):
+    if not tx._closed:
+        if tx._queue:
+            logger.error('transaction has unsent statements')
+
+        if tx.commit_uri:
+            logger.error('rolling back uncommitted transaction')
+            tx.rollback()
+
+
 class Client(object):
     def __init__(self, uri=None, host=None, port=None, scheme='http'):
         if not uri:
@@ -128,6 +139,10 @@ class Transaction(object):
         # Track the depth of a transaction to prevent it from being committed
         # in sub-context managers.
         self._depth = 0
+
+        # Rollback uncommitted state on exit to prevent blocking subsequent
+        # access
+        atexit.register(_transaction_exit, self)
 
     def __enter__(self):
         self._depth += 1

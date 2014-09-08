@@ -1,5 +1,24 @@
 import unittest
+import logging
 from origins.graph import neo4j
+
+
+class MockHandler(logging.Handler):
+    def __init__(self, *args, **kwargs):
+        self.reset()
+        logging.Handler.__init__(self, *args, **kwargs)
+
+    def emit(self, record):
+        self.messages[record.levelname.lower()].append(record.getMessage())
+
+    def reset(self):
+        self.messages = {
+            'debug': [],
+            'info': [],
+            'warning': [],
+            'error': [],
+            'critical': [],
+        }
 
 
 class Neo4jTestCase(unittest.TestCase):
@@ -69,3 +88,22 @@ class Neo4jTestCase(unittest.TestCase):
         r = neo4j.tx.send('MATCH (n) RETURN n')
 
         self.assertEqual(len(r), 1)
+
+    def test_uncommitted(self):
+        handler = MockHandler(logging.ERROR)
+        neo4j.logger.addHandler(handler)
+
+        tx = neo4j.client.transaction()
+
+        # Uncommitted
+        tx.send('CREATE (n)')
+        # Unsent
+        tx.send('CREATE (n)', wait=True)
+
+        # Mimic call on exit
+        neo4j._transaction_exit(tx)
+
+        self.assertEqual(len(handler.messages['error']), 2)
+
+        # Remove handler for subsequent tests
+        neo4j.logger.removeHandler(handler)
