@@ -151,11 +151,13 @@ class Transaction(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._depth -= 1
 
-        if not self._closed and self._depth == 0:
-            if exc_type:
-                if self.commit_uri:
-                    self.rollback()
-            else:
+        if not self._closed:
+            # Handle error if it occurs
+            if exc_type and self.commit_uri:
+                self.rollback()
+
+            # Otherwise commit
+            elif self._depth == 0:
                 self.commit()
 
     def _close(self):
@@ -208,6 +210,9 @@ class Transaction(object):
             if 'location' in resp.headers:
                 url = self.transaction_uri = resp.headers['location']
 
+            if 'commit' in resp_data:
+                self.commit_uri = resp_data['commit']
+
             self._batches += 1
 
         return resp_data
@@ -225,8 +230,13 @@ class Transaction(object):
         if not self.commit_uri:
             logger.debug('begin: {}'.format(self.transaction_uri))
 
-        data = self._send(self.transaction_uri, statements,
-                          parameters=parameters)
+        try:
+            data = self._send(self.transaction_uri, statements,
+                              parameters=parameters)
+        except Exception:
+            if self.commit_uri:
+                self.rollback()
+            raise
 
         if 'commit' in data:
             self.commit_uri = data['commit']
@@ -240,7 +250,12 @@ class Transaction(object):
         else:
             uri = SINGLE_TRANSACTION_URI_TMPL.format(self.client.uri)
 
-        data = self._send(uri, statements, parameters=parameters)
+        try:
+            data = self._send(uri, statements, parameters=parameters)
+        except Exception:
+            if self.commit_uri:
+                self.rollback()
+            raise
 
         if self.commit_uri:
             logger.debug('commit: {}'.format(uri))
