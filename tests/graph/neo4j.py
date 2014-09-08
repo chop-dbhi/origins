@@ -6,15 +6,8 @@ class Neo4jTestCase(unittest.TestCase):
     def setUp(self):
         neo4j.purge()
 
-    def test_client(self):
-        client = neo4j.Client()
-
-        with client.transaction() as tx:
-            result = tx.send('CREATE (n {foo: 1}) RETURN n')[0][0]
-            self.assertEqual(result, {'foo': 1})
-
     def test_batch(self):
-        with neo4j.Transaction(batch_size=2) as tx:
+        with neo4j.client.transaction(batch_size=2) as tx:
             tx.send([{
                 'statement': 'CREATE ({ props })',
                 'parameters': {'props': {'foo': 1}},
@@ -30,7 +23,7 @@ class Neo4jTestCase(unittest.TestCase):
             self.assertEqual(tx.send('MATCH (n) RETURN count(n)')[0][0], 3)
 
     def test_rollback(self):
-        tx = neo4j.Transaction()
+        tx = neo4j.client.transaction()
 
         # Create node
         tx.send('CREATE ({})')
@@ -44,7 +37,7 @@ class Neo4jTestCase(unittest.TestCase):
         self.assertEqual(len(neo4j.tx.send('MATCH (n) RETURN n')), 0)
 
     def test_nesting(self):
-        with neo4j.Transaction() as tx1:
+        with neo4j.tx as tx1:
             self.assertEqual(tx1._depth, 1)
 
             with tx1 as tx2:

@@ -5,15 +5,14 @@ import uuid
 import inspect
 import requests
 from importlib import import_module
-from ._redis import client as redis
 
 
 HTTP_RE = re.compile(r'^https?://', re.I)
 
-TOPICS = 'origins.topics'
-SUBSCRIBERS = 'origins.subscribers'
-WATCHERS = 'origins.watchers'
-EVENTS = 'origins.events'
+TOPICS_KEY = 'origins.topics'
+SUBSCRIBERS_KEY = 'origins.subscribers'
+WATCHERS_KEY = 'origins.watchers'
+EVENTS_KEY = 'origins.events'
 
 
 def publish_web(url, event, data):
@@ -72,18 +71,3 @@ def test_func(func):
     "Triggers a test payload to the function handler."
     event, data = make_test_payload()
     publish_func(func, event, data)
-
-
-def reset():
-    "Resets the redis database."
-    if not redis:
-        return
-
-    redis.flushdb()
-
-
-def register_topic(topic):
-    if not redis:
-        return
-
-    redis.sadd(TOPICS, topic)

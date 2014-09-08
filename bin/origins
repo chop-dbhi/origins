@@ -4,36 +4,43 @@
 """Origins CLI
 
 Usage:
-    origins serve [--debug] [--host HOST] [--port PORT] [--config PATH]
+    origins serve [--debug] [--config PATH]
+    origins events [--debug] [--config PATH]
 
 Options:
     -h --help           Show this screen.
     -v --version        Show version.
+    --debug             Turns on debugging.
     --config PATH       Specify path to configuration.
 """
 
-if __name__ == '__main__':
-    import sys
-    from docopt import docopt
-    from origins import config
+import sys
+from docopt import docopt
+from origins import config
 
-    opts = docopt(__doc__, version='Origins 0.1.0')
 
-    if opts['--config']:
-        import json
+cli_options = docopt(__doc__, version='Origins 0.1.0')
 
-        try:
-            with open(opts['--config'], 'rU') as f:
-                config.options.update(json.load(f))
-        except Exception:
-            print('could not read configuration file.')
-            sys.exit(1)
 
-    if opts['serve']:
-        from origins.service import app
+# Load options
+if cli_options['--config']:
+    try:
+        config.load_options(cli_options['--config'])
+    except Exception:
+        sys.exit(1)
 
-        debug = opts['--debug'] or config.options['debug']
-        host = opts['--host'] or config.options['host']
-        port = opts['--port'] or config.options['port']
 
-        app.run(threaded=True, debug=debug, host=host, port=port)
+# Set debug; common enough to support override
+if cli_options['--debug']:
+    config.options['debug'] = cli_options['--debug']
+
+
+# Execute passed command
+if cli_options['serve']:
+    from origins.service import server
+
+    server.serve()
+elif cli_options['events']:
+    from origins.events import server
+
+    server.serve()

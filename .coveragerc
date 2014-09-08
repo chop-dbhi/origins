@@ -1,9 +1,6 @@
 [run]
 branch = True
 source = origins
-omit =
-    origins/events/__main__.py
-    origins/service/__main__.py
 
 [report]
 exclude_lines =

@@ -12,12 +12,11 @@ mlogger = logging.getLogger(__name__ + ':metrics')
 logger.setLevel(logging.INFO)
 mlogger.setLevel(logging.INFO)
 
-
-DEFAULT_URI = 'http://{}:{}/db/data/'.format(config.options['neo4j_host'],
-                                             config.options['neo4j_port'])
-
 # Default number of statements that will be sent in one request
 DEFAULT_BATCH_SIZE = 100
+
+# Endpoint for the REST service
+DEFAULT_URI_TMPL = '{scheme}://{host}:{port}/db/data/'
 
 # Endpoint for opening a transaction
 TRANSACTION_URI_TMPL = '{}transaction'
@@ -129,25 +128,18 @@ def _merge_response(output, data):
 
 
 class Client(object):
-    def __init__(self, uri=DEFAULT_URI):
+    def __init__(self, uri=None, host=None, port=None, scheme='http'):
+        if not uri:
+            uri = DEFAULT_URI_TMPL.format(host=host, port=port, scheme=scheme)
+
         self.uri = uri
 
-    def transaction(self, batch_size=None):
-        return Transaction(self.uri, batch_size)
-
-    def send(self, *args, **kwargs):
-        batch_size = kwargs.pop('batch_size', None)
-        tx = Transaction(self.uri, batch_size)
-        return tx.commit(*args, **kwargs)
+    def transaction(self, batch_size=None, autocommit=False):
+        return Transaction(self, batch_size, autocommit)
 
 
 class Transaction(object):
-    def __init__(self, client=None, batch_size=None, autocommit=False):
-        if not client:
-            client = Client()
-        elif isinstance(client, str):
-            client = Client(client)
-
+    def __init__(self, client, batch_size=None, autocommit=False):
         if not batch_size:
             batch_size = DEFAULT_BATCH_SIZE
 
@@ -310,10 +302,6 @@ class Transaction(object):
         self._close()
 
 
-# Default transaction with auto-commit enabled
-tx = Transaction(autocommit=True)
-
-
 def purge(*args, **kwargs):
     "Deletes all nodes and relationships."
     tx.send('MATCH (n) '
@@ -325,3 +313,10 @@ def purge(*args, **kwargs):
 def debug():
     logger.setLevel(logging.DEBUG)
     mlogger.setLevel(logging.DEBUG)
+
+
+# Initialize the default client
+client = Client(**config.options['neo4j'])
+
+# Default transaction with auto-commit enabled
+tx = client.transaction(autocommit=True)

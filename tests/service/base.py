@@ -1,7 +1,7 @@
 import json
 import unittest
 from uritemplate import expand
-from origins.service import app
+from origins.service.app import app
 from origins.graph import neo4j
 
 

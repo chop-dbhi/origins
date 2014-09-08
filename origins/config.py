@@ -7,50 +7,69 @@ from copy import deepcopy
 # Default configuration options
 default_options = {
     'debug': None,
-    'events_enabled': None,
 
     'host': 'localhost',
     'port': 5000,
 
-    'redis_host': 'localhost',
-    'redis_port': 6379,
-    'redis_db': 0,
+    'neo4j': {
+        'host': 'localhost',
+        'port': 7474,
+    },
 
-    'neo4j_host': 'localhost',
-    'neo4j_port': 7474,
+    'redis': {
+        'host': 'localhost',
+        'port': 6379,
+        'db': 0,
+    },
 }
 
 
-options = deepcopy(default_options)
+def _defaults(a, b):
+    "Recursively apply default values from b into a."
+    o = {}
+
+    for ak, av in a.items():
+        if isinstance(av, dict):
+            o[ak] = _defaults(av, b[ak])
+        else:
+            o[ak] = deepcopy(av)
+
+    # Fill in the remaining defaults
+    for bk, bv in b.items():
+        # Already handled
+        if bk not in o:
+            o[bk] = deepcopy(bv)
+
+    return o
 
 
-config_name = os.environ.get('ORIGINS_CONFIG')
-
-
-# Update configuration if available
-if config_name:
+def load_options(path):
+    "Loads configuration options from path."
     try:
-        with open(config_name) as f:
-            try:
-                options.update(json.load(f))
-            except ValueError:
-                print('configuration file must be valid JSON')
-                sys.exit(1)
-    except IOError:
-        print('cannot read configuration file')
-        sys.exit(1)
+        with open(path, 'rU') as f:
+            return make_options(json.load(f))
+    except (ValueError, IOError):
+        sys.stderr.write('Error loading configuration file {}\n'.format(path))
+        raise
 
 
-# Override with environment-specific variables
-for key in default_options:
-    var = 'ORIGINS_' + key.upper()
+def set_options(opts=None):
+    global options
 
-    if var in os.environ:
-        value = os.environ[var]
+    options = make_options(opts)
 
-        try:
-            value = int(value)
-        except (ValueError, TypeError):
-            pass
+    return options
 
-        options[key] = value
+
+def make_options(options=None):
+    if not options:
+        options = {}
+
+    return _defaults(options, default_options)
+
+
+# Load config options from environment
+if os.environ.get('ORIGINS_CONFIG'):
+    options = load_options(os.environ['ORIGINS_CONFIG'])
+else:
+    options = make_options()
