@@ -79,11 +79,11 @@ def update_edges(old, new, tx):
             edge = Edge.parse(e, old, o)
 
         # Forward trigger
-        if edge.start == old and edge.direction in ('directed', 'bidirected'):
+        if edge.start == old and edge.direction in {'bidirected', 'directed'}:
             _update(edge, new, edge.end, tx=tx)
 
         # Reverse trigger
-        elif edge.end == old and (edge.direction == 'bidirected' or edge.optimistic):  # noqa
+        elif edge.end == old and edge.direction in {'bidirected', 'reverse'}:  # noqa
             _update(edge, edge.start, new, tx=tx)
 
         # No updates, remove
@@ -119,13 +119,13 @@ def cascade_remove(node, tx):
             _edges[edge].add(edge.start)
 
             # Mutual dependence or inverse will remove the end node
-            if edge.dependence in ('mutual', 'inverse'):
+            if edge.dependence in {'mutual', 'inverse'}:
                 _nodes[edge.end].add(edge.start)
 
         elif edge.end in _nodes:
             _edges[edge].add(edge.end)
 
-            if edge.dependence in ('mutual', 'forward'):
+            if edge.dependence in {'mutual', 'forward'}:
                 _nodes[edge.start].add(edge.end)
 
     for edge, triggers in _edges.items():

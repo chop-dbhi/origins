@@ -156,20 +156,21 @@ class Edge(Node):
         MUTUAL_DEPENDENCE,
     )
 
-    BIDIRECTED = 'bidirected'
-    DIRECTED = 'directed'
     UNDIRECTED = 'undirected'
+    DIRECTED = 'directed'
+    REVERSE = 'reverse'
+    BIDIRECTED = 'bidirected'
 
     DIRECTION_TYPES = (
-        BIDIRECTED,
-        DIRECTED,
         UNDIRECTED,
+        DIRECTED,
+        REVERSE,
+        BIDIRECTED,
     )
 
     def __init__(self, id=None, label=None, description=None, type=None,
                  uuid=None, time=None, sha1=None, properties=None, model=None,
-                 start=None, end=None, dependence=None, direction=None,
-                 optimistic=None):
+                 start=None, end=None, dependence=None, direction=None):
 
         if direction is None:
             direction = self.DIRECTED
@@ -182,11 +183,6 @@ class Edge(Node):
         elif dependence not in self.DEPENDENCE_TYPES:
             raise ValidationError('dependence not valid: choices are: {}'
                                   .format(', '.join(self.DEPENDENCE_TYPES)))
-
-        if optimistic is None:
-            optimistic = False
-        elif not isinstance(optimistic, bool):
-            raise ValidationError('optimistic must be a boolean')
 
         super(Edge, self).__init__(
             id=id,
@@ -202,7 +198,6 @@ class Edge(Node):
 
         self.direction = direction
         self.dependence = dependence
-        self.optimistic = optimistic
 
         # Initialize as nodes assuming these are UUIDs
         if not isinstance(start, Node):
@@ -235,7 +230,6 @@ class Edge(Node):
             'description': self.description,
             'direction': self.direction,
             'dependence': self.dependence,
-            'optimistic': self.optimistic,
         }
 
     def to_dict(self):

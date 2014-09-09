@@ -226,19 +226,15 @@ class EdgeDirectionTestCase(TestCase):
         # No new edge is formed
         self.assertRaises(DoesNotExist, edges.get_by_id, e0.id)
 
-    def test_optimistic(self):
-        e0 = edges.add(self.a0, self.b0, optimistic=True, direction='directed')
-
-        # a -> b; forward (works as normal)
-        a1 = nodes.set(self.a0.uuid, label='v2')
-
-        self.assertUpdate(e0, a1, self.b0)
+    def test_reverse(self):
+        # A will watch B
+        e0 = edges.add(self.a0, self.b0, direction='reverse')
 
         # a <- b; reverse
         b1 = nodes.set(self.b0.uuid, label='v2')
 
-        # New edge formed due to optimistic update
-        self.assertUpdate(e0, a1, b1)
+        # New edge formed due to the reverse
+        self.assertUpdate(e0, self.a0, b1)
 
 
 class EdgeDependenceTestCase(TestCase):

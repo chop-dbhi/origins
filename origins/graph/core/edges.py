@@ -154,8 +154,7 @@ def get(uuid, tx=neo4j.tx):
 
 
 def add(start, end, id=None, label=None, description=None, properties=None,
-        direction=None, dependence=None, optimistic=None, type=None,
-        model=None, tx=neo4j.tx):
+        direction=None, dependence=None, type=None, model=None, tx=neo4j.tx):
 
     with tx as tx:
         # Imported here to prevent circular import
@@ -180,8 +179,7 @@ def add(start, end, id=None, label=None, description=None, properties=None,
                     type=type,
                     model=model,
                     direction=direction,
-                    dependence=dependence,
-                    optimistic=optimistic)
+                    dependence=dependence)
 
         prov = _add(edge, tx)
 
@@ -194,7 +192,7 @@ def add(start, end, id=None, label=None, description=None, properties=None,
 
 
 def set(uuid, label=None, description=None, properties=None,
-        direction=None, dependence=None, optimistic=None, type=None,
+        direction=None, dependence=None, type=None,
         model=None, tx=neo4j.tx):
 
     with tx as tx:
@@ -216,7 +214,6 @@ def set(uuid, label=None, description=None, properties=None,
             'model': model,
             'direction': direction,
             'dependence': dependence,
-            'optimistic': optimistic,
         })
 
         # Compare the new edge with the previous
