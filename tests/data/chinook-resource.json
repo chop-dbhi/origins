@@ -1,1040 +1,1490 @@
 {
-    "relationships": {
-        "Track/AlbumId:REFERENCES:Album/AlbumId": {
-            "start": "Track/AlbumId",
-            "end": "Album/AlbumId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Album_AlbumId"
-            }
-        },
-        "PlaylistTrack/TrackId:REFERENCES:Track/TrackId": {
-            "start": "PlaylistTrack/TrackId",
-            "end": "Track/TrackId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Track_TrackId"
-            }
-        },
-        "Invoice/CustomerId:REFERENCES:Customer/CustomerId": {
-            "start": "Invoice/CustomerId",
-            "end": "Customer/CustomerId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Customer_CustomerId"
-            }
-        },
-        "InvoiceLine/TrackId:REFERENCES:Track/TrackId": {
-            "start": "InvoiceLine/TrackId",
-            "end": "Track/TrackId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Track_TrackId"
-            }
-        },
-        "PlaylistTrack/PlaylistId:REFERENCES:Playlist/PlaylistId": {
-            "start": "PlaylistTrack/PlaylistId",
-            "end": "Playlist/PlaylistId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Playlist_PlaylistId"
-            }
-        },
-        "Track/MediaTypeId:REFERENCES:MediaType/MediaTypeId": {
-            "start": "Track/MediaTypeId",
-            "end": "MediaType/MediaTypeId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_MediaType_MediaTypeId"
-            }
-        },
-        "Track/GenreId:REFERENCES:Genre/GenreId": {
-            "start": "Track/GenreId",
-            "end": "Genre/GenreId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Genre_GenreId"
-            }
-        },
-        "Employee/ReportsTo:REFERENCES:Employee/EmployeeId": {
-            "start": "Employee/ReportsTo",
-            "end": "Employee/EmployeeId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Employee_EmployeeId"
-            }
-        },
-        "Customer/SupportRepId:REFERENCES:Employee/EmployeeId": {
-            "start": "Customer/SupportRepId",
-            "end": "Employee/EmployeeId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Employee_EmployeeId"
-            }
-        },
-        "InvoiceLine/InvoiceId:REFERENCES:Invoice/InvoiceId": {
-            "start": "InvoiceLine/InvoiceId",
-            "end": "Invoice/InvoiceId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Invoice_InvoiceId"
-            }
-        },
-        "Album/ArtistId:REFERENCES:Artist/ArtistId": {
-            "start": "Album/ArtistId",
-            "end": "Artist/ArtistId",
-            "type": "REFERENCES",
-            "properties": {
-                "type": "foreignkey",
-                "name": "fk_Artist_ArtistId"
-            }
-        }
-    },
     "version": 1.0,
-    "resource": {
-        "id": "sqlite:///chinook.sqlite",
-        "label": "chinook.sqlite"
-    },
     "components": {
         "Track/AlbumId": {
             "type": "Column",
-            "parent": "Track",
+            "label": "AlbumId",
             "properties": {
+                "primary_key": 0,
                 "default_value": null,
+                "nullable": true,
                 "index": 2,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "INTEGER",
-                "name": "AlbumId"
-            },
-            "label": "AlbumId"
-        },
-        "Invoice/BillingState": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 5,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "BillingState"
-            },
-            "label": "BillingState"
-        },
-        "Customer/CustomerId": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "CustomerId"
-            },
-            "label": "CustomerId"
-        },
-        "Employee/EmployeeId": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "EmployeeId"
-            },
-            "label": "EmployeeId"
-        },
-        "Invoice": {
-            "type": "Table",
-            "parent": "chinook.sqlite",
-            "properties": {
-                "name": "Invoice"
-            },
-            "label": "Invoice"
-        },
-        "InvoiceLine": {
-            "type": "Table",
-            "parent": "chinook.sqlite",
-            "properties": {
-                "name": "InvoiceLine"
-            },
-            "label": "InvoiceLine"
-        },
-        "InvoiceLine/Quantity": {
-            "type": "Column",
-            "parent": "InvoiceLine",
-            "properties": {
-                "default_value": null,
-                "index": 4,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "Quantity"
-            },
-            "label": "Quantity"
-        },
-        "Track/Milliseconds": {
-            "type": "Column",
-            "parent": "Track",
-            "properties": {
-                "default_value": null,
-                "index": 6,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "Milliseconds"
-            },
-            "label": "Milliseconds"
-        },
-        "Album/ArtistId": {
-            "type": "Column",
-            "parent": "Album",
-            "properties": {
-                "default_value": null,
-                "index": 2,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "ArtistId"
-            },
-            "label": "ArtistId"
-        },
-        "Customer/Address": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 4,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(70)",
-                "name": "Address"
-            },
-            "label": "Address"
-        },
-        "Customer/State": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 6,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "State"
-            },
-            "label": "State"
-        },
-        "Album/Title": {
-            "type": "Column",
-            "parent": "Album",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NVARCHAR(160)",
-                "name": "Title"
-            },
-            "label": "Title"
-        },
-        "Playlist/PlaylistId": {
-            "type": "Column",
-            "parent": "Playlist",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "PlaylistId"
-            },
-            "label": "PlaylistId"
-        },
-        "Track/UnitPrice": {
-            "type": "Column",
-            "parent": "Track",
-            "properties": {
-                "default_value": null,
-                "index": 8,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NUMERIC(10,2)",
-                "name": "UnitPrice"
-            },
-            "label": "UnitPrice"
-        },
-        "Invoice/Total": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 8,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NUMERIC(10,2)",
-                "name": "Total"
-            },
-            "label": "Total"
-        },
-        "Employee/State": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 9,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "State"
-            },
-            "label": "State"
-        },
-        "InvoiceLine/InvoiceId": {
-            "type": "Column",
-            "parent": "InvoiceLine",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "InvoiceId"
-            },
-            "label": "InvoiceId"
-        },
-        "Invoice/InvoiceDate": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 2,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "DATETIME",
-                "name": "InvoiceDate"
-            },
-            "label": "InvoiceDate"
-        },
-        "Invoice/BillingCountry": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 6,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "BillingCountry"
-            },
-            "label": "BillingCountry"
-        },
-        "PlaylistTrack/TrackId": {
-            "type": "Column",
-            "parent": "PlaylistTrack",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "TrackId"
-            },
-            "label": "TrackId"
-        },
-        "Track/MediaTypeId": {
-            "type": "Column",
-            "parent": "Track",
-            "properties": {
-                "default_value": null,
-                "index": 3,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "MediaTypeId"
-            },
-            "label": "MediaTypeId"
-        },
-        "Customer/Country": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 7,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "Country"
-            },
-            "label": "Country"
-        },
-        "Employee": {
-            "type": "Table",
-            "parent": "chinook.sqlite",
-            "properties": {
-                "name": "Employee"
-            },
-            "label": "Employee"
-        },
-        "Customer/Company": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 3,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(80)",
-                "name": "Company"
-            },
-            "label": "Company"
-        },
-        "Customer/City": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 5,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "City"
-            },
-            "label": "City"
-        },
-        "MediaType/Name": {
-            "type": "Column",
-            "parent": "MediaType",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(120)",
-                "name": "Name"
-            },
-            "label": "Name"
-        },
-        "InvoiceLine/TrackId": {
-            "type": "Column",
-            "parent": "InvoiceLine",
-            "properties": {
-                "default_value": null,
-                "index": 2,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "TrackId"
-            },
-            "label": "TrackId"
-        },
-        "Artist/Name": {
-            "type": "Column",
-            "parent": "Artist",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(120)",
-                "name": "Name"
-            },
-            "label": "Name"
-        },
-        "Album": {
-            "type": "Table",
-            "parent": "chinook.sqlite",
-            "properties": {
-                "name": "Album"
-            },
-            "label": "Album"
-        },
-        "PlaylistTrack": {
-            "type": "Table",
-            "parent": "chinook.sqlite",
-            "properties": {
-                "name": "PlaylistTrack"
-            },
-            "label": "PlaylistTrack"
-        },
-        "Employee/Phone": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 12,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(24)",
-                "name": "Phone"
-            },
-            "label": "Phone"
-        },
-        "Customer/LastName": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 2,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NVARCHAR(20)",
-                "name": "LastName"
-            },
-            "label": "LastName"
-        },
-        "Employee/HireDate": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 6,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "DATETIME",
-                "name": "HireDate"
-            },
-            "label": "HireDate"
-        },
-        "Playlist/Name": {
-            "type": "Column",
-            "parent": "Playlist",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(120)",
-                "name": "Name"
-            },
-            "label": "Name"
-        },
-        "Track/TrackId": {
-            "type": "Column",
-            "parent": "Track",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "TrackId"
-            },
-            "label": "TrackId"
-        },
-        "MediaType": {
-            "type": "Table",
-            "parent": "chinook.sqlite",
-            "properties": {
-                "name": "MediaType"
-            },
-            "label": "MediaType"
+                "name": "AlbumId",
+                "type": "INTEGER"
+            }
         },
         "Playlist": {
             "type": "Table",
-            "parent": "chinook.sqlite",
+            "label": "Playlist",
             "properties": {
                 "name": "Playlist"
-            },
-            "label": "Playlist"
+            }
         },
-        "Employee/PostalCode": {
+        "Customer/CustomerId": {
             "type": "Column",
-            "parent": "Employee",
+            "label": "CustomerId",
             "properties": {
+                "primary_key": 1,
                 "default_value": null,
-                "index": 11,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(10)",
-                "name": "PostalCode"
-            },
-            "label": "PostalCode"
-        },
-        "Genre/Name": {
-            "type": "Column",
-            "parent": "Genre",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(120)",
-                "name": "Name"
-            },
-            "label": "Name"
-        },
-        "Customer/Email": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 11,
-                "primary_key": 0,
                 "nullable": false,
-                "type": "NVARCHAR(60)",
-                "name": "Email"
-            },
-            "label": "Email"
-        },
-        "Invoice/CustomerId": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "CustomerId"
-            },
-            "label": "CustomerId"
-        },
-        "chinook.sqlite": {
-            "type": "Database",
-            "properties": {
-                "path": "/Users/ruthb/Code/cbmi/origins/tests/data/chinook.sqlite",
-                "version": 32,
-                "name": "chinook.sqlite",
-                "size": 1067008
-            },
-            "label": "chinook.sqlite"
-        },
-        "Employee/Address": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 7,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(70)",
-                "name": "Address"
-            },
-            "label": "Address"
+                "index": 0,
+                "name": "CustomerId",
+                "type": "INTEGER"
+            }
         },
         "Employee/Title": {
             "type": "Column",
-            "parent": "Employee",
+            "label": "Title",
             "properties": {
+                "primary_key": 0,
                 "default_value": null,
+                "nullable": true,
                 "index": 3,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(30)",
-                "name": "Title"
-            },
-            "label": "Title"
-        },
-        "Customer/Phone": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 9,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(24)",
-                "name": "Phone"
-            },
-            "label": "Phone"
+                "name": "Title",
+                "type": "NVARCHAR(30)"
+            }
         },
         "Genre": {
             "type": "Table",
-            "parent": "chinook.sqlite",
+            "label": "Genre",
             "properties": {
                 "name": "Genre"
-            },
-            "label": "Genre"
+            }
         },
-        "Track/Composer": {
+        "InvoiceLine/InvoiceId": {
             "type": "Column",
-            "parent": "Track",
+            "label": "InvoiceId",
             "properties": {
-                "default_value": null,
-                "index": 5,
                 "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(220)",
-                "name": "Composer"
-            },
-            "label": "Composer"
-        },
-        "Employee/City": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
                 "default_value": null,
-                "index": 8,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "City"
-            },
-            "label": "City"
-        },
-        "Artist/ArtistId": {
-            "type": "Column",
-            "parent": "Artist",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
                 "nullable": false,
-                "type": "INTEGER",
-                "name": "ArtistId"
-            },
-            "label": "ArtistId"
-        },
-        "Employee/ReportsTo": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 4,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "INTEGER",
-                "name": "ReportsTo"
-            },
-            "label": "ReportsTo"
-        },
-        "Employee/Fax": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 13,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(24)",
-                "name": "Fax"
-            },
-            "label": "Fax"
-        },
-        "Employee/LastName": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
                 "index": 1,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NVARCHAR(20)",
-                "name": "LastName"
-            },
-            "label": "LastName"
+                "name": "InvoiceId",
+                "type": "INTEGER"
+            }
         },
-        "Invoice/InvoiceId": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "InvoiceId"
-            },
-            "label": "InvoiceId"
-        },
-        "Employee/BirthDate": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 5,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "DATETIME",
-                "name": "BirthDate"
-            },
-            "label": "BirthDate"
-        },
-        "PlaylistTrack/PlaylistId": {
-            "type": "Column",
-            "parent": "PlaylistTrack",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "PlaylistId"
-            },
-            "label": "PlaylistId"
-        },
-        "Track": {
+        "InvoiceLine": {
             "type": "Table",
-            "parent": "chinook.sqlite",
+            "label": "InvoiceLine",
             "properties": {
-                "name": "Track"
-            },
-            "label": "Track"
+                "name": "InvoiceLine"
+            }
         },
-        "InvoiceLine/InvoiceLineId": {
+        "Invoice/BillingState": {
             "type": "Column",
-            "parent": "InvoiceLine",
+            "label": "BillingState",
             "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "InvoiceLineId"
-            },
-            "label": "InvoiceLineId"
-        },
-        "Customer/Fax": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 10,
                 "primary_key": 0,
+                "default_value": null,
                 "nullable": true,
-                "type": "NVARCHAR(24)",
-                "name": "Fax"
-            },
-            "label": "Fax"
+                "index": 5,
+                "name": "BillingState",
+                "type": "NVARCHAR(40)"
+            }
         },
         "Employee/Email": {
             "type": "Column",
-            "parent": "Employee",
+            "label": "Email",
             "properties": {
+                "primary_key": 0,
                 "default_value": null,
+                "nullable": true,
                 "index": 14,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(60)",
-                "name": "Email"
-            },
-            "label": "Email"
+                "name": "Email",
+                "type": "NVARCHAR(60)"
+            }
         },
-        "Invoice/BillingAddress": {
+        "Invoice/InvoiceId": {
             "type": "Column",
-            "parent": "Invoice",
+            "label": "InvoiceId",
             "properties": {
-                "default_value": null,
-                "index": 3,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(70)",
-                "name": "BillingAddress"
-            },
-            "label": "BillingAddress"
-        },
-        "InvoiceLine/UnitPrice": {
-            "type": "Column",
-            "parent": "InvoiceLine",
-            "properties": {
-                "default_value": null,
-                "index": 3,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NUMERIC(10,2)",
-                "name": "UnitPrice"
-            },
-            "label": "UnitPrice"
-        },
-        "Invoice/BillingCity": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 4,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "BillingCity"
-            },
-            "label": "BillingCity"
-        },
-        "Track/GenreId": {
-            "type": "Column",
-            "parent": "Track",
-            "properties": {
-                "default_value": null,
-                "index": 4,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "INTEGER",
-                "name": "GenreId"
-            },
-            "label": "GenreId"
-        },
-        "Track/Bytes": {
-            "type": "Column",
-            "parent": "Track",
-            "properties": {
-                "default_value": null,
-                "index": 7,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "INTEGER",
-                "name": "Bytes"
-            },
-            "label": "Bytes"
-        },
-        "Invoice/BillingPostalCode": {
-            "type": "Column",
-            "parent": "Invoice",
-            "properties": {
-                "default_value": null,
-                "index": 7,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(10)",
-                "name": "BillingPostalCode"
-            },
-            "label": "BillingPostalCode"
-        },
-        "Customer/PostalCode": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
-                "default_value": null,
-                "index": 8,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(10)",
-                "name": "PostalCode"
-            },
-            "label": "PostalCode"
-        },
-        "Track/Name": {
-            "type": "Column",
-            "parent": "Track",
-            "properties": {
-                "default_value": null,
-                "index": 1,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NVARCHAR(200)",
-                "name": "Name"
-            },
-            "label": "Name"
-        },
-        "MediaType/MediaTypeId": {
-            "type": "Column",
-            "parent": "MediaType",
-            "properties": {
-                "default_value": null,
-                "index": 0,
                 "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "MediaTypeId"
-            },
-            "label": "MediaTypeId"
-        },
-        "Artist": {
-            "type": "Table",
-            "parent": "chinook.sqlite",
-            "properties": {
-                "name": "Artist"
-            },
-            "label": "Artist"
-        },
-        "Customer/FirstName": {
-            "type": "Column",
-            "parent": "Customer",
-            "properties": {
                 "default_value": null,
-                "index": 1,
-                "primary_key": 0,
                 "nullable": false,
-                "type": "NVARCHAR(40)",
-                "name": "FirstName"
-            },
-            "label": "FirstName"
-        },
-        "Employee/FirstName": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 2,
-                "primary_key": 0,
-                "nullable": false,
-                "type": "NVARCHAR(20)",
-                "name": "FirstName"
-            },
-            "label": "FirstName"
-        },
-        "Genre/GenreId": {
-            "type": "Column",
-            "parent": "Genre",
-            "properties": {
-                "default_value": null,
                 "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "GenreId"
-            },
-            "label": "GenreId"
-        },
-        "Employee/Country": {
-            "type": "Column",
-            "parent": "Employee",
-            "properties": {
-                "default_value": null,
-                "index": 10,
-                "primary_key": 0,
-                "nullable": true,
-                "type": "NVARCHAR(40)",
-                "name": "Country"
-            },
-            "label": "Country"
-        },
-        "Album/AlbumId": {
-            "type": "Column",
-            "parent": "Album",
-            "properties": {
-                "default_value": null,
-                "index": 0,
-                "primary_key": 1,
-                "nullable": false,
-                "type": "INTEGER",
-                "name": "AlbumId"
-            },
-            "label": "AlbumId"
+                "name": "InvoiceId",
+                "type": "INTEGER"
+            }
         },
         "Customer/SupportRepId": {
             "type": "Column",
-            "parent": "Customer",
+            "label": "SupportRepId",
             "properties": {
-                "default_value": null,
-                "index": 12,
                 "primary_key": 0,
+                "default_value": null,
                 "nullable": true,
-                "type": "INTEGER",
-                "name": "SupportRepId"
-            },
-            "label": "SupportRepId"
+                "index": 12,
+                "name": "SupportRepId",
+                "type": "INTEGER"
+            }
+        },
+        "Invoice/InvoiceDate": {
+            "type": "Column",
+            "label": "InvoiceDate",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 2,
+                "name": "InvoiceDate",
+                "type": "DATETIME"
+            }
+        },
+        "Customer/City": {
+            "type": "Column",
+            "label": "City",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 5,
+                "name": "City",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Invoice/BillingCountry": {
+            "type": "Column",
+            "label": "BillingCountry",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 6,
+                "name": "BillingCountry",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Artist/ArtistId": {
+            "type": "Column",
+            "label": "ArtistId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "ArtistId",
+                "type": "INTEGER"
+            }
+        },
+        "Playlist/Name": {
+            "type": "Column",
+            "label": "Name",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 1,
+                "name": "Name",
+                "type": "NVARCHAR(120)"
+            }
+        },
+        "Customer/State": {
+            "type": "Column",
+            "label": "State",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 6,
+                "name": "State",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Employee": {
+            "type": "Table",
+            "label": "Employee",
+            "properties": {
+                "name": "Employee"
+            }
+        },
+        "Track": {
+            "type": "Table",
+            "label": "Track",
+            "properties": {
+                "name": "Track"
+            }
+        },
+        "Employee/City": {
+            "type": "Column",
+            "label": "City",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 8,
+                "name": "City",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Customer/Fax": {
+            "type": "Column",
+            "label": "Fax",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 10,
+                "name": "Fax",
+                "type": "NVARCHAR(24)"
+            }
+        },
+        "Employee/HireDate": {
+            "type": "Column",
+            "label": "HireDate",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 6,
+                "name": "HireDate",
+                "type": "DATETIME"
+            }
+        },
+        "Employee/BirthDate": {
+            "type": "Column",
+            "label": "BirthDate",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 5,
+                "name": "BirthDate",
+                "type": "DATETIME"
+            }
+        },
+        "Track/UnitPrice": {
+            "type": "Column",
+            "label": "UnitPrice",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 8,
+                "name": "UnitPrice",
+                "type": "NUMERIC(10,2)"
+            }
+        },
+        "Employee/EmployeeId": {
+            "type": "Column",
+            "label": "EmployeeId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "EmployeeId",
+                "type": "INTEGER"
+            }
+        },
+        "PlaylistTrack/TrackId": {
+            "type": "Column",
+            "label": "TrackId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 1,
+                "name": "TrackId",
+                "type": "INTEGER"
+            }
+        },
+        "Genre/Name": {
+            "type": "Column",
+            "label": "Name",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 1,
+                "name": "Name",
+                "type": "NVARCHAR(120)"
+            }
+        },
+        "Track/Bytes": {
+            "type": "Column",
+            "label": "Bytes",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 7,
+                "name": "Bytes",
+                "type": "INTEGER"
+            }
+        },
+        "Invoice": {
+            "type": "Table",
+            "label": "Invoice",
+            "properties": {
+                "name": "Invoice"
+            }
+        },
+        "Track/TrackId": {
+            "type": "Column",
+            "label": "TrackId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "TrackId",
+                "type": "INTEGER"
+            }
+        },
+        "Employee/Fax": {
+            "type": "Column",
+            "label": "Fax",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 13,
+                "name": "Fax",
+                "type": "NVARCHAR(24)"
+            }
+        },
+        "InvoiceLine/UnitPrice": {
+            "type": "Column",
+            "label": "UnitPrice",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 3,
+                "name": "UnitPrice",
+                "type": "NUMERIC(10,2)"
+            }
+        },
+        "Genre/GenreId": {
+            "type": "Column",
+            "label": "GenreId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "GenreId",
+                "type": "INTEGER"
+            }
+        },
+        "Employee/FirstName": {
+            "type": "Column",
+            "label": "FirstName",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 2,
+                "name": "FirstName",
+                "type": "NVARCHAR(20)"
+            }
+        },
+        "InvoiceLine/Quantity": {
+            "type": "Column",
+            "label": "Quantity",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 4,
+                "name": "Quantity",
+                "type": "INTEGER"
+            }
+        },
+        "Customer/Company": {
+            "type": "Column",
+            "label": "Company",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 3,
+                "name": "Company",
+                "type": "NVARCHAR(80)"
+            }
+        },
+        "Customer/PostalCode": {
+            "type": "Column",
+            "label": "PostalCode",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 8,
+                "name": "PostalCode",
+                "type": "NVARCHAR(10)"
+            }
+        },
+        "Album/ArtistId": {
+            "type": "Column",
+            "label": "ArtistId",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 2,
+                "name": "ArtistId",
+                "type": "INTEGER"
+            }
+        },
+        "Invoice/CustomerId": {
+            "type": "Column",
+            "label": "CustomerId",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 1,
+                "name": "CustomerId",
+                "type": "INTEGER"
+            }
+        },
+        "Playlist/PlaylistId": {
+            "type": "Column",
+            "label": "PlaylistId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "PlaylistId",
+                "type": "INTEGER"
+            }
+        },
+        "Track/GenreId": {
+            "type": "Column",
+            "label": "GenreId",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 4,
+                "name": "GenreId",
+                "type": "INTEGER"
+            }
+        },
+        "Employee/ReportsTo": {
+            "type": "Column",
+            "label": "ReportsTo",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 4,
+                "name": "ReportsTo",
+                "type": "INTEGER"
+            }
+        },
+        "Track/Composer": {
+            "type": "Column",
+            "label": "Composer",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 5,
+                "name": "Composer",
+                "type": "NVARCHAR(220)"
+            }
+        },
+        "MediaType/Name": {
+            "type": "Column",
+            "label": "Name",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 1,
+                "name": "Name",
+                "type": "NVARCHAR(120)"
+            }
+        },
+        "Track/Milliseconds": {
+            "type": "Column",
+            "label": "Milliseconds",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 6,
+                "name": "Milliseconds",
+                "type": "INTEGER"
+            }
+        },
+        "MediaType/MediaTypeId": {
+            "type": "Column",
+            "label": "MediaTypeId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "MediaTypeId",
+                "type": "INTEGER"
+            }
+        },
+        "MediaType": {
+            "type": "Table",
+            "label": "MediaType",
+            "properties": {
+                "name": "MediaType"
+            }
+        },
+        "Artist": {
+            "type": "Table",
+            "label": "Artist",
+            "properties": {
+                "name": "Artist"
+            }
+        },
+        "Customer/Country": {
+            "type": "Column",
+            "label": "Country",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 7,
+                "name": "Country",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Customer/Email": {
+            "type": "Column",
+            "label": "Email",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 11,
+                "name": "Email",
+                "type": "NVARCHAR(60)"
+            }
+        },
+        "Employee/Address": {
+            "type": "Column",
+            "label": "Address",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 7,
+                "name": "Address",
+                "type": "NVARCHAR(70)"
+            }
+        },
+        "InvoiceLine/InvoiceLineId": {
+            "type": "Column",
+            "label": "InvoiceLineId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "InvoiceLineId",
+                "type": "INTEGER"
+            }
+        },
+        "Employee/Country": {
+            "type": "Column",
+            "label": "Country",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 10,
+                "name": "Country",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Invoice/BillingAddress": {
+            "type": "Column",
+            "label": "BillingAddress",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 3,
+                "name": "BillingAddress",
+                "type": "NVARCHAR(70)"
+            }
+        },
+        "InvoiceLine/TrackId": {
+            "type": "Column",
+            "label": "TrackId",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 2,
+                "name": "TrackId",
+                "type": "INTEGER"
+            }
+        },
+        "Invoice/BillingCity": {
+            "type": "Column",
+            "label": "BillingCity",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 4,
+                "name": "BillingCity",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Employee/LastName": {
+            "type": "Column",
+            "label": "LastName",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 1,
+                "name": "LastName",
+                "type": "NVARCHAR(20)"
+            }
+        },
+        "Invoice/Total": {
+            "type": "Column",
+            "label": "Total",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 8,
+                "name": "Total",
+                "type": "NUMERIC(10,2)"
+            }
+        },
+        "Customer/Address": {
+            "type": "Column",
+            "label": "Address",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 4,
+                "name": "Address",
+                "type": "NVARCHAR(70)"
+            }
+        },
+        "Employee/PostalCode": {
+            "type": "Column",
+            "label": "PostalCode",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 11,
+                "name": "PostalCode",
+                "type": "NVARCHAR(10)"
+            }
+        },
+        "Customer/Phone": {
+            "type": "Column",
+            "label": "Phone",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 9,
+                "name": "Phone",
+                "type": "NVARCHAR(24)"
+            }
+        },
+        "Invoice/BillingPostalCode": {
+            "type": "Column",
+            "label": "BillingPostalCode",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 7,
+                "name": "BillingPostalCode",
+                "type": "NVARCHAR(10)"
+            }
+        },
+        "Customer/LastName": {
+            "type": "Column",
+            "label": "LastName",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 2,
+                "name": "LastName",
+                "type": "NVARCHAR(20)"
+            }
         },
         "Customer": {
             "type": "Table",
-            "parent": "chinook.sqlite",
+            "label": "Customer",
             "properties": {
                 "name": "Customer"
-            },
-            "label": "Customer"
+            }
+        },
+        "Album": {
+            "type": "Table",
+            "label": "Album",
+            "properties": {
+                "name": "Album"
+            }
+        },
+        "Track/Name": {
+            "type": "Column",
+            "label": "Name",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 1,
+                "name": "Name",
+                "type": "NVARCHAR(200)"
+            }
+        },
+        "Album/Title": {
+            "type": "Column",
+            "label": "Title",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 1,
+                "name": "Title",
+                "type": "NVARCHAR(160)"
+            }
+        },
+        "Employee/State": {
+            "type": "Column",
+            "label": "State",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 9,
+                "name": "State",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "PlaylistTrack/PlaylistId": {
+            "type": "Column",
+            "label": "PlaylistId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "PlaylistId",
+                "type": "INTEGER"
+            }
+        },
+        "Album/AlbumId": {
+            "type": "Column",
+            "label": "AlbumId",
+            "properties": {
+                "primary_key": 1,
+                "default_value": null,
+                "nullable": false,
+                "index": 0,
+                "name": "AlbumId",
+                "type": "INTEGER"
+            }
+        },
+        "Employee/Phone": {
+            "type": "Column",
+            "label": "Phone",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 12,
+                "name": "Phone",
+                "type": "NVARCHAR(24)"
+            }
+        },
+        "chinook.sqlite": {
+            "type": "Database",
+            "label": "chinook.sqlite",
+            "properties": {
+                "path": "/Users/ruthb/Code/cbmi/origins/tests/data/chinook.sqlite",
+                "size": 1067008,
+                "name": "chinook.sqlite",
+                "version": 32
+            }
+        },
+        "Track/MediaTypeId": {
+            "type": "Column",
+            "label": "MediaTypeId",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 3,
+                "name": "MediaTypeId",
+                "type": "INTEGER"
+            }
+        },
+        "PlaylistTrack": {
+            "type": "Table",
+            "label": "PlaylistTrack",
+            "properties": {
+                "name": "PlaylistTrack"
+            }
+        },
+        "Customer/FirstName": {
+            "type": "Column",
+            "label": "FirstName",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": false,
+                "index": 1,
+                "name": "FirstName",
+                "type": "NVARCHAR(40)"
+            }
+        },
+        "Artist/Name": {
+            "type": "Column",
+            "label": "Name",
+            "properties": {
+                "primary_key": 0,
+                "default_value": null,
+                "nullable": true,
+                "index": 1,
+                "name": "Name",
+                "type": "NVARCHAR(120)"
+            }
         }
+    },
+    "relationships": {
+        "Invoice/BillingState:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/BillingState"
+        },
+        "Employee/EmployeeId:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/EmployeeId"
+        },
+        "Customer/PostalCode:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/PostalCode"
+        },
+        "Customer/State:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/State"
+        },
+        "Employee/ReportsTo:foreignkey:Employee/EmployeeId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Employee_EmployeeId"
+            },
+            "end": "Employee/EmployeeId",
+			"start": "Employee/ReportsTo"
+        },
+        "Track/Bytes:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/Bytes"
+        },
+        "Employee/City:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/City"
+        },
+        "Customer/Company:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/Company"
+        },
+        "MediaType:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "MediaType"
+        },
+        "InvoiceLine/InvoiceLineId:descends:InvoiceLine": {
+            "type": "descends",
+            "end": "InvoiceLine",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "InvoiceLine/InvoiceLineId"
+        },
+        "Customer/Country:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/Country"
+        },
+        "PlaylistTrack/PlaylistId:descends:PlaylistTrack": {
+            "type": "descends",
+            "end": "PlaylistTrack",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "PlaylistTrack/PlaylistId"
+        },
+        "InvoiceLine/Quantity:descends:InvoiceLine": {
+            "type": "descends",
+            "end": "InvoiceLine",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "InvoiceLine/Quantity"
+        },
+        "Employee:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee"
+        },
+        "Artist/Name:descends:Artist": {
+            "type": "descends",
+            "end": "Artist",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Artist/Name"
+        },
+        "Invoice/CustomerId:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/CustomerId"
+        },
+        "Genre/GenreId:descends:Genre": {
+            "type": "descends",
+            "end": "Genre",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Genre/GenreId"
+        },
+        "Customer/LastName:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/LastName"
+        },
+        "Playlist/PlaylistId:descends:Playlist": {
+            "type": "descends",
+            "end": "Playlist",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Playlist/PlaylistId"
+        },
+        "Track/MediaTypeId:foreignkey:MediaType/MediaTypeId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_MediaType_MediaTypeId"
+            },
+            "end": "MediaType/MediaTypeId",
+			"start": "Track/MediaTypeId"
+        },
+        "Invoice/BillingCity:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/BillingCity"
+        },
+        "Customer/SupportRepId:foreignkey:Employee/EmployeeId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Employee_EmployeeId"
+            },
+            "end": "Employee/EmployeeId",
+			"start": "Customer/SupportRepId"
+        },
+        "Album/ArtistId:foreignkey:Artist/ArtistId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Artist_ArtistId"
+            },
+            "end": "Artist/ArtistId",
+			"start": "Album/ArtistId"
+        },
+        "PlaylistTrack:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "PlaylistTrack"
+        },
+        "Employee/ReportsTo:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/ReportsTo"
+        },
+        "Customer:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer"
+        },
+        "Customer/CustomerId:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/CustomerId"
+        },
+        "Invoice/InvoiceDate:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/InvoiceDate"
+        },
+        "InvoiceLine/TrackId:descends:InvoiceLine": {
+            "type": "descends",
+            "end": "InvoiceLine",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "InvoiceLine/TrackId"
+        },
+        "Invoice/Total:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/Total"
+        },
+        "Invoice/BillingCountry:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/BillingCountry"
+        },
+        "Employee/FirstName:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/FirstName"
+        },
+        "Album:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Album"
+        },
+        "Album/AlbumId:descends:Album": {
+            "type": "descends",
+            "end": "Album",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Album/AlbumId"
+        },
+        "Track/GenreId:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/GenreId"
+        },
+        "Playlist:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Playlist"
+        },
+        "Artist:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Artist"
+        },
+        "Employee/Email:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/Email"
+        },
+        "Customer/City:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/City"
+        },
+        "Genre:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Genre"
+        },
+        "Artist/ArtistId:descends:Artist": {
+            "type": "descends",
+            "end": "Artist",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Artist/ArtistId"
+        },
+        "InvoiceLine/TrackId:foreignkey:Track/TrackId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Track_TrackId"
+            },
+            "end": "Track/TrackId",
+			"start": "InvoiceLine/TrackId"
+        },
+        "MediaType/Name:descends:MediaType": {
+            "type": "descends",
+            "end": "MediaType",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "MediaType/Name"
+        },
+        "Track/Milliseconds:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/Milliseconds"
+        },
+        "Employee/Title:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/Title"
+        },
+        "Employee/PostalCode:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/PostalCode"
+        },
+        "Track/UnitPrice:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/UnitPrice"
+        },
+        "Invoice/CustomerId:foreignkey:Customer/CustomerId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Customer_CustomerId"
+            },
+            "end": "Customer/CustomerId",
+			"start": "Invoice/CustomerId"
+        },
+        "InvoiceLine/InvoiceId:descends:InvoiceLine": {
+            "type": "descends",
+            "end": "InvoiceLine",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "InvoiceLine/InvoiceId"
+        },
+        "Track/Name:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/Name"
+        },
+        "Track/GenreId:foreignkey:Genre/GenreId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Genre_GenreId"
+            },
+            "end": "Genre/GenreId",
+			"start": "Track/GenreId"
+        },
+        "Invoice:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice"
+        },
+        "Employee/LastName:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/LastName"
+        },
+        "Track/TrackId:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/TrackId"
+        },
+        "Track/Composer:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/Composer"
+        },
+        "Album/ArtistId:descends:Album": {
+            "type": "descends",
+            "end": "Album",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Album/ArtistId"
+        },
+        "Track/AlbumId:foreignkey:Album/AlbumId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Album_AlbumId"
+            },
+            "end": "Album/AlbumId",
+			"start": "Track/AlbumId"
+        },
+        "InvoiceLine:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "InvoiceLine"
+        },
+        "PlaylistTrack/PlaylistId:foreignkey:Playlist/PlaylistId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Playlist_PlaylistId"
+            },
+            "end": "Playlist/PlaylistId",
+			"start": "PlaylistTrack/PlaylistId"
+        },
+        "Album/Title:descends:Album": {
+            "type": "descends",
+            "end": "Album",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Album/Title"
+        },
+        "Employee/State:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/State"
+        },
+        "InvoiceLine/InvoiceId:foreignkey:Invoice/InvoiceId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Invoice_InvoiceId"
+            },
+            "end": "Invoice/InvoiceId",
+			"start": "InvoiceLine/InvoiceId"
+        },
+        "Customer/Fax:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/Fax"
+        },
+        "Customer/SupportRepId:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/SupportRepId"
+        },
+        "Genre/Name:descends:Genre": {
+            "type": "descends",
+            "end": "Genre",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Genre/Name"
+        },
+        "Customer/Phone:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/Phone"
+        },
+        "Customer/Address:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/Address"
+        },
+        "Employee/BirthDate:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/BirthDate"
+        },
+        "Employee/HireDate:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/HireDate"
+        },
+        "MediaType/MediaTypeId:descends:MediaType": {
+            "type": "descends",
+            "end": "MediaType",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "MediaType/MediaTypeId"
+        },
+        "Customer/Email:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/Email"
+        },
+        "Employee/Phone:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/Phone"
+        },
+        "PlaylistTrack/TrackId:foreignkey:Track/TrackId": {
+            "type": "foreign key",
+            "properties": {
+                "type": "foreignkey",
+                "name": "fk_Track_TrackId"
+            },
+            "end": "Track/TrackId",
+			"start": "PlaylistTrack/TrackId"
+        },
+        "Track/AlbumId:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/AlbumId"
+        },
+        "Track:descends:chinook.sqlite": {
+            "type": "descends",
+            "end": "chinook.sqlite",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track"
+        },
+        "InvoiceLine/UnitPrice:descends:InvoiceLine": {
+            "type": "descends",
+            "end": "InvoiceLine",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "InvoiceLine/UnitPrice"
+        },
+        "Invoice/BillingAddress:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/BillingAddress"
+        },
+        "Track/MediaTypeId:descends:Track": {
+            "type": "descends",
+            "end": "Track",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Track/MediaTypeId"
+        },
+        "Employee/Address:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/Address"
+        },
+        "PlaylistTrack/TrackId:descends:PlaylistTrack": {
+            "type": "descends",
+            "end": "PlaylistTrack",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "PlaylistTrack/TrackId"
+        },
+        "Employee/Fax:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/Fax"
+        },
+        "Customer/FirstName:descends:Customer": {
+            "type": "descends",
+            "end": "Customer",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Customer/FirstName"
+        },
+        "Invoice/InvoiceId:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/InvoiceId"
+        },
+        "Employee/Country:descends:Employee": {
+            "type": "descends",
+            "end": "Employee",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Employee/Country"
+        },
+        "Invoice/BillingPostalCode:descends:Invoice": {
+            "type": "descends",
+            "end": "Invoice",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Invoice/BillingPostalCode"
+        },
+        "Playlist/Name:descends:Playlist": {
+            "type": "descends",
+            "end": "Playlist",
+            "dependence": "forward",
+            "direction": "bidirected",
+			"start": "Playlist/Name"
+        }
+    },
+    "resource": {
+        "id": "sqlite:///chinook.sqlite",
+        "label": "chinook.sqlite"
     }
 }
