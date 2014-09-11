@@ -7,13 +7,26 @@ if __name__ == '__main__':
     loader = unittest.TestLoader()
     runner = unittest.runner.TextTestRunner()
 
+    args = sys.argv[1:]
+
+    if '--debug' in args:
+        args.remove('--debug')
+
+        import logging
+        from origins.graph import neo4j
+
+        neo4j.debug()
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        neo4j.logger.addHandler(handler)
+
     tests = None
 
-    if sys.argv[1:]:
-        if 'TestCase' in sys.argv[1]:
-            tests = loader.loadTestsFromNames(sys.argv[1:])
+    if args:
+        if 'TestCase' in args[0]:
+            tests = loader.loadTestsFromNames(args)
         else:
-            start_dir = sys.argv[1]
+            start_dir = args[0]
     else:
         start_dir = 'tests'
 
