@@ -39,7 +39,8 @@ class Neo4jTestCase(unittest.TestCase):
             }])
 
             self.assertEqual(tx._batches, 2)
-            self.assertEqual(tx.send('MATCH (n) RETURN count(n)')[0][0], 3)
+
+        self.assertEqual(neo4j.tx.send('MATCH (n) RETURN count(n)')[0][0], 3)
 
     def test_rollback(self):
         tx = neo4j.client.transaction()
@@ -56,7 +57,9 @@ class Neo4jTestCase(unittest.TestCase):
         self.assertEqual(len(neo4j.tx.send('MATCH (n) RETURN n')), 0)
 
     def test_nesting(self):
-        with neo4j.tx as tx1:
+        tx = neo4j.client.transaction()
+
+        with tx as tx1:
             self.assertEqual(tx1._depth, 1)
 
             with tx1 as tx2:
@@ -76,7 +79,9 @@ class Neo4jTestCase(unittest.TestCase):
         self.assertIsNotNone(neo4j.tx.send('MATCH (n) RETURN id(n)')[0][0])
 
     def test_autocommit(self):
-        with neo4j.tx as tx1:
+        tx = neo4j.client.transaction(autocommit=True)
+
+        with tx as tx1:
             tx1.send('CREATE (n)')
 
             with tx1 as tx2:
@@ -84,23 +89,25 @@ class Neo4jTestCase(unittest.TestCase):
 
             tx1.rollback()
 
-        neo4j.tx.send('CREATE (n)')
-        r = neo4j.tx.send('MATCH (n) RETURN n')
+        tx.send('CREATE (n)')
+        r = tx.send('MATCH (n) RETURN n')
 
         self.assertEqual(len(r), 1)
 
     def test_defer(self):
-        data = neo4j.tx.send('CREATE (n {foo: 1}) RETURN n', defer=True)
+        tx = neo4j.client.transaction()
+
+        data = tx.send('CREATE (n {foo: 1}) RETURN n', defer=True)
         self.assertIsNone(data)
 
-        data = neo4j.tx.send('CREATE (n {foo: 2}) RETURN n', defer=True)
+        data = tx.send('CREATE (n {foo: 2}) RETURN n', defer=True)
         self.assertIsNone(data)
 
-        self.assertEqual(len(neo4j.tx._queue), 2)
+        self.assertEqual(len(tx._queue), 2)
 
-        data = neo4j.tx.commit()
+        data = tx.commit()
 
-        self.assertEqual(len(neo4j.tx._queue), 0)
+        self.assertEqual(len(tx._queue), 0)
         self.assertEqual(len(data), 2)
 
     def test_uncommitted(self):
@@ -111,6 +118,9 @@ class Neo4jTestCase(unittest.TestCase):
 
         # Uncommitted
         tx.send('CREATE (n)')
+
+        self.assertTrue(tx.commit_uri)
+
         # Unsent
         tx.send('CREATE (n)', defer=True)
 
