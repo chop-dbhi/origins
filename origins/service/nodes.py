@@ -1,7 +1,7 @@
 from flask import url_for, request
 from flask.ext import restful
-from origins.graph.core import nodes
-from origins.exceptions import DoesNotExist, InvalidState, ValidationError
+from origins.graph import Node
+from origins.exceptions import DoesNotExist, ValidationError
 from . import utils
 
 
@@ -17,8 +17,8 @@ def prepare(n):
     return n
 
 
-class Nodes(restful.Resource):
-    module = nodes
+class NodesResource(restful.Resource):
+    model = Node
 
     def prepare(self, n):
         return prepare(n)
@@ -69,14 +69,14 @@ class Nodes(restful.Resource):
         if params['query']:
             predicate = self.get_search_predicate(params['query'])
 
-            cursor = self.module.search(predicate,
-                                        operator='OR',
-                                        limit=params['limit'],
-                                        skip=params['skip'])
-        else:
-            cursor = self.module.match(type=params['type'],
+            cursor = self.model.search(predicate,
+                                       operator='OR',
                                        limit=params['limit'],
                                        skip=params['skip'])
+        else:
+            cursor = self.model.match(type=params['type'],
+                                      limit=params['limit'],
+                                      skip=params['skip'])
 
         result = []
 
@@ -89,15 +89,15 @@ class Nodes(restful.Resource):
         attrs = self.get_attrs(request.json)
 
         try:
-            n = self.module.add(**attrs)
+            n = self.model.add(**attrs)
         except ValidationError as e:
             return {'message': str(e)}, 422
 
         return self.prepare(n), 201
 
 
-class Node(restful.Resource):
-    module = nodes
+class NodeResource(restful.Resource):
+    model = Node
 
     def prepare(self, n):
         return prepare(n)
@@ -126,7 +126,7 @@ class Node(restful.Resource):
 
     def get(self, uuid):
         try:
-            n = self.module.get(uuid)
+            n = self.model.get(uuid)
         except DoesNotExist as e:
             return {'message': str(e)}, 404
 
@@ -136,10 +136,10 @@ class Node(restful.Resource):
         attrs = self.get_attrs(request.json)
 
         try:
-            n = self.module.set(uuid, **attrs)
+            n = self.model.set(uuid, **attrs)
         except DoesNotExist as e:
             return {'message': str(e)}, 404
-        except InvalidState as e:
+        except ValidationError as e:
             return {'message': str(e)}, 422
 
         # Nothing change
@@ -150,10 +150,10 @@ class Node(restful.Resource):
 
     def delete(self, uuid):
         try:
-            self.module.remove(uuid)
+            self.model.remove(uuid)
         except DoesNotExist as e:
             return {'message': str(e)}, 404
-        except InvalidState as e:
+        except ValidationError as e:
             return {'message': str(e)}, 422
 
         return '', 204

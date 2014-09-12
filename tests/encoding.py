@@ -24,7 +24,7 @@ class JsonLoaderTestCase(unittest.TestCase):
         with open(file_path) as f:
             data = encoding.json.load(f)
             self.assertEqual(len(data['components']), 76)
-            self.assertEqual(len(data['relationships']), 11)
+            self.assertEqual(len(data['relationships']), 86)
 
 
 class YamlLoaderTestCase(unittest.TestCase):
@@ -34,4 +34,4 @@ class YamlLoaderTestCase(unittest.TestCase):
         with open(file_path) as f:
             data = encoding.yaml.load(f)
             self.assertEqual(len(data['components']), 76)
-            self.assertEqual(len(data['relationships']), 11)
+            self.assertEqual(len(data['relationships']), 86)

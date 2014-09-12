@@ -1,8 +1,8 @@
-from .. import utils, cypher
+from . import utils, cypher
 
 
 def match(statement, predicate=None, limit=None, skip=None,
-          model=None, type=None):
+          **kwargs):
 
     if predicate:
         placeholder = cypher.map(predicate.keys(), 'pred')
@@ -11,10 +11,7 @@ def match(statement, predicate=None, limit=None, skip=None,
         placeholder = ''
         parameters = {}
 
-    statement = utils.prep(statement,
-                           type=type,
-                           model=model,
-                           predicate=placeholder)
+    statement = utils.prep(statement, predicate=placeholder, **kwargs)
 
     if skip:
         statement += ' SKIP { skip }'
@@ -31,7 +28,7 @@ def match(statement, predicate=None, limit=None, skip=None,
 
 
 def search(statement, predicate, operator=None, limit=None, skip=None,
-           model=None, type=None):
+           **kwargs):
 
     if operator is None:
         operator = 'AND'
@@ -41,10 +38,7 @@ def search(statement, predicate, operator=None, limit=None, skip=None,
                                 parameter='predicate',
                                 operator=operator)
 
-    statement = utils.prep(statement,
-                           type=type,
-                           model=model,
-                           predicate=placeholder)
+    statement = utils.prep(statement, predicate=placeholder, **kwargs)
 
     parameters = {
         'predicate': predicate,

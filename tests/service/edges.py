@@ -70,7 +70,7 @@ class EdgeTestCase(ServiceTestCase):
         # Still accessible directly
         r, d = self.get({'uuid': self.d['uuid']})
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(d, self.d)
+        self.assertIsNotNone(d['invalidation'])
 
         # Not in the set
         _, d = self.get('/edges/')

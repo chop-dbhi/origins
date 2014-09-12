@@ -3,13 +3,13 @@ from flask import url_for
 from flask.ext import restful
 
 
-class Root(restful.Resource):
+class RootResource(restful.Resource):
     def get(self):
         return {
             'title': 'Origins Service API',
             'version': 1.0,
 
-            '_links': {
+            'links': {
                 'nodes': {
                     'href': url_for('nodes', _external=True),
                 },

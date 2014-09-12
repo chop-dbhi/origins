@@ -1,6 +1,8 @@
 import unittest
 from origins.exceptions import ValidationError, DoesNotExist
-from origins.graph import neo4j, resources, components
+from origins.graph import neo4j
+from origins.graph.resources import Resource
+from origins.graph.components import Component
 
 
 class ResourceTestCase(unittest.TestCase):
@@ -8,45 +10,41 @@ class ResourceTestCase(unittest.TestCase):
         neo4j.purge()
 
     def test_match(self):
-        r0 = resources.add()
-        p0 = resources.add(type='Database')
-        self.assertEqual(resources.match(), [r0, p0])
+        r0 = Resource.add()
+        p0 = Resource.add(type='Database')
+
+        self.assertEqual(Resource.match(), [r0, p0])
 
     def test_add(self):
-        # Without ID
-        r = resources.add()
-        self.assertTrue(r.type, resources.RESOURCE_TYPE)
-
-        # With ID
-        r = resources.add('my-resource')
-        self.assertTrue(r.type, resources.RESOURCE_TYPE)
+        r0 = Resource.add(id='my-resource')
 
         # Cannot add with same ID
-        self.assertRaises(ValidationError, resources.add, 'my-resource')
+        self.assertRaises(ValidationError, Resource.add, id=r0.id)
 
     def test_set(self):
-        r0 = resources.add()
-        r1 = resources.set(r0.uuid, label='My Resource')
+        r0 = Resource.add()
+        r1 = Resource.set(r0.uuid, label='My Resource')
 
         self.assertEqual(r0.id, r1.id)
         self.assertNotEqual(r0.uuid, r1.uuid)
+        self.assertEqual(r1.label, 'My Resource')
 
     def test_remove(self):
-        r = resources.add()
-        resources.remove(r.uuid)
+        r = Resource.add()
+        Resource.remove(r.uuid)
 
-        self.assertRaises(DoesNotExist, resources.get_by_id, r.id)
+        self.assertRaises(DoesNotExist, Resource.get_by_id, r.id)
 
     def test_components(self):
-        r = resources.add()
-        p = resources.add()
+        r = Resource.add()
+        p = Resource.add()
 
-        c = components.add(r.uuid)
-        d = components.add(p.uuid)
+        c = Component.add(resource=r)
+        d = Component.add(resource=p)
 
-        resources.include_component(r.uuid, d.uuid)
+        Resource.include_component(r.uuid, component=d)
 
-        self.assertEqual(resources.components(r.uuid), [c, d])
-        self.assertEqual(resources.components(p.uuid), [d])
-        self.assertEqual(resources.managed_components(r.uuid), [c])
-        self.assertEqual(resources.managed_components(p.uuid), [d])
+        self.assertEqual(Resource.components(r.uuid), [c, d])
+        self.assertEqual(Resource.components(p.uuid), [d])
+        self.assertEqual(Resource.managed_components(r.uuid), [c])
+        self.assertEqual(Resource.managed_components(p.uuid), [d])

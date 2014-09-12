@@ -1,58 +1,56 @@
 import unittest
 from origins.exceptions import ValidationError, DoesNotExist
-from origins.graph import neo4j, components, resources
+from origins.graph import neo4j
+from origins.graph.resources import Resource
+from origins.graph.components import Component
 
 
 class ComponentTestCase(unittest.TestCase):
     def setUp(self):
         neo4j.purge()
 
-        self.r = resources.add()
+        self.r = Resource.add()
 
     def test_match(self):
-        r0 = components.add(self.r.uuid)
-        p0 = components.add(self.r.uuid, type='Database')
+        r0 = Component.add(resource=self.r)
+        p0 = Component.add(type='Database', resource=self.r)
 
-        self.assertEqual(components.match(), [r0, p0])
+        self.assertEqual(Component.match(), [r0, p0])
 
     def test_add(self):
-        # Without ID
-        c = components.add(self.r.uuid)
-        self.assertTrue(c.type, components.COMPONENT_TYPE)
-
-        # With ID
-        c = components.add(self.r.uuid, id='component')
-        self.assertTrue(c.type, components.COMPONENT_TYPE)
+        c = Component.add(id='component', resource=self.r)
 
         # Cannot add with same ID
-        self.assertRaises(ValidationError, components.add, self.r.uuid,
-                          id='component')
+        self.assertRaises(ValidationError, Component.add, id=c.id,
+                          resource=self.r)
 
     def test_set(self):
-        r0 = components.add(self.r.uuid)
-        r1 = components.set(r0.uuid, label='My Component')
+        c0 = Component.add(resource=self.r)
+        c1 = Component.set(c0.uuid, label='My Component')
 
-        self.assertEqual(r0.id, r1.id)
-        self.assertNotEqual(r0.uuid, r1.uuid)
+        self.assertEqual(c0.id, c1.id)
+        self.assertNotEqual(c0.uuid, c1.uuid)
+
+        self.assertEqual(Component.resource(c1.uuid), self.r)
 
     def test_remove(self):
-        c = components.add(self.r.uuid)
-        components.remove(c.uuid)
+        c = Component.add(resource=self.r)
+        Component.remove(c.uuid)
 
-        self.assertRaises(DoesNotExist, components.get_by_id, self.r.uuid,
-                          id=c.id)
+        self.assertRaises(DoesNotExist, Component.get_by_id, c.id,
+                          resource=self.r)
 
     def test_resource(self):
-        c = components.add(self.r.uuid)
-        r = components.resource(c.uuid)
+        c = Component.add(resource=self.r)
+        r = Component.resource(c.uuid)
 
         self.assertEqual(r, self.r)
 
     def test_resource_dependence(self):
-        c = components.add(self.r.uuid)
+        c = Component.add(resource=self.r)
 
         # Remove resource
-        resources.remove(self.r.uuid)
+        Resource.remove(self.r.uuid)
 
-        self.assertRaises(DoesNotExist, components.get_by_id, self.r.uuid,
-                          c.id)
+        self.assertRaises(DoesNotExist, Component.get_by_id, c.id,
+                          resource=self.r)

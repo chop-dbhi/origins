@@ -1,100 +1,78 @@
-from flask import abort, request
-from flask.ext import restful
-from origins.graph import collections
-from . import utils
+from flask import request, url_for
+from origins.exceptions import ValidationError
+from origins.graph import Collection
+from .nodes import NodesResource, NodeResource
+from .resources import ResourceResource
 
 
-class Collections(restful.Resource):
-    def get(self):
-        try:
-            limit = int(request.args.get('limit'))
-        except TypeError:
-            limit = utils.DEFAULT_PAGE_LIMIT
+def prepare(n):
+    n = n.to_dict()
 
-        try:
-            skip = int(request.args.get('skip'))
-        except TypeError:
-            skip = 0
+    n['links'] = {
+        'self': {
+            'href': url_for('collection', uuid=n['uuid'],
+                            _external=True),
+        },
+        'resources': {
+            'href': url_for('collection-resources', uuid=n['uuid'],
+                            _external=True),
+        },
+    }
 
-        query = request.args.getlist('query')
+    return n
 
-        if query:
-            param = '(?i)' + '|'.join(['.*' + q + '.*' for q in query])
 
-            predicate = {
-                'origins:label': param,
-            }
-            cursor = collections.search(predicate, limit=limit, skip=skip)
+class CollectionsResource(NodesResource):
+    model = Collection
+
+    def prepare(self, n):
+        return prepare(n)
+
+
+class CollectionResource(NodeResource):
+    model = Collection
+
+    def prepare(self, n):
+        return prepare(n)
+
+
+class CollectionResourcesResource(NodesResource):
+    def get_attrs(self, data):
+        return {
+            'resource': data.get('resource'),
+        }
+
+    def get(self, uuid):
+        params = self.get_params()
+
+        if params['query']:
+            predicate = self.get_search_predicate(params['query'])
         else:
-            cursor = collections.match(limit=limit, skip=skip)
+            predicate = None
+
+        try:
+            cursor = Collection.resources(uuid,
+                                          predicate=predicate,
+                                          limit=params['limit'],
+                                          skip=params['skip'])
+        except ValidationError as e:
+            return {'message': str(e)}, 404
 
         result = []
 
-        for c in cursor:
-            c = utils.add_collection_data(c)
-            result.append(c)
+        handler = ResourceResource()
 
-        return result
+        for n in cursor:
+            result.append(handler.prepare(n))
 
-    def post(self):
-        c = collections.create(request.json)
+        return result, 200
 
-        return utils.add_collection_data(c), 201
+    def post(self, uuid):
+        attrs = self.get_attrs(request.json)
 
+        try:
+            Collection.add_resource(uuid, **attrs)
+        except ValidationError as e:
+            return {'message': str(e)}, 422
 
-class Collection(restful.Resource):
-    def get(self, uuid):
-        c = collections.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = collections.resources(c)
-        result = []
-
-        for r in cursor:
-            r = utils.add_resource_data(r)
-            result.append(r)
-
-        c['resources'] = result
-
-        return utils.add_collection_data(c)
-
-    def put(self, uuid):
-        c = collections.get(uuid)
-
-        if not c:
-            abort(404)
-
-        c = collections.update(c, request.json)
-
-        if request.args.get('quiet') == '1':
-            return '', 204
-
-        return utils.add_collection_data(c), 200
-
-    def delete(self, uuid):
-        c = collections.get(uuid)
-
-        if not c:
-            abort(404)
-
-        collections.delete(c)
-        return '', 200
-
-
-class CollectionResources(restful.Resource):
-    def get(self, uuid):
-        c = collections.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = collections.resources(c)
-        result = []
-
-        for r in cursor:
-            r = utils.add_resource_data(r)
-            result.append(r)
-
-        return result
+        return '', 204

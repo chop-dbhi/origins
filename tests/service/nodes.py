@@ -17,10 +17,12 @@ class NodesTestCase(ServiceTestCase):
 
         r, d = self.get(params={'query': 'be'})
 
+        self.assertEqual(r.status_code, 200)
         self.assertCountEqual(d, [ben, bella])
 
         r, d = self.get(params={'query': 'en'})
 
+        self.assertEqual(r.status_code, 200)
         self.assertCountEqual(d, [ben, jen])
 
     def test_post(self):
@@ -68,7 +70,7 @@ class NodeTestCase(ServiceTestCase):
         # Still accessible directly
         r, d = self.get({'uuid': self.d['uuid']})
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(d, self.d)
+        self.assertIsNotNone(d['invalidation'])
 
         # Not in the set
         _, d = self.get('/nodes/')

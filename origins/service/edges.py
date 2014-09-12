@@ -1,6 +1,6 @@
 from flask import url_for
-from origins.graph.core import edges
-from .nodes import Nodes, Node
+from origins.graph import Edge
+from .nodes import NodesResource, NodeResource
 
 
 def prepare(n):
@@ -16,8 +16,8 @@ def prepare(n):
     return n
 
 
-class Edges(Nodes):
-    module = edges
+class EdgesResource(NodesResource):
+    model = Edge
 
     def prepare(self, n):
         return prepare(n)
@@ -34,8 +34,8 @@ class Edges(Nodes):
         }
 
 
-class Edge(Node):
-    module = edges
+class EdgeResource(NodeResource):
+    model = Edge
 
     def prepare(self, n):
         return prepare(n)

@@ -1,8 +1,8 @@
 from .base import ServiceTestCase
 
 
-class ResourcesTestCase(ServiceTestCase):
-    path = '/resources/'
+class CollectionsTestCase(ServiceTestCase):
+    path = '/collections/'
 
     def test_get(self):
         r, d = self.get()
@@ -33,11 +33,11 @@ class ResourcesTestCase(ServiceTestCase):
             'type': 'Foo',
         })
 
-        # Get all resources
+        # Get all collections
         _, d = self.get()
         self.assertEqual(d, [r])
 
-        # Get resources by type
+        # Get collections by type
         _, d = self.get(params={'type': 'Foo'})
         self.assertEqual(d, [r])
 
@@ -45,13 +45,13 @@ class ResourcesTestCase(ServiceTestCase):
         self.assertEqual(d, [])
 
 
-class ResourceTestCase(ServiceTestCase):
-    path = '/resources/{uuid}/'
+class CollectionTestCase(ServiceTestCase):
+    path = '/collections/{uuid}/'
 
     def setUp(self):
-        super(ResourceTestCase, self).setUp()
+        super(CollectionTestCase, self).setUp()
 
-        _, self.d = self.post('/resources/', data={})
+        _, self.d = self.post('/collections/', data={})
 
     def test_get(self):
         r, d = self.get({
@@ -82,18 +82,21 @@ class ResourceTestCase(ServiceTestCase):
         self.assertIsNotNone(d['invalidation'])
 
         # Not visible in the set
-        _, d = self.get('/resources/')
+        _, d = self.get('/collections/')
         self.assertEqual(d, [])
 
 
-class ResourceComponentsTestCase(ServiceTestCase):
-    path = '/resources/{uuid}/components/'
+class CollectionResourcesTestCase(ServiceTestCase):
+    path = '/collections/{uuid}/resources/'
 
     def setUp(self):
-        super(ResourceComponentsTestCase, self).setUp()
+        super(CollectionResourcesTestCase, self).setUp()
 
-        _, self.d = self.post('/resources/', data={})
-        _, self.c = self.post({'uuid': self.d['uuid']}, data={})
+        _, self.d = self.post('/collections/', data={})
+        _, self.r = self.post('/resources/', data={})
+        self.post({'uuid': self.d['uuid']}, data={
+            'resource': self.r['uuid'],
+        })
 
     def test_get(self):
         r, d = self.get({
@@ -101,7 +104,7 @@ class ResourceComponentsTestCase(ServiceTestCase):
         })
 
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(d, [self.c])
+        self.assertEqual(d, [self.r])
 
     def test_get_404(self):
         r, d = self.get({
@@ -113,7 +116,6 @@ class ResourceComponentsTestCase(ServiceTestCase):
     def test_post(self):
         r, d = self.post({
             'uuid': self.d['uuid'],
-        }, data={})
+        }, data={'resource': self.r['uuid']})
 
-        self.assertEqual(r.status_code, 201)
-        self.assertTrue(d)
+        self.assertEqual(r.status_code, 204)

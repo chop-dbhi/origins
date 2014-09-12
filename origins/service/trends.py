@@ -10,7 +10,7 @@ class Trends(restful.Resource):
             'title': 'Origins Service API - Trends',
             'version': 1.0,
 
-            '_links': {
+            'links': {
                 'connected_components': {
                     'href': url_for('trend-components-connected',
                                     _external=True),

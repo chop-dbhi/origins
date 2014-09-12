@@ -1,11 +1,30 @@
-import re
-import json
+"""
+A model in Origins defines the semantics and structure of how a *value* based
+on the model behaves and is represented in the graph.
+
+A value is presented as a set of core metadata and optional set of properties.
+Additional metadata may be supported when a model is applied to the value.
+
+There are two basic concepts being modeled in Origins, *occurrents* and
+*continuants*. An occurrent's identity is defined by it's *value*, while a
+continuant retains it's identity regardless if it's state and relations change
+over time. A continuant can be logically represented as a series of
+occurrents.
+
+In PROV, this corresponds to the `Activity` and `Entity` types, respectively.
+PROV defines `Agent` as being an `Entity` or `Activity` depending on context,
+but always having a responsibility over the thing it is influencing.
+
+Origins defines both the `Occurrent` and `Continuant` types to represent these
+two distinct concepts.
+"""
+
 from copy import deepcopy
-from hashlib import sha1
 from uuid import uuid4
-from origins.exceptions import ValidationError
-from .packer import unpack
-from . import utils
+from ..exceptions import DoesNotExist, ValidationError
+from .. import events, provenance
+from .packer import unpack, pack
+from . import neo4j, utils, traverse, deps
 
 
 DIFF_ATTRS = {
@@ -16,39 +35,20 @@ DIFF_ATTRS = {
     'dependence',
 }
 
-UUID_RE = re.compile(r'^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$')
 
-
-def is_uuid(s):
-    if not isinstance(s, str):
-        return False
-
-    return UUID_RE.match(s) is not None
-
-
-def _dict_sha1(d):
-    "Returns the SHA1 hex of a dictionary."
-    if d:
-        s = json.dumps(d, sort_keys=True)
-        return sha1(s.encode('utf-8')).hexdigest()
-
-
-class Node(object):
-    DEFAULT_TYPE = 'Node'
-    DEFAULT_MODEL = 'origins:Node'
-
+class Model(object):
     def __init__(self, id=None, type=None, label=None, description=None,
-                 properties=None, uuid=None, time=None, sha1=None,
-                 model=None):
+                 properties=None, uuid=None, time=None, model=None,
+                 sha1=None, invalidation=None):
 
         if not type:
-            type = self.DEFAULT_TYPE
+            type = self.model_type
 
         if not model:
-            model = self.DEFAULT_MODEL
+            model = self.model_name
 
         if not sha1:
-            sha1 = _dict_sha1(properties)
+            sha1 = utils.dict_sha1(properties)
 
         if not time:
             time = utils.timestamp()
@@ -68,6 +68,7 @@ class Node(object):
         self.description = description
         self.properties = properties
         self.sha1 = sha1
+        self.invalidation = invalidation
 
     def __hash__(self):
         return hash(self.uuid)
@@ -75,37 +76,28 @@ class Node(object):
     def __str__(self):
         if self.label:
             label = self.label
-        elif is_uuid(self.id):
+        elif utils.is_uuid(self.id):
             label = self.id[:8]
         else:
             label = self.id
 
-        return '{} ({})'.format(label, self.uuid[:8])
+        return '("{}" {} r.{})'.format(label, self.model_name, self.uuid[:8])
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, str(self))
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
+        if hasattr(other, 'uuid'):
+            return self.uuid == other.uuid
 
-        return self.uuid == other.uuid
+        return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def _derive_attrs(self):
-        return {
-            'id': self.id,
-            'label': self.label,
-            'type': self.type,
-            'model': self.model,
-            'description': self.description,
-        }
-
     @classmethod
-    def parse(cls, attrs):
-        return cls(**unpack(attrs))
+    def parse(cls, attrs, invalidation=None):
+        return cls(invalidation=unpack(invalidation), **unpack(attrs))
 
     @classmethod
     def derive(cls, node, attrs=None):
@@ -127,180 +119,404 @@ class Node(object):
 
         return cls(**copy)
 
-    def to_dict(self):
-        attrs = self.__dict__.copy()
-
-        if self.properties:
-            attrs['properties'] = deepcopy(self.properties)
-
-        return attrs
-
-    def diff(self, other):
-        return diff_attrs(self.to_dict(), other.to_dict(),
-                          allowed=DIFF_ATTRS)
-
-
-class Edge(Node):
-    DEFAULT_TYPE = 'related'
-    DEFAULT_MODEL = 'origins:Edge'
-
-    NO_DEPENDENCE = 'none'
-    FORWARD_DEPENDENCE = 'forward'
-    INVERSE_DEPENDENCE = 'inverse'
-    MUTUAL_DEPENDENCE = 'mutual'
-
-    DEPENDENCE_TYPES = (
-        NO_DEPENDENCE,
-        FORWARD_DEPENDENCE,
-        INVERSE_DEPENDENCE,
-        MUTUAL_DEPENDENCE,
-    )
-
-    UNDIRECTED = 'undirected'
-    DIRECTED = 'directed'
-    REVERSE = 'reverse'
-    BIDIRECTED = 'bidirected'
-
-    DIRECTION_TYPES = (
-        UNDIRECTED,
-        DIRECTED,
-        REVERSE,
-        BIDIRECTED,
-    )
-
-    def __init__(self, id=None, label=None, description=None, type=None,
-                 uuid=None, time=None, sha1=None, properties=None, model=None,
-                 start=None, end=None, dependence=None, direction=None):
-
-        if direction is None:
-            direction = self.DIRECTED
-        elif direction not in self.DIRECTION_TYPES:
-            raise ValidationError('direction not valid. choices are: {}'
-                                  .format(', '.join(self.DIRECTION_TYPES)))
-
-        if dependence is None:
-            dependence = self.NO_DEPENDENCE
-        elif dependence not in self.DEPENDENCE_TYPES:
-            raise ValidationError('dependence not valid: choices are: {}'
-                                  .format(', '.join(self.DEPENDENCE_TYPES)))
-
-        super(Edge, self).__init__(
-            id=id,
-            type=type,
-            model=model,
-            label=label,
-            description=description,
-            uuid=uuid,
-            time=time,
-            sha1=sha1,
-            properties=properties
-        )
-
-        self.direction = direction
-        self.dependence = dependence
-
-        # Initialize as nodes assuming these are UUIDs
-        if not isinstance(start, Node):
-            start = Node(uuid=start)
-
-        if not isinstance(end, Node):
-            end = Node(uuid=end)
-
-        self.start = start
-        self.end = end
-
-    @classmethod
-    def parse(cls, attrs, start=None, end=None):
-        if isinstance(start, dict):
-            start = Node.parse(start)
-
-        if isinstance(end, dict):
-            end = Node.parse(end)
-
-        return cls(start=start, end=end, **unpack(attrs))
-
     def _derive_attrs(self):
         return {
             'id': self.id,
             'label': self.label,
             'type': self.type,
             'model': self.model,
-            'start': self.start,
-            'end': self.end,
             'description': self.description,
-            'direction': self.direction,
-            'dependence': self.dependence,
         }
 
     def to_dict(self):
-        attrs = super(self.__class__, self).to_dict()
+        return {
+            'uuid': self.uuid,
+            'id': self.id,
+            'model': self.model,
+            'type': self.type,
+            'label': self.label,
+            'description': self.description,
+            'sha1': self.sha1,
+            'time': self.time,
+            'properties': deepcopy(self.properties),
+            'invalidation': deepcopy(self.invalidation),
+        }
 
-        # These are not attributes, just references to nodes
-        attrs.pop('start')
-        attrs.pop('end')
+    def diff(self, other):
+        return utils.diff_attrs(self.to_dict(), other.to_dict(),
+                                allowed=DIFF_ATTRS)
 
-        return attrs
+    # Returns all
+    match_statement = '''
+        MATCH (n$model$type $predicate)
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+        RETURN n, null
+    '''
+
+    # Search nodes with predicate
+    search_statement = '''
+        MATCH (n$model$type)
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+            AND $predicate
+        RETURN n, null
+    '''
+
+    # Returns single node by UUID. The model nor type is applied here since
+    # the lookup is by UUID
+    get_statement = '''
+        MATCH (n$model {`origins:uuid`: { uuid }})
+        OPTIONAL MATCH (n)<-[:`prov:entity`]-(i:`prov:Invalidation`)
+        RETURN n, i
+        LIMIT 1
+    '''
+
+    get_by_id_statement = '''
+        MATCH (n$model$type {`origins:id`: { id }})
+            WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+        RETURN n, null
+        LIMIT 1
+    '''
+
+    # Return 1 if the node exists
+    exists_statement = '''
+        MATCH (n$model {`origins:uuid`: { uuid }})
+        RETURN true
+        LIMIT 1
+    '''
+
+    # Return 1 if the node exists
+    exists_by_id_statement = '''
+        MATCH (n$model {`origins:id`: { id }})
+        RETURN true
+        LIMIT 1
+    '''
+
+    # Creates a node
+    # The `prov:Entity` and `origins:Node` labels are fixed.
+    add_statement = '''
+        CREATE (n$model$type:`prov:Entity` { attrs })
+        RETURN 1
+    '''
+
+    # Removes the `$type` label for a node. Type labels are only set while
+    # the node is valid.
+    invalidate_statement = '''
+        MATCH (n$model {`origins:uuid`: { uuid }})
+        REMOVE n$type
+        RETURN 1
+    '''
+
+    @classmethod
+    def match_query(cls, predicate=None, limit=None, skip=None, type=None):
+
+        return traverse.match(cls.match_statement,
+                              predicate=pack(predicate),
+                              limit=limit,
+                              skip=skip,
+                              type=type,
+                              model=cls.model_name)
+
+    @classmethod
+    def search_query(cls, predicate, operator=None, limit=None, skip=None,
+                     type=None):
+
+        return traverse.search(cls.search_statement,
+                               predicate=pack(predicate),
+                               operator=operator,
+                               limit=limit,
+                               skip=skip,
+                               type=type,
+                               model=cls.model_name)
+
+    @classmethod
+    def get_query(cls, uuid):
+        statement = utils.prep(cls.get_statement,
+                               model=cls.model_name)
+
+        return {
+            'statement': statement,
+            'parameters': {
+                'uuid': uuid,
+            }
+        }
+
+    @classmethod
+    def get_by_id_query(cls, id):
+        statement = utils.prep(cls.get_by_id_statement,
+                               model=cls.model_name)
+
+        return {
+            'statement': statement,
+            'parameters': {
+                'id': id,
+            }
+        }
+
+    @classmethod
+    def exists_query(cls, uuid):
+        statement = utils.prep(cls.exists_statement,
+                               model=cls.model_name)
+
+        return {
+            'statement': statement,
+            'parameters': {
+                'uuid': uuid,
+            }
+        }
+
+    @classmethod
+    def exists_by_id_query(cls, id):
+        statement = utils.prep(cls.exists_by_id_statement,
+                               model=cls.model_name)
+
+        return {
+            'statement': statement,
+            'parameters': {
+                'id': id,
+            }
+        }
+
+    @classmethod
+    def add_query(cls, node):
+        # Get all labels for this node up the class hierarchy
+        model_names = cls.model_names(node)
+
+        statement = utils.prep(cls.add_statement,
+                               type=node.type,
+                               model=model_names)
+
+        return {
+            'statement': statement,
+            'parameters': {
+                'attrs': pack(node.to_dict()),
+            },
+        }
+
+    @classmethod
+    def invalidate_query(cls, node):
+        statement = utils.prep(cls.invalidate_statement,
+                               type=node.type,
+                               model=node.model_name)
+
+        return {
+            'statement': statement,
+            'parameters': {
+                'uuid': node.uuid
+            },
+        }
+
+    @classmethod
+    def match(cls, predicate=None, limit=None, skip=None, type=None,
+              tx=neo4j.tx):
+
+        query = cls.match_query(predicate=predicate,
+                                limit=limit,
+                                skip=skip,
+                                type=type)
+
+        result = tx.send(query)
+
+        return [cls.parse(*r) for r in result]
+
+    @classmethod
+    def search(cls, predicate, operator=None, limit=None, skip=None, type=None,
+               tx=neo4j.tx):
+
+        query = cls.search_query(predicate=predicate,
+                                 operator=operator,
+                                 limit=limit,
+                                 skip=skip,
+                                 type=type)
+
+        result = tx.send(query)
+
+        return [cls.parse(*r) for r in result]
+
+    @classmethod
+    def get(cls, uuid, tx=neo4j.tx):
+        query = cls.get_query(uuid=uuid)
+
+        result = tx.send(query)
+
+        if not result:
+            raise DoesNotExist('{} does not exist'.format(cls.model_type))
+
+        return cls.parse(*result[0])
+
+    @classmethod
+    def get_by_id(cls, id, tx=neo4j.tx, **kwargs):
+        query = cls.get_by_id_query(id=id, **kwargs)
+
+        result = tx.send(query)
+
+        if not result:
+            raise DoesNotExist('{} does not exist'.format(cls.model_type))
+
+        return cls.parse(*result[0])
+
+    @classmethod
+    def exists(cls, uuid, tx=neo4j.tx):
+        query = cls.exists_query(uuid=uuid)
+
+        result = tx.send(query)
+
+        return True if result else False
+
+    @classmethod
+    def exists_by_id(cls, id, tx=neo4j.tx):
+        query = cls.exists_by_id_query(id)
+
+        result = tx.send(query)
+
+        return True if result else False
+
+    @classmethod
+    def _add(cls, node, tx):
+        query = cls.add_query(node)
+
+        if not tx.send(query):
+            raise Exception('did not successfully add {}'.format(node))
+
+        prov_spec = provenance.add(node.uuid)
+
+        return provenance.load(prov_spec, tx=tx)
+
+    @classmethod
+    def _set(cls, old, new, tx):
+        # Invalidate old version
+        cls._invalidate(old, tx=tx)
+
+        # Add new version
+        prov = cls._add(new, tx=tx)
+
+        # Trigger the change dependency. This must occur after the new
+        # node has been added so it is visible in the graph.
+        deps.trigger_change(old, new, tx=tx)
+
+        return prov
+
+    @classmethod
+    def _invalidate(cls, node, tx):
+        query = cls.invalidate_query(node)
+
+        if not tx.send(query):
+            raise Exception('did not successfully delete {}'.format(node))
+
+    @classmethod
+    def _remove(cls, node, reason, tx, trigger=None):
+        with tx as tx:
+            cls._invalidate(node, tx)
+
+            # TODO do something with triggers
+            # Provenance for remove
+            prov_spec = provenance.remove(node.uuid, reason=reason)
+            return provenance.load(prov_spec, tx=tx)
+
+    @classmethod
+    def _validate_unique(cls, node, tx):
+        pass
+
+    @classmethod
+    def _validate(cls, node, tx):
+        pass
+
+    @classmethod
+    def add(cls, *args, **kwargs):
+        tx = kwargs.pop('tx', neo4j.tx)
+
+        with tx as tx:
+            node = cls(*args, **kwargs)
+
+            cls._validate_unique(node, tx=tx)
+
+            cls._validate(node, tx=tx)
+
+            prov = cls._add(node, tx=tx)
+
+            events.publish('{}.add'.format(cls.model_type), {
+                'node': node.to_dict(),
+                'prov': prov,
+            })
+
+            return node
+
+    @classmethod
+    def set(cls, uuid, **kwargs):
+        tx = kwargs.pop('tx', neo4j.tx)
+
+        with tx as tx:
+            previous = cls.get(uuid, tx=tx)
+
+            if previous.invalidation:
+                raise ValidationError('cannot set invalidation {}'
+                                      .format(cls.model_type))
+
+            # Derive from previous
+            node = cls.derive(previous, kwargs)
+
+            # Compare the new node with the previous
+            diff = previous.diff(node)
+
+            if not diff:
+                return
+
+            prov = cls._set(previous, node, tx=tx)
+
+            # Provenance for change
+            prov_spec = provenance.change(previous.uuid, node.uuid)
+            prov_spec['wasGeneratedBy'] = prov['wasGeneratedBy']
+            prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
+            prov = provenance.load(prov_spec, tx=tx)
+
+            events.publish('{}.change'.format(cls.model_type), {
+                'node': node.to_dict(),
+                'diff': diff,
+                'prov': prov,
+            })
+
+            return node
+
+    @classmethod
+    def remove(cls, uuid, reason=None, tx=neo4j.tx):
+        with tx as tx:
+            node = cls.get(uuid, tx=tx)
+
+            if node.invalidation:
+                raise ValidationError('{} already invalidated: {}'
+                                      .format(cls.model_type, uuid))
+
+            nodes = deps.trigger_remove(node, tx=tx)
+
+            # Remove all nodes
+            for n, triggers in nodes.items():
+                if n != node:
+                    r = 'origins:DependentNodeRemoved'
+                else:
+                    r = reason
+
+                prov = cls._remove(n, reason=r, tx=tx)
+
+                events.publish('{}.remove'.format(n.model_type), {
+                    'node': n.to_dict(),
+                    'prov': prov,
+                })
+
+            return node
+
+    @classmethod
+    def model_names(cls, node):
+        # Get all labels for this node up the class hierarchy
+        return tuple([m.model_name for m in node.__class__.__mro__
+                      if hasattr(m, 'model_name')])
 
 
-def diff_attrs(a, b, allowed=None, encoding='utf-8'):
-    """Compare `a` against `b`.
+class Occurrent(Model):
+    model_name = 'origins:Occurrent'
 
-    Keys found in `a` but not in `b` are marked as additions. The key and
-    value in `a` is returned.
+    model_type = 'Occurrent'
 
-    Keys found in `b` but not in `a` are marked as removals. The key and
-    value in `b` is returned.
 
-    Keys found in both whose values are not *exactly equal*, which involves
-    comparing value and type, are marked as changed. The key and a tuple
-    of the old value and new value is returned.
-    """
-    d = {}
+class Continuant(Model):
+    model_name = 'origins:Continuant'
 
-    if a is None:
-        a = {}
-
-    if b is None:
-        b = {}
-
-    for k in a:
-        if allowed and k not in allowed:
-            continue
-
-        av = a[k]
-
-        # Recurse for dict values
-        if isinstance(av, dict):
-            _d = diff_attrs(av, b.get(k))
-
-            if _d:
-                d[k] = _d
-
-            continue
-
-        # Decode bytes for unicode comparison
-        if isinstance(av, bytes):
-            av = av.decode(encoding)
-
-        if k in b:
-            bv = b[k]
-
-            # Decode bytes for unicode comparison
-            if isinstance(bv, bytes):
-                bv = bv.decode(encoding)
-
-            if av != bv or type(av) != type(bv):
-                d[k] = (bv, av)
-
-        # null values are ignored
-        elif av is not None:
-            d[k] = (None, av)
-
-    for k in b:
-        if allowed and k not in allowed:
-            continue
-
-        if k not in a and b[k] is not None:
-            d[k] = (b[k], None)
-
-    return d
+    model_type = 'Continuant'

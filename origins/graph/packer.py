@@ -42,6 +42,9 @@ def unpack(b):
     """Takes a dict and unpacks non-Origins properties into a nested
     'properties' dict.
     """
+    if not b:
+        return
+
     a = {}
     p = {}
 

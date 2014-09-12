@@ -1,144 +1,103 @@
-from functools import partial
-from string import Template as T
 from origins.exceptions import ValidationError, DoesNotExist
-from .core import edges, nodes, traverse
-from .model import Node
-from . import neo4j
+from .model import Continuant
+from .edges import Edge
+from . import neo4j, traverse
 
 
-__all__ = (
-    'match',
-    'search',
-    'get',
-    'get_by_id',
-    'add',
-    'set',
-    'remove',
-    'components',
-)
+class Resource(Continuant):
+    model_name = 'origins:Resource'
 
+    model_type = 'Resource'
 
-RESOURCE_MODEL = 'origins:Resource'
-RESOURCE_TYPE = 'Resource'
+    match_components_statement = '''
 
+        MATCH (n:`origins:Component`$type $predicate)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        RETURN n
 
-MATCH_RESOURCE_COMPONENTS = T('''
-MATCH (n:`origins:Component`$type $predicate)<-[:includes]-(:`origins:Node` {`origins:uuid`: { uuid }})
-RETURN n
-''')  # noqa
+    '''  # noqa
 
+    match_managed_components_statement = '''
 
-MATCH_RESOURCE_MANAGED_COMPONENTS = T('''
-MATCH (n:`origins:Component`$type $predicate)<-[:manages]-(:`origins:Node` {`origins:uuid`: { uuid }})
-RETURN n
-''')  # noqa
+        MATCH (n:`origins:Component`$type $predicate)<-[:manages]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        RETURN n
 
+    '''  # noqa
 
-SEARCH_RESOURCE_COMPONENTS = T('''
-MATCH (n:`origins:Component`$type)<-[:includes]-(:`origins:Node` {`origins:uuid`: { uuid }})
-WHERE $predicate
-RETURN n
-''')  # noqa
+    search_components_statement = '''
 
+        MATCH (n:`origins:Component`$type)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        WHERE $predicate
+        RETURN n
 
-match = partial(nodes.match, model=RESOURCE_MODEL)
-search = partial(nodes.search, model=RESOURCE_MODEL)
+    '''  # noqa
 
-get_by_id = partial(nodes.get_by_id, model=RESOURCE_MODEL)
-get = nodes.get
+    @classmethod
+    def _validate_unique(cls, node, tx):
+        # Enforce unique IDs on resources
+        if node.uuid != node.id and cls.exists_by_id(node.id, tx):
+            raise ValidationError('{} with id {} already exists'
+                                  .format(cls.model_name, id))
 
-set = nodes.set
-remove = nodes.remove
+    @classmethod
+    def components(cls, uuid, predicate=None, type=None, limit=None, skip=None,
+                   tx=neo4j.tx):
 
+        from .components import Component
 
-def add(id=None, label=None, description=None, properties=None, type=None,
-        tx=neo4j.tx):
-
-    if not type:
-        type = RESOURCE_TYPE
-
-    with tx as tx:
-        # The ID of a resource must be unique
-        if id:
+        with tx as tx:
             try:
-                result = get_by_id(id)
+                cls.get(uuid, tx=tx)
             except DoesNotExist:
-                result = None
+                raise ValidationError('resource does not exist')
 
-            if result:
-                raise ValidationError('resource already exists with id')
+            if predicate:
+                query = traverse.search(cls.search_components_statement,
+                                        predicate=predicate,
+                                        type=type,
+                                        limit=limit,
+                                        skip=skip)
+            else:
+                query = traverse.match(cls.match_components_statement,
+                                       type=type,
+                                       limit=limit,
+                                       skip=skip)
 
-        return nodes.add(id=id,
-                         label=label,
-                         description=description,
-                         properties=properties,
-                         type=type,
-                         model=RESOURCE_MODEL,
-                         tx=tx)
+            query['parameters']['uuid'] = uuid
 
+            result = tx.send(query)
 
-def components(uuid, predicate=None, type=None, limit=None, skip=None,
-               tx=neo4j.tx):
+            return [Component.parse(r) for r in result]
 
-    with tx as tx:
-        try:
-            get(uuid, tx=tx)
-        except DoesNotExist:
-            raise ValidationError('resource does not exist')
+    @classmethod
+    def managed_components(cls, uuid, type=None, limit=None, skip=None,
+                           tx=neo4j.tx):
 
-        if predicate:
-            query = traverse.search(SEARCH_RESOURCE_COMPONENTS,
-                                    predicate=predicate,
-                                    type=type,
-                                    limit=limit,
-                                    skip=skip)
-        else:
-            query = traverse.match(MATCH_RESOURCE_COMPONENTS,
+        from .components import Component
+
+        with tx as tx:
+            if not cls.exists(uuid, tx=tx):
+                raise ValidationError('resource does not exist')
+
+            query = traverse.match(cls.match_managed_components_statement,
                                    type=type,
                                    limit=limit,
                                    skip=skip)
 
-        query['parameters']['uuid'] = uuid
+            query['parameters']['uuid'] = uuid
 
-        result = tx.send(query)
+            result = tx.send(query)
 
-        return [Node.parse(r) for r in result]
+            return [Component.parse(r) for r in result]
 
+    @classmethod
+    def include_component(cls, uuid, component, tx=neo4j.tx):
+        with tx as tx:
+            try:
+                resource = cls.get(uuid, tx=tx)
+            except DoesNotExist:
+                raise ValidationError('resource does not exist')
 
-def managed_components(uuid, type=None, limit=None, skip=None, tx=neo4j.tx):
-    with tx as tx:
-        try:
-            get(uuid, tx=tx)
-        except DoesNotExist:
-            raise ValidationError('resource does not exist')
-
-        query = traverse.match(MATCH_RESOURCE_MANAGED_COMPONENTS,
-                               type=type,
-                               limit=limit,
-                               skip=skip)
-
-        query['parameters']['uuid'] = uuid
-
-        result = tx.send(query)
-
-        return [Node.parse(r) for r in result]
-
-
-def include_component(uuid, component, tx=neo4j.tx):
-    from . import components
-
-    with tx as tx:
-        try:
-            get(uuid, tx=tx)
-        except DoesNotExist:
-            raise ValidationError('resource does not exist')
-
-        try:
-            components.get(component, tx=tx)
-        except DoesNotExist:
-            raise ValidationError('component does not exist')
-
-        return edges.add(start=uuid,
-                         end=component,
-                         type='includes',
-                         tx=tx)
+            Edge.add(start=resource,
+                     end=component,
+                     type='includes',
+                     tx=tx)

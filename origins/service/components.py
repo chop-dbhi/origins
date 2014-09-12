@@ -1,15 +1,15 @@
 from flask import url_for
-from origins.graph import components
-from .nodes import Nodes, Node
+from origins.graph import Component
+from .nodes import NodesResource, NodeResource
 
 
 def prepare(n, r=None):
     n = n.to_dict()
 
     if not r:
-        r = components.resource(n['uuid']).uuid
+        r = Component.resource(n['uuid']).uuid
 
-    n['_links'] = {
+    n['links'] = {
         'self': {
             'href': url_for('component', uuid=n['uuid'],
                             _external=True),
@@ -22,33 +22,30 @@ def prepare(n, r=None):
     return n
 
 
-class Components(Nodes):
-    module = components
+class ComponentsResource(NodesResource):
+    model = Component
 
     def prepare(self, n, resource=None):
         return prepare(n, r=resource)
 
     def get_attrs(self, data):
+        resource = data.get('resource')
+
+        if isinstance(resource, str):
+            resource = {'uuid': resource}
+
         return {
             'id': data.get('id'),
             'type': data.get('type'),
             'label': data.get('label'),
             'description': data.get('description'),
             'properties': data.get('properties'),
-            'resource': data.get('resource'),
+            'resource': resource,
         }
 
 
-class Component(Node):
-    module = components
+class ComponentResource(NodeResource):
+    model = Component
 
     def prepare(self, n, resource=None):
         return prepare(n, r=resource)
-
-    def get_attrs(self, data):
-        return {
-            'type': data.get('type'),
-            'label': data.get('label'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-        }

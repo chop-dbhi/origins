@@ -1,8 +1,8 @@
 from flask import request, url_for
 from origins.exceptions import ValidationError
-from origins.graph import resources, components
-from .nodes import Nodes, Node
-from .components import Component
+from origins.graph import Resource
+from .nodes import NodesResource, NodeResource
+from .components import ComponentResource
 
 
 def prepare(n):
@@ -22,42 +22,25 @@ def prepare(n):
     return n
 
 
-class Resources(Nodes):
-    module = resources
+class ResourcesResource(NodesResource):
+    model = Resource
 
     def prepare(self, n):
         return prepare(n)
 
-    def get_attrs(self, data):
-        return {
-            'id': data.get('id'),
-            'type': data.get('type'),
-            'label': data.get('label'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-        }
 
-
-class Resource(Node):
-    module = resources
+class ResourceResource(NodeResource):
+    model = Resource
 
     def prepare(self, n):
         return prepare(n)
 
-    def get_attrs(self, data):
-        return {
-            'label': data.get('label'),
-            'type': data.get('type'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-        }
 
-
-class ResourceComponents(Nodes):
+class ResourceComponentsResource(NodesResource):
     def prepare(self, uuid, n):
         n = n.to_dict()
 
-        n['_links'] = {
+        n['links'] = {
             'self': {
                 'href': url_for('component', uuid=n['uuid'],
                                 _external=True),
@@ -79,10 +62,10 @@ class ResourceComponents(Nodes):
             predicate = None
 
         try:
-            cursor = resources.components(uuid,
-                                          predicate=predicate,
-                                          limit=params['limit'],
-                                          skip=params['skip'])
+            cursor = Resource.components(uuid,
+                                         predicate=predicate,
+                                         limit=params['limit'],
+                                         skip=params['skip'])
         except ValidationError as e:
             return {'message': str(e)}, 404
 
@@ -94,13 +77,15 @@ class ResourceComponents(Nodes):
         return result, 200
 
     def post(self, uuid):
-        handler = Component()
+        handler = ComponentResource()
 
         attrs = handler.get_attrs(request.json)
-        attrs['resource'] = uuid
+        attrs['resource'] = {
+            'uuid': uuid,
+        }
 
         try:
-            n = components.add(**attrs)
+            n = handler.model.add(**attrs)
         except ValidationError as e:
             return {'message': str(e)}, 404
 

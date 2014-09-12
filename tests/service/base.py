@@ -41,10 +41,13 @@ class ServiceTestCase(unittest.TestCase):
         func = getattr(test_client, method.lower())
         resp = func(path, query_string=params, data=data, headers=headers)
 
-        if resp.data:
-            data = json.loads(resp.data.decode('utf8'))
-        else:
-            data = None
+        data = resp.data.decode('utf8')
+
+        if data and resp.headers['Content-Type'] == 'application/json':
+            try:
+                data = json.loads(resp.data.decode('utf8'))
+            except ValueError:
+                pass
 
         return resp, data
 

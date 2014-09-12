@@ -3,8 +3,8 @@ from flask import Flask, make_response
 from flask.ext import restful
 from flask_cors import CORS
 from origins import config
-from origins.graph.model import Node
-from . import root, nodes, edges, resources, components
+from origins.graph.model import Model
+from . import root, nodes, edges, resources, components, collections
 
 
 app = Flask(__name__)
@@ -14,7 +14,7 @@ api = restful.Api(app)
 
 
 def json_node_encoder(o):
-    if isinstance(o, Node):
+    if isinstance(o, Model):
         return o.to_dict()
     raise ValueError
 
@@ -35,42 +35,54 @@ def json_representation(data, code, headers=None):
     return response
 
 
-api.add_resource(root.Root,
+api.add_resource(root.RootResource,
                  '/',
                  endpoint='root')
 
-api.add_resource(nodes.Nodes,
+api.add_resource(nodes.NodesResource,
                  '/nodes/',
                  endpoint='nodes')
 
-api.add_resource(nodes.Node,
+api.add_resource(nodes.NodeResource,
                  '/nodes/<uuid>/',
                  endpoint='node')
 
-api.add_resource(edges.Edges,
+api.add_resource(edges.EdgesResource,
                  '/edges/',
                  endpoint='edges')
 
-api.add_resource(edges.Edge,
+api.add_resource(edges.EdgeResource,
                  '/edges/<uuid>/',
                  endpoint='edge')
 
-api.add_resource(resources.Resources,
+api.add_resource(resources.ResourcesResource,
                  '/resources/',
                  endpoint='resources')
 
-api.add_resource(resources.Resource,
+api.add_resource(resources.ResourceResource,
                  '/resources/<uuid>/',
                  endpoint='resource')
 
-api.add_resource(resources.ResourceComponents,
+api.add_resource(resources.ResourceComponentsResource,
                  '/resources/<uuid>/components/',
                  endpoint='resource-components')
 
-api.add_resource(components.Components,
+api.add_resource(components.ComponentsResource,
                  '/components/',
                  endpoint='components')
 
-api.add_resource(components.Component,
+api.add_resource(components.ComponentResource,
                  '/components/<uuid>/',
                  endpoint='component')
+
+api.add_resource(collections.CollectionsResource,
+                 '/collections/',
+                 endpoint='collections')
+
+api.add_resource(collections.CollectionResource,
+                 '/collections/<uuid>/',
+                 endpoint='collection')
+
+api.add_resource(collections.CollectionResourcesResource,
+                 '/collections/<uuid>/resources/',
+                 endpoint='collection-resources')

@@ -1,11 +1,12 @@
 from origins.graph import neo4j
-from origins.graph.core import edges, nodes
+from origins.graph.edges import Edge
+from origins.graph.nodes import Node
 from .base import TestCase
 
 
 def _build_tree(max_depth=3, tx=neo4j.tx):
     with tx as tx:
-        root = nodes.add('0')
+        root = Node.add('0')
 
         # Start with root
         queue = [(root, 0)]
@@ -15,16 +16,14 @@ def _build_tree(max_depth=3, tx=neo4j.tx):
             r, d = queue.pop()
 
             d += 1
-            a = nodes.add('{}a'.format(d), publish_event=False)
-            b = nodes.add('{}b'.format(d), publish_event=False)
+            a = Node.add('{}a'.format(d))
+            b = Node.add('{}b'.format(d))
 
             # Attach children for convenience
             r.children = [a, b]
 
-            edges.add(a, r, dependence='forward', publish_event=False,
-                      check_nodes=False)
-            edges.add(b, r, dependence='forward', publish_event=False,
-                      check_nodes=False)
+            Edge.add(a, r, dependence='forward')
+            Edge.add(b, r, dependence='forward')
 
             if d < max_depth:
                 queue.append((a, d))
@@ -49,25 +48,25 @@ def _descendents(n):
 
 class DependencyChainTestCase(TestCase):
     def test_circle(self):
-        f = s = nodes.add()
-        e = nodes.add()
+        f = s = Node.add()
+        e = Node.add()
 
         # Create initial edge
-        edges.add(s, e, dependence='forward')
+        Edge.add(s, e, dependence='forward')
 
         for _ in range(10):
             s = e
-            e = nodes.add()
-            edges.add(s, e, dependence='forward')
+            e = Node.add()
+            Edge.add(s, e, dependence='forward')
 
         # Connect the loop
-        edges.add(e, f, dependence='forward')
+        Edge.add(e, f, dependence='forward')
 
         # Trigger delete
-        nodes.remove(f.uuid)
+        Node.remove(f.uuid)
 
         # All were removed
-        self.assertEqual(nodes.match(), [])
+        self.assertEqual(Node.match(), [])
 
     def test_tree(self):
         root = _build_tree()
@@ -76,20 +75,20 @@ class DependencyChainTestCase(TestCase):
         d = _descendents(n)
         removed = set([n] + d)
 
-        nodes.remove(n.uuid)
+        Node.remove(n.uuid)
 
-        remaining = set(nodes.match())
+        remaining = set(Node.match())
 
-        # None of the removed nodes should match
+        # None of the removed Node should match
         self.assertFalse(remaining & removed)
 
-        # No edges remain for removed nodes
-        for e in edges.match():
+        # No Edge remain for removed Node
+        for e in Edge.match():
             self.assertFalse(e.start in removed)
             self.assertFalse(e.end in removed)
 
         # Remove root; everything else is gone
-        nodes.remove(root.uuid)
+        Node.remove(root.uuid)
 
-        self.assertEqual(nodes.match(), [])
-        self.assertEqual(edges.match(), [])
+        self.assertEqual(Node.match(), [])
+        self.assertEqual(Edge.match(), [])

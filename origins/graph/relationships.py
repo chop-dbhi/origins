@@ -1,18 +1,19 @@
-from origins.exceptions import ValidationError, InvalidStateError
-from .model import Continuant
+from origins.exceptions import DoesNotExist, ValidationError
 from . import neo4j, utils, deps
-from .resources import Resource
 from .edges import Edge
+from .components import Component
 
 
-class Component(Continuant):
-    model_name = 'origins:Component'
+class Relationship(Edge):
+    model_name = 'origins:Relationship'
 
-    model_type = 'Component'
+    start_model = Component
+
+    end_model = Component
 
     get_by_id_statement = '''
 
-        MATCH (:`origins:Resource` {`origins:uuid`: { resource }})-[:manages]->(n:`origins:Component` {`origins:id`: { id }})
+        MATCH (:`origins:Resource` {`origins:uuid`: { resource }})-[:manages]->(n:`origins:Relationship` {`origins:id`: { id }})
         RETURN n
 
     '''  # noqa
@@ -21,18 +22,14 @@ class Component(Continuant):
     # the component being looked up may be invalid
     get_resource_statement = '''
 
-        MATCH (:`origins:Component` {`origins:uuid`: { uuid }})<-[:`origins:end`]-(:`origins:Edge` {`origins:type`: 'manages'})-[:`origins:start`]->(n:`origins:Resource`)
+        MATCH (:`origins:Relationship` {`origins:uuid`: { uuid }})<-[:`origins:end`]-(:`origins:Edge` {`origins:type`: 'manages'})-[:`origins:start`]->(n:`origins:Resource`)
         RETURN n
 
     '''  # noqa
 
     def __init__(self, *args, **kwargs):
         self.resource = kwargs.pop('resource', None)
-
-        if isinstance(self.resource, dict):
-            self.resource = Resource(**self.resource)
-
-        super(Component, self).__init__(*args, **kwargs)
+        super(Relationship, self).__init__(*args, **kwargs)
 
     @classmethod
     def get_by_id_query(cls, id, resource):
@@ -65,7 +62,7 @@ class Component(Continuant):
 
     @classmethod
     def _add(cls, node, tx):
-        prov = Continuant._add(node, tx)
+        prov = Edge._add(node, tx)
 
         # Define managing relationship
         Edge.add(start=node.resource,
@@ -91,7 +88,7 @@ class Component(Continuant):
         cls._invalidate(old, tx=tx)
 
         # Add new version
-        prov = Continuant._add(new, tx=tx)
+        prov = Edge._add(new, tx=tx)
 
         # Trigger the change dependency. This must occur after the new
         # node has been added so it is visible in the graph.
@@ -113,6 +110,6 @@ class Component(Continuant):
         result = tx.send(query)
 
         if not result:
-            raise InvalidStateError('No resource associated with component.')
+            raise DoesNotExist('{} does not exist'.format(cls.model_type))
 
         return Resource.parse(*result[0])
