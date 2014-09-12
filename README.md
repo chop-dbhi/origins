@@ -8,19 +8,21 @@ Documentation: https://github.com/cbmi/origins/wiki/
 
 ### Service
 
+The REST service:
+
 ```
-python -m origins.service
+./bin/origins serve --debug
 ```
 
 ### Events
 
-Run the daemon:
+The events daemon that pushes published events to subscribers:
 
 ```
-python -m origins.events
+./bin/origins events --debug
 ```
 
-Run the Redis monitor:
+Run the Redis monitor if you're curious:
 
 ```
 redis-cli monitor
