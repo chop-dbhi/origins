@@ -14,24 +14,20 @@ neo4j:
         - /data/neo4j:/neo4j/data
 
 # Origins service
-origins:
+service:
     image: bruth/origins
     ports:
         - 5000:5000
-    environment:
-        ORIGINS_DEBUG: 1
-        ORIGINS_NEO4J_HOST: neo4j
-        ORIGINS_REDIS_HOST: redis
     links:
         - redis:redis
         - neo4j:neo4j
+    command:
+        - serve
 
 # Origins events daemon
-origins_events:
+events:
     image: bruth/origins
-    environment:
-        ORIGINS_DEBUG: 1
-        ORIGINS_REDIS_HOST: redis
     links:
         - redis:redis
-    command: python3 -m origins.events
+    command:
+        - events
