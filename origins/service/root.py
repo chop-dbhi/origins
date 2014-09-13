@@ -22,6 +22,9 @@ class RootResource(restful.Resource):
                 'components': {
                     'href': url_for('components', _external=True),
                 },
+                'relationships': {
+                    'href': url_for('relationships', _external=True),
+                },
 
                 # Templates for single objects
                 'node': {
@@ -38,6 +41,10 @@ class RootResource(restful.Resource):
                 },
                 'component': {
                     'href': unquote(url_for('component', uuid='{uuid}',
+                                            _external=True)),
+                },
+                'relationship': {
+                    'href': unquote(url_for('relationship', uuid='{uuid}',
                                             _external=True)),
                 },
             }
