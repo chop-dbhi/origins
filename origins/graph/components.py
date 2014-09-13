@@ -1,7 +1,6 @@
 from origins.exceptions import ValidationError, InvalidStateError
 from .model import Continuant
 from . import neo4j, utils, deps
-from .resources import Resource
 from .edges import Edge
 
 
@@ -28,10 +27,6 @@ class Component(Continuant):
 
     def __init__(self, *args, **kwargs):
         self.resource = kwargs.pop('resource', None)
-
-        if isinstance(self.resource, dict):
-            self.resource = Resource(**self.resource)
-
         super(Component, self).__init__(*args, **kwargs)
 
     @classmethod

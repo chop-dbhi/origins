@@ -80,9 +80,7 @@ class ResourceComponentsResource(NodesResource):
         handler = ComponentResource()
 
         attrs = handler.get_attrs(request.json)
-        attrs['resource'] = {
-            'uuid': uuid,
-        }
+        attrs['resource'] = Resource(uuid=uuid)
 
         try:
             n = handler.model.add(**attrs)

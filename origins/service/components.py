@@ -1,5 +1,6 @@
 from flask import url_for
-from origins.graph import Component
+from origins.exceptions import ValidationError
+from origins.graph import Component, Resource
 from .nodes import NodesResource, NodeResource
 
 
@@ -31,8 +32,10 @@ class ComponentsResource(NodesResource):
     def get_attrs(self, data):
         resource = data.get('resource')
 
-        if isinstance(resource, str):
-            resource = {'uuid': resource}
+        if not resource:
+            raise ValidationError('resource required')
+
+        resource = Resource(uuid=resource)
 
         return {
             'id': data.get('id'),
