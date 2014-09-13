@@ -1,8 +1,7 @@
 import unittest
 from origins.exceptions import ValidationError, DoesNotExist
 from origins.graph import neo4j
-from origins.graph.resources import Resource
-from origins.graph.components import Component
+from origins.graph import Resource, Component, Relationship
 
 
 class ResourceTestCase(unittest.TestCase):
@@ -48,3 +47,20 @@ class ResourceTestCase(unittest.TestCase):
         self.assertEqual(Resource.components(p.uuid), [d])
         self.assertEqual(Resource.managed_components(r.uuid), [c])
         self.assertEqual(Resource.managed_components(p.uuid), [d])
+
+    def test_relationships(self):
+        r = Resource.add()
+        p = Resource.add()
+
+        x = Component.add(resource=r)
+        y = Component.add(resource=p)
+
+        c = Relationship.add(x, y, resource=r)
+        d = Relationship.add(x, y, type='other', resource=p)
+
+        Resource.include_relationship(r.uuid, relationship=d)
+
+        self.assertEqual(Resource.relationships(r.uuid), [c, d])
+        self.assertEqual(Resource.relationships(p.uuid), [d])
+        self.assertEqual(Resource.managed_relationships(r.uuid), [c])
+        self.assertEqual(Resource.managed_relationships(p.uuid), [d])

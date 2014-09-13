@@ -1,98 +1,78 @@
-from flask import abort, request
-from flask.ext import restful
-from origins.graph import relationships
-from . import utils
+from flask import url_for
+from origins.exceptions import ValidationError
+from origins.graph import Relationship, Resource
+from .nodes import NodesResource, NodeResource
 
 
-class Relationships(restful.Resource):
-    def get(self):
-        try:
-            limit = int(request.args.get('limit'))
-        except TypeError:
-            limit = utils.DEFAULT_PAGE_LIMIT
+def prepare(n, r=None):
+    n = n.to_dict()
 
-        try:
-            skip = int(request.args.get('skip'))
-        except TypeError:
-            skip = 0
+    if not r:
+        r = Relationship.resource(n['uuid']).uuid
 
-        query = request.args.getlist('query')
+    n['links'] = {
+        'self': {
+            'href': url_for('relationship', uuid=n['uuid'],
+                            _external=True),
+        },
+        'resource': {
+            'href': url_for('resource', uuid=r, _external=True)
+        },
+    }
 
-        if query:
-            param = '(?i)' + '|'.join(['.*' + q + '.*' for q in query])
-
-            predicate = {
-                'origins:label': param,
-            }
-            cursor = relationships.search(predicate, limit=limit, skip=skip)
-        else:
-            cursor = relationships.match(limit=limit, skip=skip)
-
-        result = []
-
-        for c in cursor:
-            c = utils.add_relationship_data(c)
-            result.append(c)
-
-        return result
+    return n
 
 
-class Relationship(restful.Resource):
-    def get(self, uuid):
-        c = relationships.get(uuid)
+class RelationshipsResource(NodesResource):
+    model = Relationship
 
-        if not c:
-            abort(404)
+    def prepare(self, n, resource=None):
+        return prepare(n, r=resource)
 
-        return utils.add_relationship_data(c)
+    def get_attrs(self, data):
+        resource = data.get('resource')
+        start = data.get('start')
+        end = data.get('end')
 
-    def put(self, uuid):
-        c = relationships.get(uuid)
+        if not resource:
+            raise ValidationError('resource required')
 
-        if not c:
-            abort(404)
+        if not start:
+            raise ValidationError('start component required')
 
-        c = relationships.update(c, request.json)
+        if not end:
+            raise ValidationError('end component required')
 
-        if request.args.get('quiet') == '1':
-            return '', 204
+        resource = Resource(uuid=resource)
+        start = Relationship.start_model(uuid=start)
+        end = Relationship.end_model(uuid=end)
 
-        return utils.add_relationship_data(c), 200
-
-
-class RelationshipRevisions(restful.Resource):
-    def get(self, uuid):
-        c = relationships.get(uuid)
-
-        if not c:
-            abort(404)
-
-        cursor = relationships.revisions(c)
-
-        result = []
-
-        for r in cursor:
-            r = utils.add_relationship_data(r)
-            result.append(r)
-
-        return result
+        return {
+            'resource': resource,
+            'start': start,
+            'end': end,
+            'id': data.get('id'),
+            'type': data.get('type'),
+            'label': data.get('label'),
+            'description': data.get('description'),
+            'properties': data.get('properties'),
+            'dependence': data.get('dependence'),
+            'direction': data.get('direction'),
+        }
 
 
-class RelationshipRevision(restful.Resource):
-    def get(self, uuid):
-        c = relationships.revision(uuid)
+class RelationshipResource(NodeResource):
+    model = Relationship
 
-        if not c:
-            abort(404)
+    def prepare(self, n, resource=None):
+        return prepare(n, r=resource)
 
-        return utils.add_relationship_data(c)
-
-
-class RelationshipTimeline(restful.Resource):
-    def get(self, uuid):
-        c = relationships.revision(uuid)
-
-        if not c:
-            abort(404)
-
-        return relationships.timeline(c)
+    def get_attrs(self, data):
+        return {
+            'label': data.get('label'),
+            'type': data.get('type'),
+            'description': data.get('description'),
+            'properties': data.get('properties'),
+            'dependence': data.get('dependence'),
+            'direction': data.get('direction'),
+        }

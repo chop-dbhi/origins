@@ -4,7 +4,8 @@ from flask.ext import restful
 from flask_cors import CORS
 from origins import config
 from origins.graph.model import Model
-from . import root, nodes, edges, resources, components, collections
+from . import (root, nodes, edges, resources, components,
+               collections, relationships)
 
 
 app = Flask(__name__)
@@ -67,6 +68,10 @@ api.add_resource(resources.ResourceComponentsResource,
                  '/resources/<uuid>/components/',
                  endpoint='resource-components')
 
+api.add_resource(resources.ResourceRelationshipsResource,
+                 '/resources/<uuid>/relationships/',
+                 endpoint='resource-relationships')
+
 api.add_resource(components.ComponentsResource,
                  '/components/',
                  endpoint='components')
@@ -74,6 +79,14 @@ api.add_resource(components.ComponentsResource,
 api.add_resource(components.ComponentResource,
                  '/components/<uuid>/',
                  endpoint='component')
+
+api.add_resource(relationships.RelationshipsResource,
+                 '/relationships/',
+                 endpoint='relationships')
+
+api.add_resource(relationships.RelationshipResource,
+                 '/relationships/<uuid>/',
+                 endpoint='relationship')
 
 api.add_resource(collections.CollectionsResource,
                  '/collections/',

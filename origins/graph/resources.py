@@ -31,6 +31,28 @@ class Resource(Continuant):
 
     '''  # noqa
 
+    match_relationships_statement = '''
+
+        MATCH (n:`origins:Relationship`$type $predicate)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        RETURN n
+
+    '''  # noqa
+
+    match_managed_relationships_statement = '''
+
+        MATCH (n:`origins:Relationship`$type $predicate)<-[:manages]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        RETURN n
+
+    '''  # noqa
+
+    search_relationships_statement = '''
+
+        MATCH (n:`origins:Relationship`$type)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        WHERE $predicate
+        RETURN n
+
+    '''  # noqa
+
     @classmethod
     def _validate_unique(cls, node, tx):
         # Enforce unique IDs on resources
@@ -99,5 +121,69 @@ class Resource(Continuant):
 
             Edge.add(start=resource,
                      end=component,
+                     type='includes',
+                     tx=tx)
+
+    @classmethod
+    def relationships(cls, uuid, predicate=None, type=None, limit=None,
+                      skip=None, tx=neo4j.tx):
+
+        from .relationships import Relationship
+
+        with tx as tx:
+            try:
+                cls.get(uuid, tx=tx)
+            except DoesNotExist:
+                raise ValidationError('resource does not exist')
+
+            if predicate:
+                query = traverse.search(cls.search_relationships_statement,
+                                        predicate=predicate,
+                                        type=type,
+                                        limit=limit,
+                                        skip=skip)
+            else:
+                query = traverse.match(cls.match_relationships_statement,
+                                       type=type,
+                                       limit=limit,
+                                       skip=skip)
+
+            query['parameters']['uuid'] = uuid
+
+            result = tx.send(query)
+
+            return [Relationship.parse(r) for r in result]
+
+    @classmethod
+    def managed_relationships(cls, uuid, type=None, limit=None, skip=None,
+                              tx=neo4j.tx):
+
+        from .relationships import Relationship
+
+        with tx as tx:
+            if not cls.exists(uuid, tx=tx):
+                raise ValidationError('resource does not exist')
+
+            query = traverse.match(cls.match_managed_relationships_statement,
+                                   type=type,
+                                   limit=limit,
+                                   skip=skip)
+
+            query['parameters']['uuid'] = uuid
+
+            result = tx.send(query)
+
+            return [Relationship.parse(r) for r in result]
+
+    @classmethod
+    def include_relationship(cls, uuid, relationship, tx=neo4j.tx):
+        with tx as tx:
+            try:
+                resource = cls.get(uuid, tx=tx)
+            except DoesNotExist:
+                raise ValidationError('resource does not exist')
+
+            Edge.add(start=resource,
+                     end=relationship,
                      type='includes',
                      tx=tx)
