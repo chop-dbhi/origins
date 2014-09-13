@@ -42,7 +42,10 @@ class NodeTestCase(ServiceTestCase):
     def setUp(self):
         super(NodeTestCase, self).setUp()
 
-        _, self.d = self.post('/nodes/', data={})
+        _, self.d = self.post('/nodes/', data={
+            'type': 'Test',
+            'label': 'Test',
+        })
 
     def test_get(self):
         r, d = self.get({
@@ -55,10 +58,18 @@ class NodeTestCase(ServiceTestCase):
     def test_put(self):
         r, d = self.put({
             'uuid': self.d['uuid'],
-        }, data={'label': 'Test'})
+        }, data={'label': 'Special'})
 
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(d['label'], 'Test')
+        self.assertEqual(d['label'], 'Special')
+        self.assertEqual(d['type'], 'Test')
+
+    def test_put_no_change(self):
+        r, d = self.put({
+            'uuid': self.d['uuid'],
+        }, data={'label': 'Test'})
+
+        self.assertEqual(r.status_code, 204)
 
     def test_delete(self):
         r, d = self.delete({

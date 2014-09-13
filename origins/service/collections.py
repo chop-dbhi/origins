@@ -38,8 +38,11 @@ class CollectionResource(NodeResource):
 
 class CollectionResourcesResource(NodesResource):
     def get_attrs(self, data):
+        if not data.get('resource'):
+            raise ValidationError('resource required')
+
         return {
-            'resource': data.get('resource'),
+            'resource': data['resource'],
         }
 
     def get(self, uuid):
@@ -68,9 +71,8 @@ class CollectionResourcesResource(NodesResource):
         return result, 200
 
     def post(self, uuid):
-        attrs = self.get_attrs(request.json)
-
         try:
+            attrs = self.get_attrs(request.json)
             Collection.add_resource(uuid, **attrs)
         except ValidationError as e:
             return {'message': str(e)}, 422

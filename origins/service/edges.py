@@ -20,47 +20,45 @@ def prepare(n):
 class EdgesResource(NodesResource):
     model = Edge
 
+    attr_keys = (
+        'id',
+        'type',
+        'label',
+        'description',
+        'properties',
+        'dependence',
+        'direction',
+    )
+
     def prepare(self, n):
         return prepare(n)
 
     def get_attrs(self, data):
-        start = data.get('start')
-        end = data.get('end')
-
-        if not start:
+        if not data.get('start'):
             raise ValidationError('start node required')
 
-        if not end:
+        if not data.get('end'):
             raise ValidationError('end node required')
 
-        start = Node(uuid=start)
-        end = Node(uuid=end)
+        attrs = super(EdgesResource, self).get_attrs(data)
 
-        return {
-            'id': data.get('id'),
-            'type': data.get('type'),
-            'label': data.get('label'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-            'dependence': data.get('dependence'),
-            'direction': data.get('direction'),
-            'start': start,
-            'end': end,
-        }
+        attrs['start'] = Node(uuid=data['start'])
+        attrs['end'] = Node(uuid=data['end'])
+
+        return attrs
 
 
 class EdgeResource(NodeResource):
     model = Edge
 
+    attr_keys = (
+        'type',
+        'label',
+        'description',
+        'properties',
+        'dependence',
+        'direction',
+    )
+
     def prepare(self, n):
         return prepare(n)
-
-    def get_attrs(self, data):
-        return {
-            'label': data.get('label'),
-            'type': data.get('type'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-            'dependence': data.get('dependence'),
-            'direction': data.get('direction'),
-        }

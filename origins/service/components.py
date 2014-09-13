@@ -30,21 +30,14 @@ class ComponentsResource(NodesResource):
         return prepare(n, r=resource)
 
     def get_attrs(self, data):
-        resource = data.get('resource')
-
-        if not resource:
+        if not data.get('resource'):
             raise ValidationError('resource required')
 
-        resource = Resource(uuid=resource)
+        attrs = super(ComponentsResource, self).get_attrs(data)
 
-        return {
-            'id': data.get('id'),
-            'type': data.get('type'),
-            'label': data.get('label'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-            'resource': resource,
-        }
+        attrs['resource'] = Resource(uuid=data['resource'])
+
+        return attrs
 
 
 class ComponentResource(NodeResource):

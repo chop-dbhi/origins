@@ -20,6 +20,14 @@ def prepare(n):
 class NodesResource(restful.Resource):
     model = Node
 
+    attr_keys = (
+        'id',
+        'type',
+        'label',
+        'description',
+        'properties',
+    )
+
     def prepare(self, n):
         return prepare(n)
 
@@ -47,13 +55,13 @@ class NodesResource(restful.Resource):
         }
 
     def get_attrs(self, data):
-        return {
-            'id': data.get('id'),
-            'type': data.get('type'),
-            'label': data.get('label'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-        }
+        attrs = {}
+
+        for key in self.attr_keys:
+            if key in data:
+                attrs[key] = data[key]
+
+        return attrs
 
     def get_search_predicate(self, query):
         param = '(?i)' + '|'.join(['.*' + q + '.*' for q in query])
@@ -98,6 +106,13 @@ class NodesResource(restful.Resource):
 class NodeResource(restful.Resource):
     model = Node
 
+    attr_keys = (
+        'type',
+        'label',
+        'description',
+        'properties',
+    )
+
     def prepare(self, n):
         return prepare(n)
 
@@ -116,12 +131,13 @@ class NodeResource(restful.Resource):
         }
 
     def get_attrs(self, data):
-        return {
-            'type': data.get('type'),
-            'label': data.get('label'),
-            'description': data.get('description'),
-            'properties': data.get('properties'),
-        }
+        attrs = {}
+
+        for key in self.attr_keys:
+            if key in data:
+                attrs[key] = data[key]
+
+        return attrs
 
     def get(self, uuid):
         try:
