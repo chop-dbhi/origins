@@ -86,9 +86,8 @@ class NodesResource(restful.Resource):
         return result, 200
 
     def post(self):
-        attrs = self.get_attrs(request.json)
-
         try:
+            attrs = self.get_attrs(request.json)
             n = self.model.add(**attrs)
         except ValidationError as e:
             return {'message': str(e)}, 422
@@ -133,9 +132,8 @@ class NodeResource(restful.Resource):
         return self.prepare(n), 200
 
     def put(self, uuid):
-        attrs = self.get_attrs(request.json)
-
         try:
+            attrs = self.get_attrs(request.json)
             n = self.model.set(uuid, **attrs)
         except DoesNotExist as e:
             return {'message': str(e)}, 404
