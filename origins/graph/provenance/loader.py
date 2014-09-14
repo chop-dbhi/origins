@@ -1,7 +1,7 @@
 import logging
 from string import Template as T
 from uuid import uuid4
-from origins.graph import cypher, neo4j, utils
+from .. import cypher, neo4j, utils
 from .constants import PROV_TERMS, PROV_RELATIONS, PROV_TYPES, PROV_EVENTS
 
 

@@ -22,9 +22,9 @@ two distinct concepts.
 from copy import deepcopy
 from uuid import uuid4
 from ..exceptions import DoesNotExist, ValidationError
-from .. import events, provenance
+from .. import events
 from .packer import unpack, pack
-from . import neo4j, utils, traverse, deps
+from . import neo4j, utils, traverse, deps, provenance
 
 
 DIFF_ATTRS = {
@@ -463,7 +463,7 @@ class Model(object):
             prov = cls._set(previous, node, tx=tx)
 
             # Provenance for change
-            prov_spec = provenance.change(previous.uuid, node.uuid)
+            prov_spec = provenance.set(previous.uuid, node.uuid)
             prov_spec['wasGeneratedBy'] = prov['wasGeneratedBy']
             prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
             prov = provenance.load(prov_spec, tx=tx)

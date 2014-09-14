@@ -1,6 +1,5 @@
-from tests.graph.base import TestCase
-from origins.graph import neo4j
-from origins import provenance
+from origins.graph import neo4j, provenance
+from .base import TestCase
 
 
 class LoadTestCase(TestCase):

@@ -1,6 +1,6 @@
 from collections import defaultdict
-from origins import provenance, events
-from . import utils
+from origins import events
+from . import utils, provenance
 
 
 # Returns all edges and the *other* node of the edge
@@ -52,8 +52,8 @@ def _update(current, start, end, tx):
     prov = current._add(edge, tx)
 
     # TODO add trigger
-    prov_spec = provenance.change(current.uuid, edge.uuid,
-                                  reason='origins:NodeChange')
+    prov_spec = provenance.set(current.uuid, edge.uuid,
+                               reason='origins:NodeChange')
     prov_spec['wasGeneratedBy'] = prov['wasGeneratedBy']
     prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
     prov = provenance.load(prov_spec, tx=tx)

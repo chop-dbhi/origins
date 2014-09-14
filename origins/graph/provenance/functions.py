@@ -1,4 +1,4 @@
-import time
+from .. import utils
 
 
 def add(entity, new=False):
@@ -22,12 +22,12 @@ def add(entity, new=False):
 
     # New object, mark it's generation time
     if new:
-        prov['wasGeneratedBy']['wgb']['prov:time'] = time.time() * 1000
+        prov['wasGeneratedBy']['wgb']['prov:time'] = utils.timestamp()
 
     return prov
 
 
-def change(previous, entity, method=None, reason=None):
+def set(previous, entity, method=None, reason=None):
     if not method:
         method = 'prov:Revision'
 
