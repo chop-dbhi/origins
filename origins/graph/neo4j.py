@@ -159,7 +159,7 @@ class Transaction(object):
                 self.rollback()
 
             # Otherwise commit if any statements have been sent or queued
-            elif self._depth == 0 and self._batches > 0 or self._queue:
+            elif self._depth == 0 and (self._batches > 0 or self._queue):
                 self.commit()
 
     def _close(self):
@@ -211,21 +211,20 @@ class Transaction(object):
         # Send at least one request
         batches = max(1, int(math.ceil(len(statements) / batch_size)))
 
-        # Reuse or open a transaction for more than one batch. Otherwise
-        # commit for the final batch or send a single request
-        if commit:
-            if self.commit_uri:
-                url = self.commit_uri
-            else:
-                url = SINGLE_TRANSACTION_URI_TMPL.format(self.client.uri)
-        else:
-            url = self.transaction_uri
-
         for i in range(batches):
+            # Reuse or open a transaction for more than one batch. Otherwise
+            # commit for the final batch or send a single request
             if commit and i == batches - 1:
+                if self.commit_uri:
+                    url = self.commit_uri
+                else:
+                    url = SINGLE_TRANSACTION_URI_TMPL.format(self.client.uri)
+
                 logger.debug('commiting batch {}/{} to {}'
                              .format(i + 1, batches, url))
             else:
+                url = self.transaction_uri
+
                 logger.debug('sending batch {}/{} to {}'
                              .format(i + 1, batches, url))
 
