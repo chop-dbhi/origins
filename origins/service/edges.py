@@ -34,10 +34,10 @@ class EdgesResource(NodesResource):
         return prepare(n)
 
     def get_attrs(self, data):
-        if not data.get('start'):
+        if not data or not data.get('start'):
             raise ValidationError('start node required')
 
-        if not data.get('end'):
+        if not data or not data.get('end'):
             raise ValidationError('end node required')
 
         attrs = super(EdgesResource, self).get_attrs(data)

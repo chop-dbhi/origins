@@ -30,13 +30,13 @@ class RelationshipsResource(EdgesResource):
         return prepare(n, r=resource)
 
     def get_attrs(self, data):
-        if not data.get('resource'):
+        if not data or not data.get('resource'):
             raise ValidationError('resource required')
 
-        if not data.get('start'):
+        if not data or not data.get('start'):
             raise ValidationError('start component required')
 
-        if not data.get('end'):
+        if not data or not data.get('end'):
             raise ValidationError('end component required')
 
         # Parent, i.e. nodes

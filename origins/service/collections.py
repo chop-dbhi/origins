@@ -38,7 +38,7 @@ class CollectionResource(NodeResource):
 
 class CollectionResourcesResource(NodesResource):
     def get_attrs(self, data):
-        if not data.get('resource'):
+        if not data or not data.get('resource'):
             raise ValidationError('resource required')
 
         return {

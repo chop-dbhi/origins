@@ -51,7 +51,7 @@ class ResourceTestCase(ServiceTestCase):
     def setUp(self):
         super(ResourceTestCase, self).setUp()
 
-        _, self.d = self.post('/resources/', data={})
+        _, self.d = self.post('/resources/')
 
     def test_get(self):
         r, d = self.get({
@@ -92,8 +92,8 @@ class ResourceComponentsTestCase(ServiceTestCase):
     def setUp(self):
         super(ResourceComponentsTestCase, self).setUp()
 
-        _, self.d = self.post('/resources/', data={})
-        _, self.c = self.post({'uuid': self.d['uuid']}, data={})
+        _, self.d = self.post('/resources/')
+        _, self.c = self.post({'uuid': self.d['uuid']})
 
     def test_get(self):
         r, d = self.get({
@@ -113,7 +113,7 @@ class ResourceComponentsTestCase(ServiceTestCase):
     def test_post(self):
         r, d = self.post({
             'uuid': self.d['uuid'],
-        }, data={})
+        })
 
         self.assertEqual(r.status_code, 201)
         self.assertTrue(d)

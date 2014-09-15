@@ -12,7 +12,7 @@ class ComponentsTestCase(ServiceTestCase):
 
     def test_post(self):
         # Managing resource
-        _, r = self.post('/resources/', data={})
+        _, r = self.post('/resources/')
 
         r, d = self.post(data={
             'resource': r['uuid'],
@@ -29,7 +29,7 @@ class ComponentTestCase(ServiceTestCase):
         super(ComponentTestCase, self).setUp()
 
         # Managing resource
-        _, r = self.post('/resources/', data={})
+        _, r = self.post('/resources/')
 
         _, self.d = self.post('/components/', data={
             'resource': r['uuid'],

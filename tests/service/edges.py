@@ -7,8 +7,8 @@ class EdgesTestCase(ServiceTestCase):
     def setUp(self):
         super(EdgesTestCase, self).setUp()
 
-        _, self.a = self.post('/nodes/', data={})
-        _, self.b = self.post('/nodes/', data={})
+        _, self.a = self.post('/nodes/')
+        _, self.b = self.post('/nodes/')
 
     def test_get(self):
         r, d = self.get()
@@ -36,8 +36,8 @@ class EdgeTestCase(ServiceTestCase):
     def setUp(self):
         super(EdgeTestCase, self).setUp()
 
-        _, self.a = self.post('/nodes/', data={})
-        _, self.b = self.post('/nodes/', data={})
+        _, self.a = self.post('/nodes/')
+        _, self.b = self.post('/nodes/')
 
         _, self.d = self.post('/edges/', data={
             'start': self.a['uuid'],

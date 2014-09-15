@@ -30,7 +30,7 @@ class ComponentsResource(NodesResource):
         return prepare(n, r=resource)
 
     def get_attrs(self, data):
-        if not data.get('resource'):
+        if not data or not data.get('resource'):
             raise ValidationError('resource required')
 
         attrs = super(ComponentsResource, self).get_attrs(data)

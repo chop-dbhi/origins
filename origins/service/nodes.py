@@ -57,9 +57,10 @@ class NodesResource(restful.Resource):
     def get_attrs(self, data):
         attrs = {}
 
-        for key in self.attr_keys:
-            if key in data:
-                attrs[key] = data[key]
+        if data:
+            for key in self.attr_keys:
+                if key in data:
+                    attrs[key] = data[key]
 
         return attrs
 
@@ -133,9 +134,10 @@ class NodeResource(restful.Resource):
     def get_attrs(self, data):
         attrs = {}
 
-        for key in self.attr_keys:
-            if key in data:
-                attrs[key] = data[key]
+        if data:
+            for key in self.attr_keys:
+                if key in data:
+                    attrs[key] = data[key]
 
         return attrs
 

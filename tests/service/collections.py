@@ -51,7 +51,7 @@ class CollectionTestCase(ServiceTestCase):
     def setUp(self):
         super(CollectionTestCase, self).setUp()
 
-        _, self.d = self.post('/collections/', data={})
+        _, self.d = self.post('/collections/')
 
     def test_get(self):
         r, d = self.get({
@@ -92,8 +92,8 @@ class CollectionResourcesTestCase(ServiceTestCase):
     def setUp(self):
         super(CollectionResourcesTestCase, self).setUp()
 
-        _, self.d = self.post('/collections/', data={})
-        _, self.r = self.post('/resources/', data={})
+        _, self.d = self.post('/collections/')
+        _, self.r = self.post('/resources/')
         self.post({'uuid': self.d['uuid']}, data={
             'resource': self.r['uuid'],
         })

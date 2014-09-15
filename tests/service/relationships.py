@@ -12,7 +12,7 @@ class RelationshipsTestCase(ServiceTestCase):
 
     def test_post(self):
         # Managing resource
-        _, r = self.post('/resources/', data={})
+        _, r = self.post('/resources/')
 
         # Two components to relate
         _, x = self.post('/components/', data={
@@ -40,7 +40,7 @@ class RelationshipTestCase(ServiceTestCase):
         super(RelationshipTestCase, self).setUp()
 
         # Managing resource
-        _, r = self.post('/resources/', data={})
+        _, r = self.post('/resources/')
 
         # Two components to relate
         _, x = self.post('/components/', data={

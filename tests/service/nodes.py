@@ -26,7 +26,7 @@ class NodesTestCase(ServiceTestCase):
         self.assertCountEqual(d, [ben, jen])
 
     def test_post(self):
-        r, n = self.post(data={})
+        r, n = self.post()
 
         self.assertEqual(r.status_code, 201)
         self.assertIn('uuid', n)
