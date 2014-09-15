@@ -76,12 +76,15 @@ class Model(object):
     def __str__(self):
         if self.label:
             label = self.label
-        elif utils.is_uuid(self.id):
-            label = self.id[:8]
-        else:
+        elif not utils.is_uuid(self.id):
             label = self.id
+        else:
+            label = None
 
-        return '("{}" {} r.{})'.format(label, self.model_name, self.uuid[:8])
+        if label:
+            return '"{}" r.{}'.format(label, self.uuid[:8])
+
+        return 'r.{}'.format(self.uuid[:8])
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, str(self))
