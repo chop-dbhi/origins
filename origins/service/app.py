@@ -5,7 +5,7 @@ from flask_cors import CORS
 from origins import config
 from origins.graph.model import Model
 from . import (root, nodes, edges, resources, components,
-               collections, relationships)
+               collections, relationships, trends)
 
 
 app = Flask(__name__)
@@ -99,3 +99,31 @@ api.add_resource(collections.CollectionResource,
 api.add_resource(collections.CollectionResourcesResource,
                  '/collections/<uuid>/resources/',
                  endpoint='collection-resources')
+
+api.add_resource(trends.Trends,
+                 '/trends/',
+                 endpoint='trends')
+
+api.add_resource(trends.ConnectedComponents,
+                 '/trends/connected-components/',
+                 endpoint='trend-connected-components')
+
+api.add_resource(trends.UsedComponents,
+                 '/trends/used-components/',
+                 endpoint='trend-used-components')
+
+api.add_resource(trends.ConnectedResources,
+                 '/trends/connected-resources/',
+                 endpoint='trend-connected-resources')
+
+api.add_resource(trends.UsedResources,
+                 '/trends/used-resources/',
+                 endpoint='trend-used-resources')
+
+api.add_resource(trends.ComponentSources,
+                 '/trends/component-sources/',
+                 endpoint='trend-component-sources')
+
+api.add_resource(trends.CommonRelationships,
+                 '/trends/common-relationships/',
+                 endpoint='trend-common-relationships')

@@ -6,9 +6,8 @@ from flask.ext import restful
 class RootResource(restful.Resource):
     def get(self):
         return {
-            'title': 'Origins Service API',
             'version': 1.0,
-
+            'title': 'Origins API',
             'links': {
                 'nodes': {
                     'href': url_for('nodes', _external=True),
@@ -24,6 +23,9 @@ class RootResource(restful.Resource):
                 },
                 'relationships': {
                     'href': url_for('relationships', _external=True),
+                },
+                'trends': {
+                    'href': url_for('trends', _external=True),
                 },
 
                 # Templates for single objects

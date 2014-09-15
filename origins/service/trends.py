@@ -1,30 +1,33 @@
 from flask import url_for
 from flask.ext import restful
 from origins.graph import trends
-from . import utils
+from .components import ComponentResource
+from .resources import ResourceResource
 
 
 class Trends(restful.Resource):
     def get(self):
         return {
-            'title': 'Origins Service API - Trends',
             'version': 1.0,
-
+            'title': 'Origins Trends API',
             'links': {
+                'self': {
+                    'href': url_for('trends', _external=True),
+                },
                 'connected_components': {
-                    'href': url_for('trend-components-connected',
+                    'href': url_for('trend-connected-components',
                                     _external=True),
                 },
                 'used_components': {
                     'href': url_for('trend-used-components',
                                     _external=True),
                 },
-                'used_resources': {
-                    'href': url_for('trend-used-resources',
-                                    _external=True),
-                },
                 'connected_resources': {
                     'href': url_for('trend-connected-resources',
+                                    _external=True),
+                },
+                'used_resources': {
+                    'href': url_for('trend-used-resources',
                                     _external=True),
                 },
                 'component_sources': {
@@ -39,71 +42,76 @@ class Trends(restful.Resource):
         }
 
 
-class ConnectedComponentsTrend(restful.Resource):
+class ConnectedComponents(restful.Resource):
     def get(self):
         cursor = trends.connected_components()
 
         result = []
+        handler = ComponentResource()
 
         for r in cursor:
-            utils.add_component_data(r['component'])
+            r['component'] = handler.prepare(r['component'])
             result.append(r)
 
         return result
 
 
-class UsedComponentsTrend(restful.Resource):
+class UsedComponents(restful.Resource):
     def get(self):
         cursor = trends.used_components()
 
         result = []
+        handler = ComponentResource()
 
         for r in cursor:
-            utils.add_component_data(r['component'])
+            r['component'] = handler.prepare(r['component'])
             result.append(r)
 
         return result
 
 
-class ConnectedResourcesTrend(restful.Resource):
+class ConnectedResources(restful.Resource):
     def get(self):
         cursor = trends.connected_resources()
 
         result = []
+        handler = ResourceResource()
 
         for r in cursor:
-            utils.add_resource_data(r['resource'])
+            r['resource'] = handler.prepare(r['resource'])
             result.append(r)
 
         return result
 
 
-class UsedResourcesTrend(restful.Resource):
+class UsedResources(restful.Resource):
     def get(self):
         cursor = trends.used_resources()
 
         result = []
+        handler = ResourceResource()
 
         for r in cursor:
-            utils.add_resource_data(r['resource'])
+            r['resource'] = handler.prepare(r['resource'])
             result.append(r)
 
         return result
 
 
-class ComponentSourcesTrend(restful.Resource):
+class ComponentSources(restful.Resource):
     def get(self):
         cursor = trends.component_sources()
 
         result = []
+        handler = ComponentResource()
 
         for r in cursor:
-            utils.add_component_data(r['component'])
+            r['component'] = handler.prepare(r['component'])
             result.append(r)
 
         return result
 
 
-class CommonRelationshipsTrend(restful.Resource):
+class CommonRelationships(restful.Resource):
     def get(self):
         return trends.common_relationships()
