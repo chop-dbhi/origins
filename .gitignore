@@ -2,7 +2,8 @@
 *.sw?
 *.egg-info
 .coverage
+MANIFEST
 dist
 htmlcov
-MANIFEST
+notebooks
 .ipynb_checkpoints
