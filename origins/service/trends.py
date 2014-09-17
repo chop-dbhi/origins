@@ -34,8 +34,16 @@ class Trends(restful.Resource):
                     'href': url_for('trend-component-sources',
                                     _external=True),
                 },
-                'common_relationships': {
-                    'href': url_for('trend-common-relationships',
+                'resource_types': {
+                    'href': url_for('trend-resource-types',
+                                    _external=True),
+                },
+                'component_types': {
+                    'href': url_for('trend-component-types',
+                                    _external=True),
+                },
+                'relationship_types': {
+                    'href': url_for('trend-relationship-types',
                                     _external=True),
                 },
             }
@@ -112,6 +120,16 @@ class ComponentSources(restful.Resource):
         return result
 
 
-class CommonRelationships(restful.Resource):
+class ResourceTypes(restful.Resource):
     def get(self):
-        return trends.common_relationships()
+        return trends.resource_types()
+
+
+class ComponentTypes(restful.Resource):
+    def get(self):
+        return trends.component_types()
+
+
+class RelationshipTypes(restful.Resource):
+    def get(self):
+        return trends.relationship_types()

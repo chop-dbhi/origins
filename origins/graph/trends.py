@@ -51,7 +51,25 @@ LIMIT { limit }
 '''  # noqa
 
 
-COMMON_RELATIONSHIPS = '''
+RESOURCE_TYPES = '''
+MATCH (rel:`origins:Resource`)
+WHERE NOT (rel)<-[:`prov:entity`]-(:`prov:Invalidation`)
+RETURN rel.`origins:type`, count(rel.`origins:type`) as cnt
+ORDER BY cnt DESC
+LIMIT { limit }
+'''  # noqa
+
+
+COMPONENT_TYPES = '''
+MATCH (rel:`origins:Component`)
+WHERE NOT (rel)<-[:`prov:entity`]-(:`prov:Invalidation`)
+RETURN rel.`origins:type`, count(rel.`origins:type`) as cnt
+ORDER BY cnt DESC
+LIMIT { limit }
+'''  # noqa
+
+
+RELATIONSHIP_TYPES = '''
 MATCH (rel:`origins:Relationship`)
 WHERE NOT (rel)<-[:`prov:entity`]-(:`prov:Invalidation`)
 RETURN rel.`origins:type`, count(rel.`origins:type`) as cnt
@@ -130,9 +148,37 @@ def component_sources(limit=10, tx=neo4j.tx):
     } for r in tx.send(query)]
 
 
-def common_relationships(limit=10, tx=neo4j.tx):
+def resource_types(limit=10, tx=neo4j.tx):
     query = {
-        'statement': COMMON_RELATIONSHIPS,
+        'statement': RESOURCE_TYPES,
+        'parameters': {
+            'limit': limit,
+        }
+    }
+
+    return [{
+        'type': r[0],
+        'count': r[1],
+    } for r in tx.send(query)]
+
+
+def component_types(limit=10, tx=neo4j.tx):
+    query = {
+        'statement': COMPONENT_TYPES,
+        'parameters': {
+            'limit': limit,
+        }
+    }
+
+    return [{
+        'type': r[0],
+        'count': r[1],
+    } for r in tx.send(query)]
+
+
+def relationship_types(limit=10, tx=neo4j.tx):
+    query = {
+        'statement': RELATIONSHIP_TYPES,
         'parameters': {
             'limit': limit,
         }

@@ -36,94 +36,110 @@ def json_representation(data, code, headers=None):
     return response
 
 
-api.add_resource(root.RootResource,
-                 '/',
-                 endpoint='root')
+routes = [
+    (root.RootResource,
+     '/',
+     'root'),
 
-api.add_resource(nodes.NodesResource,
-                 '/nodes/',
-                 endpoint='nodes')
+    (nodes.NodesResource,
+     '/nodes/', 'nodes'),
 
-api.add_resource(nodes.NodeResource,
-                 '/nodes/<uuid>/',
-                 endpoint='node')
+    (nodes.NodeResource,
+     '/nodes/<uuid>/',
+     'node'),
 
-api.add_resource(edges.EdgesResource,
-                 '/edges/',
-                 endpoint='edges')
+    (edges.EdgesResource,
+     '/edges/',
+     'edges'),
 
-api.add_resource(edges.EdgeResource,
-                 '/edges/<uuid>/',
-                 endpoint='edge')
+    (edges.EdgeResource,
+     '/edges/<uuid>/',
+     'edge'),
 
-api.add_resource(resources.ResourcesResource,
-                 '/resources/',
-                 endpoint='resources')
+    (resources.ResourcesResource,
+     '/resources/',
+     'resources'),
 
-api.add_resource(resources.ResourceResource,
-                 '/resources/<uuid>/',
-                 endpoint='resource')
+    (resources.ResourceSyncResource,
+     '/resources/sync/',
+     'resource-sync'),
 
-api.add_resource(resources.ResourceComponentsResource,
-                 '/resources/<uuid>/components/',
-                 endpoint='resource-components')
+    (resources.ResourceResource,
+     '/resources/<uuid>/',
+     'resource'),
 
-api.add_resource(resources.ResourceRelationshipsResource,
-                 '/resources/<uuid>/relationships/',
-                 endpoint='resource-relationships')
+    (resources.ResourceComponentsResource,
+     '/resources/<uuid>/components/',
+     'resource-components'),
 
-api.add_resource(components.ComponentsResource,
-                 '/components/',
-                 endpoint='components')
+    (resources.ResourceRelationshipsResource,
+     '/resources/<uuid>/relationships/',
+     'resource-relationships'),
 
-api.add_resource(components.ComponentResource,
-                 '/components/<uuid>/',
-                 endpoint='component')
+    (components.ComponentsResource,
+     '/components/',
+     'components'),
 
-api.add_resource(relationships.RelationshipsResource,
-                 '/relationships/',
-                 endpoint='relationships')
+    (components.ComponentResource,
+     '/components/<uuid>/',
+     'component'),
 
-api.add_resource(relationships.RelationshipResource,
-                 '/relationships/<uuid>/',
-                 endpoint='relationship')
+    (relationships.RelationshipsResource,
+     '/relationships/',
+     'relationships'),
 
-api.add_resource(collections.CollectionsResource,
-                 '/collections/',
-                 endpoint='collections')
+    (relationships.RelationshipResource,
+     '/relationships/<uuid>/',
+     'relationship'),
 
-api.add_resource(collections.CollectionResource,
-                 '/collections/<uuid>/',
-                 endpoint='collection')
+    (collections.CollectionsResource,
+     '/collections/',
+     'collections'),
 
-api.add_resource(collections.CollectionResourcesResource,
-                 '/collections/<uuid>/resources/',
-                 endpoint='collection-resources')
+    (collections.CollectionResource,
+     '/collections/<uuid>/',
+     'collection'),
 
-api.add_resource(trends.Trends,
-                 '/trends/',
-                 endpoint='trends')
+    (collections.CollectionResourcesResource,
+     '/collections/<uuid>/resources/',
+     'collection-resources'),
 
-api.add_resource(trends.ConnectedComponents,
-                 '/trends/connected-components/',
-                 endpoint='trend-connected-components')
+    (trends.Trends,
+     '/trends/',
+     'trends'),
 
-api.add_resource(trends.UsedComponents,
-                 '/trends/used-components/',
-                 endpoint='trend-used-components')
+    (trends.ConnectedComponents,
+     '/trends/connected-components/',
+     'trend-connected-components'),
 
-api.add_resource(trends.ConnectedResources,
-                 '/trends/connected-resources/',
-                 endpoint='trend-connected-resources')
+    (trends.UsedComponents,
+     '/trends/used-components/',
+     'trend-used-components'),
 
-api.add_resource(trends.UsedResources,
-                 '/trends/used-resources/',
-                 endpoint='trend-used-resources')
+    (trends.ConnectedResources,
+     '/trends/connected-resources/',
+     'trend-connected-resources'),
 
-api.add_resource(trends.ComponentSources,
-                 '/trends/component-sources/',
-                 endpoint='trend-component-sources')
+    (trends.UsedResources,
+     '/trends/used-resources/',
+     'trend-used-resources'),
 
-api.add_resource(trends.CommonRelationships,
-                 '/trends/common-relationships/',
-                 endpoint='trend-common-relationships')
+    (trends.ComponentSources,
+     '/trends/component-sources/',
+     'trend-component-sources'),
+
+    (trends.ResourceTypes,
+     '/trends/resource-types/',
+     'trend-resource-types'),
+
+    (trends.ComponentTypes,
+     '/trends/component-types/',
+     'trend-component-types'),
+
+    (trends.RelationshipTypes,
+     '/trends/relationship-types/',
+     'trend-relationship-types'),
+]
+
+for resource, path, name in routes:
+    api.add_resource(resource, path, endpoint=name)

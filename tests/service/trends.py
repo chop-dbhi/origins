@@ -21,5 +21,11 @@ class TrendsTestCase(ServiceTestCase):
         r, _ = self.get('/trends/component-sources/')
         self.assertEqual(r.status_code, 200)
 
-        r, _ = self.get('/trends/common-relationships/')
+        r, _ = self.get('/trends/resource-types/')
+        self.assertEqual(r.status_code, 200)
+
+        r, _ = self.get('/trends/component-types/')
+        self.assertEqual(r.status_code, 200)
+
+        r, _ = self.get('/trends/relationship-types/')
         self.assertEqual(r.status_code, 200)
