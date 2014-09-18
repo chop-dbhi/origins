@@ -15,6 +15,9 @@ class RootResource(restful.Resource):
                 'edges': {
                     'href': url_for('edges', _external=True),
                 },
+                'collections': {
+                    'href': url_for('collections', _external=True),
+                },
                 'resources': {
                     'href': url_for('resources', _external=True),
                 },
@@ -35,6 +38,10 @@ class RootResource(restful.Resource):
                 },
                 'edge': {
                     'href': unquote(url_for('edge', uuid='{uuid}',
+                                            _external=True)),
+                },
+                'collection': {
+                    'href': unquote(url_for('collection', uuid='{uuid}',
                                             _external=True)),
                 },
                 'resource': {
