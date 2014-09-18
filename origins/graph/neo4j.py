@@ -325,3 +325,6 @@ client = Client(**config.options['neo4j'])
 
 # Default transaction with auto-commit enabled
 tx = client.transaction(autocommit=True)
+
+if config.options['debug']:
+    debug()

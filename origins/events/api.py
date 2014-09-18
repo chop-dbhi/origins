@@ -22,6 +22,7 @@ __all__ = (
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 client = StrictRedis(decode_responses=True, **config.options['redis'])
 
@@ -39,8 +40,6 @@ def _make_event(topic, data):
 
 def _register_topic(topic):
     client.sadd(utils.TOPICS_KEY, topic)
-
-    logger.debug('registered topic "{}"'.format(topic))
 
 
 # Public methods
@@ -114,10 +113,6 @@ def purge():
 
 def debug():
     logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
 
 
 if config.options['debug']:
