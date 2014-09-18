@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(logging.INFO)
 
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 7474
+DEFAULT_SECURE_PORT = 7473
+
 # Default number of statements that will be sent in one request
 DEFAULT_BATCH_SIZE = 100
 
@@ -108,8 +112,17 @@ def _transaction_exit(tx):
 
 
 class Client(object):
-    def __init__(self, uri=None, host=None, port=None, scheme='http'):
+    def __init__(self, uri=None, host=None, port=None, secure=False):
         if not uri:
+            host = host or DEFAULT_HOST
+
+            if secure:
+                scheme = 'https'
+                port = port or DEFAULT_SECURE_PORT
+            else:
+                scheme = 'http'
+                port = port or DEFAULT_PORT
+
             uri = DEFAULT_URI_TMPL.format(host=host, port=port, scheme=scheme)
 
         self.uri = uri
