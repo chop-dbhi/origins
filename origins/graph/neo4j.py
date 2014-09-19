@@ -179,7 +179,9 @@ class Transaction(object):
         if self.autocommit:
             self.transaction_uri = TRANSACTION_URI_TMPL.format(self.client.uri)
             self.commit_uri = None
+            self._depth = 0
             self._batches = 0
+            self._queue = []
         else:
             self._closed = True
 
