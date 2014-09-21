@@ -164,7 +164,10 @@ class Transaction(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._depth -= 1
+        # If the transaction was closed inside the context block and
+        # auto-commit is enabled, the depth would already be zero
+        if self._depth > 0:
+            self._depth -= 1
 
         if not self._closed:
             # Handle error if it occurs

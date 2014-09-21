@@ -89,6 +89,7 @@ class Neo4jTestCase(unittest.TestCase):
 
             tx1.rollback()
 
+        self.assertEqual(tx._depth, 0)
         tx.send('CREATE (n)')
         r = tx.send('MATCH (n) RETURN n')
 
