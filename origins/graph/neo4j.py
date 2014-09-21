@@ -1,8 +1,8 @@
 import math
 import json
+import atexit
 import logging
 import requests
-import atexit
 from origins import config
 
 
@@ -154,6 +154,9 @@ class Transaction(object):
         # in sub-context managers.
         self._depth = 0
 
+        # Initialize a requests session for keep-alive
+        self._session = requests.Session()
+
         # Rollback uncommitted state on exit to prevent blocking subsequent
         # access
         atexit.register(_transaction_exit, self)
@@ -179,12 +182,15 @@ class Transaction(object):
                 self.commit()
 
     def _close(self):
+        self._session.close()
+
         if self.autocommit:
             self.transaction_uri = TRANSACTION_URI_TMPL.format(self.client.uri)
             self.commit_uri = None
             self._depth = 0
             self._batches = 0
             self._queue = []
+            self._session = requests.Session()
         else:
             self._closed = True
 
@@ -195,7 +201,7 @@ class Transaction(object):
             logger.debug(json.dumps(payload, indent=4))
 
         data = json.dumps(payload)
-        resp = requests.post(url, data=data, headers=HEADERS)
+        resp = self._session.post(url, data=data, headers=HEADERS)
 
         resp.raise_for_status()
         resp_data = resp.json()
@@ -307,7 +313,7 @@ class Transaction(object):
         if not self.commit_uri:
             raise Neo4jError('no pending transaction')
 
-        requests.delete(self.transaction_uri, headers=HEADERS)
+        self._session.delete(self.transaction_uri, headers=HEADERS)
         logger.debug('rollback: {}'.format(self.transaction_uri))
 
         self._close()
