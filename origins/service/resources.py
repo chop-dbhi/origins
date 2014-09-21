@@ -3,7 +3,7 @@ import codecs
 import traceback
 from flask import request, url_for
 from flask.ext import restful
-from origins.exceptions import ValidationError
+from origins.exceptions import ValidationError, DoesNotExist
 from origins.graph import Resource
 from origins.graph.sync import sync
 from .nodes import NodesResource, NodeResource
@@ -72,8 +72,10 @@ class ResourceSyncResource(restful.Resource):
 
 
 class ResourceComponentsResource(NodesResource):
-    def prepare(self, uuid, n):
+    def prepare(self, n, r):
         n = n.to_dict()
+
+        n['resource'] = r
 
         n['links'] = {
             'self': {
@@ -81,7 +83,7 @@ class ResourceComponentsResource(NodesResource):
                                 _external=True),
             },
             'resource': {
-                'href': url_for('resource', uuid=uuid,
+                'href': url_for('resource', uuid=r['uuid'],
                                 _external=True),
             },
         }
@@ -89,6 +91,11 @@ class ResourceComponentsResource(NodesResource):
         return n
 
     def get(self, uuid):
+        try:
+            r = Resource.get(uuid).to_dict()
+        except DoesNotExist as e:
+            return {'message': str(e)}, 404
+
         params = self.get_params()
 
         if params['query']:
@@ -107,11 +114,16 @@ class ResourceComponentsResource(NodesResource):
         result = []
 
         for n in cursor:
-            result.append(self.prepare(uuid, n))
+            result.append(self.prepare(n, r))
 
         return result, 200
 
     def post(self, uuid):
+        try:
+            r = Resource.get(uuid).to_dict()
+        except DoesNotExist as e:
+            return {'message': str(e)}, 404
+
         handler = ComponentResource()
 
         attrs = handler.get_attrs(request.json)
@@ -122,12 +134,14 @@ class ResourceComponentsResource(NodesResource):
         except ValidationError as e:
             return {'message': str(e)}, 404
 
-        return handler.prepare(n, resource=uuid), 201
+        return handler.prepare(n, resource=r), 201
 
 
 class ResourceRelationshipsResource(NodesResource):
-    def prepare(self, uuid, n):
+    def prepare(self, n, r):
         n = n.to_dict()
+
+        n['resource'] = r
 
         n['links'] = {
             'self': {
@@ -135,7 +149,7 @@ class ResourceRelationshipsResource(NodesResource):
                                 _external=True),
             },
             'resource': {
-                'href': url_for('resource', uuid=uuid,
+                'href': url_for('resource', uuid=r['uuid'],
                                 _external=True),
             },
         }
@@ -143,6 +157,11 @@ class ResourceRelationshipsResource(NodesResource):
         return n
 
     def get(self, uuid):
+        try:
+            r = Resource.get(uuid).to_dict()
+        except DoesNotExist as e:
+            return {'message': str(e)}, 404
+
         params = self.get_params()
 
         if params['query']:
@@ -161,11 +180,16 @@ class ResourceRelationshipsResource(NodesResource):
         result = []
 
         for n in cursor:
-            result.append(self.prepare(uuid, n))
+            result.append(self.prepare(n, r))
 
         return result, 200
 
     def post(self, uuid):
+        try:
+            r = Resource.get(uuid).to_dict()
+        except DoesNotExist as e:
+            return {'message': str(e)}, 404
+
         handler = RelationshipResource()
 
         attrs = handler.get_attrs(request.json)
@@ -176,4 +200,4 @@ class ResourceRelationshipsResource(NodesResource):
         except ValidationError as e:
             return {'message': str(e)}, 404
 
-        return handler.prepare(n, resource=uuid), 201
+        return handler.prepare(n, r), 201
