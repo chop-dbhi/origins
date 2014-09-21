@@ -1,3 +1,4 @@
+import json
 import logging
 
 IGNORED_ATTRS = {
@@ -29,6 +30,9 @@ def pack(a):
         if k == 'properties':
             for _k, _v in v.items():
                 if _v is not None:
+                    # JSON encode nested maps
+                    if isinstance(_v, dict):
+                        _v = json.dumps(_v)
                     b[_k] = _v
 
         # Everything else is prefixed
@@ -58,6 +62,13 @@ def unpack(b):
         if k.startswith(PACK_PREFIX):
             a[k[low:]] = v
         else:
+            # JSON decode nested maps
+            if isinstance(v, str) and v.startswith('{'):
+                try:
+                    v = json.loads(v)
+                except ValueError:
+                    pass
+
             p[k] = v
 
     a['properties'] = p or None
