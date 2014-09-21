@@ -9,7 +9,10 @@ from . import (root, nodes, edges, resources, components,
 
 
 app = Flask(__name__)
-cors = CORS(app, headers='Content-Type')
+
+cors = CORS(app, headers=['Content-Type'],
+            send_wildcard=False,
+            supports_credentials=True)
 
 api = restful.Api(app)
 
