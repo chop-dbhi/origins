@@ -33,7 +33,7 @@ RETURN n, s, e
 '''  # noqa
 
 
-def _update(current, start, end, tx):
+def _update(current, start, end, validate, tx):
     # Removes the physical edge between the two nodes
     current._invalidate(current, tx)
 
@@ -49,7 +49,7 @@ def _update(current, start, end, tx):
         'end': end,
     })
 
-    prov = current._add(edge, tx)
+    prov = current._add(edge, validate=validate, tx=tx)
 
     # TODO add trigger
     prov_spec = provenance.set(current.uuid, edge.uuid,
@@ -66,7 +66,7 @@ def _update(current, start, end, tx):
     return edge
 
 
-def trigger_change(old, new, tx):
+def trigger_change(old, new, validate, tx):
     """Get all edges with a declared dependence for the `old` node
     and creates an edge to the `new` node.
     """
@@ -96,19 +96,19 @@ def trigger_change(old, new, tx):
 
         # Forward trigger
         if edge.start == old and edge.direction in {'bidirected', 'directed'}:
-            _update(edge, new, edge.end, tx=tx)
+            _update(edge, new, edge.end, validate=validate, tx=tx)
 
         # Reverse trigger
         elif edge.end == old and edge.direction in {'bidirected', 'reverse'}:  # noqa
-            _update(edge, edge.start, new, tx=tx)
+            _update(edge, edge.start, new, validate=validate, tx=tx)
 
         # No updates, remove
         else:
             model._remove(edge, reason='origins:NodeChange', trigger=new,
-                          tx=tx)
+                          validate=validate, tx=tx)
 
 
-def trigger_remove(node, tx):
+def trigger_remove(node, validate, tx):
     """Finds all edges and nodes that depend on the passed node for
     removal.
     """
@@ -152,6 +152,7 @@ def trigger_remove(node, tx):
                 nodes[start].add(end)
 
     for edge, triggers in edges.items():
-        model._remove(edge, reason='origins:NodeRemoved', tx=tx)
+        model._remove(edge, reason='origins:NodeRemoved', validate=validate,
+                      tx=tx)
 
     return nodes

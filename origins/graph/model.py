@@ -374,27 +374,30 @@ class Model(object):
         return True if result else False
 
     @classmethod
-    def _add(cls, node, tx):
+    def _add(cls, node, validate, tx):
         query = cls.add_query(node)
 
-        if not tx.send(query):
-            raise Exception('did not successfully add {}'.format(node))
+        if not validate:
+            tx.send(query, defer=True)
+        else:
+            if not tx.send(query):
+                raise Exception('did not successfully add {}'.format(node))
 
         prov_spec = provenance.add(node.uuid)
 
         return provenance.load(prov_spec, tx=tx)
 
     @classmethod
-    def _set(cls, old, new, tx):
+    def _set(cls, old, new, validate, tx):
         # Invalidate old version
         cls._invalidate(old, tx=tx)
 
         # Add new version
-        prov = cls._add(new, tx=tx)
+        prov = cls._add(new, validate=validate, tx=tx)
 
         # Trigger the change dependency. This must occur after the new
         # node has been added so it is visible in the graph.
-        deps.trigger_change(old, new, tx=tx)
+        deps.trigger_change(old, new, validate=validate, tx=tx)
 
         return prov
 
@@ -406,7 +409,7 @@ class Model(object):
             raise Exception('did not successfully delete {}'.format(node))
 
     @classmethod
-    def _remove(cls, node, reason, tx, trigger=None):
+    def _remove(cls, node, reason, validate, tx, trigger=None):
         with tx as tx:
             cls._invalidate(node, tx)
 
@@ -426,15 +429,16 @@ class Model(object):
     @classmethod
     def add(cls, *args, **kwargs):
         tx = kwargs.pop('tx', neo4j.tx)
+        validate = kwargs.pop('validate', True)
 
         with tx as tx:
             node = cls(*args, **kwargs)
 
-            cls._validate_unique(node, tx=tx)
+            if validate:
+                cls._validate_unique(node, tx=tx)
+                cls._validate(node, tx=tx)
 
-            cls._validate(node, tx=tx)
-
-            prov = cls._add(node, tx=tx)
+            prov = cls._add(node, validate=validate, tx=tx)
 
             events.publish('{}.add'.format(cls.model_type), {
                 'node': node.to_dict(),
@@ -444,15 +448,18 @@ class Model(object):
             return node
 
     @classmethod
-    def set(cls, uuid, **kwargs):
+    def set(cls, uuid, validate=True, **kwargs):
         tx = kwargs.pop('tx', neo4j.tx)
 
         with tx as tx:
-            previous = cls.get(uuid, tx=tx)
+            if isinstance(uuid, cls):
+                previous = uuid
+            else:
+                previous = cls.get(uuid, tx=tx)
 
-            if previous.invalidation:
-                raise ValidationError('cannot set invalidation {}'
-                                      .format(cls.model_type))
+                if previous.invalidation:
+                    raise ValidationError('cannot set invalidation {}'
+                                          .format(cls.model_type))
 
             # Derive from previous
             node = cls.derive(previous, kwargs)
@@ -463,7 +470,7 @@ class Model(object):
             if not diff:
                 return
 
-            prov = cls._set(previous, node, tx=tx)
+            prov = cls._set(previous, node, validate=validate, tx=tx)
 
             # Provenance for change
             prov_spec = provenance.set(previous.uuid, node.uuid)
@@ -480,15 +487,18 @@ class Model(object):
             return node
 
     @classmethod
-    def remove(cls, uuid, reason=None, tx=neo4j.tx):
+    def remove(cls, uuid, reason=None, validate=True, tx=neo4j.tx):
         with tx as tx:
-            node = cls.get(uuid, tx=tx)
+            if isinstance(uuid, cls):
+                node = uuid
+            else:
+                node = cls.get(uuid, tx=tx)
 
-            if node.invalidation:
-                raise ValidationError('{} already invalidated: {}'
-                                      .format(cls.model_type, uuid))
+                if node.invalidation:
+                    raise ValidationError('{} already invalidated: {}'
+                                          .format(cls.model_type, uuid))
 
-            nodes = deps.trigger_remove(node, tx=tx)
+            nodes = deps.trigger_remove(node, validate=validate, tx=tx)
 
             # Remove all nodes
             for n, triggers in nodes.items():
@@ -497,7 +507,7 @@ class Model(object):
                 else:
                     r = reason
 
-                prov = cls._remove(n, reason=r, tx=tx)
+                prov = cls._remove(n, reason=r, validate=validate, tx=tx)
 
                 events.publish('{}.remove'.format(n.model_type), {
                     'node': n.to_dict(),

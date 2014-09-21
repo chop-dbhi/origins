@@ -59,8 +59,8 @@ class Component(Continuant):
                                   .format(node.model_type))
 
     @classmethod
-    def _add(cls, node, tx):
-        prov = Continuant._add(node, tx)
+    def _add(cls, node, validate, tx):
+        prov = Continuant._add(node, validate=validate, tx=tx)
 
         # Define managing relationship
         Edge.add(start=node.resource,
@@ -68,6 +68,7 @@ class Component(Continuant):
                  type='manages',
                  direction='bidirected',
                  dependence='inverse',
+                 validate=validate,
                  tx=tx)
 
         # Defining inclusion to resource
@@ -76,21 +77,22 @@ class Component(Continuant):
                  type='includes',
                  direction='bidirected',
                  dependence='none',
+                 validate=validate,
                  tx=tx)
 
         return prov
 
     @classmethod
-    def _set(cls, old, new, tx):
+    def _set(cls, old, new, validate, tx):
         # Invalidate old version
         cls._invalidate(old, tx=tx)
 
         # Add new version
-        prov = Continuant._add(new, tx=tx)
+        prov = Continuant._add(new, validate=validate, tx=tx)
 
         # Trigger the change dependency. This must occur after the new
         # node has been added so it is visible in the graph.
-        deps.trigger_change(old, new, tx=tx)
+        deps.trigger_change(old, new, validate=validate, tx=tx)
 
         return prov
 

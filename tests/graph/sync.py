@@ -18,7 +18,7 @@ class SyncTestCase(TestCase):
 
         r = sync(data)
 
-        self.assertIn('uuid', r['resource'])
+        self.assertTrue(r['resource'])
 
     def test_full(self):
         with open(data_path) as f:

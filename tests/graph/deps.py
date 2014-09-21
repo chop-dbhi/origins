@@ -4,9 +4,9 @@ from origins.graph.nodes import Node
 from .base import TestCase
 
 
-def _build_tree(max_depth=3, tx=neo4j.tx):
+def _build_tree(depth=3, tx=neo4j.tx):
     with tx as tx:
-        root = Node.add('0')
+        root = Node.add('0', validate=False)
 
         # Start with root
         queue = [(root, 0)]
@@ -16,20 +16,39 @@ def _build_tree(max_depth=3, tx=neo4j.tx):
             r, d = queue.pop()
 
             d += 1
-            a = Node.add('{}a'.format(d))
-            b = Node.add('{}b'.format(d))
+            a = Node.add('{}a'.format(d), validate=False)
+            b = Node.add('{}b'.format(d), validate=False)
 
             # Attach children for convenience
             r.children = [a, b]
 
-            Edge.add(a, r, dependence='forward')
-            Edge.add(b, r, dependence='forward')
+            Edge.add(a, r, dependence='forward', validate=False)
+            Edge.add(b, r, dependence='forward', validate=False)
 
-            if d < max_depth:
+            if d < depth:
                 queue.append((a, d))
                 queue.append((b, d))
 
         return root
+
+
+def _build_circle(size=10, tx=neo4j.tx):
+    with tx as tx:
+        f = s = Node.add(validate=False, tx=tx)
+        e = Node.add(validate=False, tx=tx)
+
+        # Create initial edge
+        Edge.add(s, e, dependence='forward', validate=False, tx=tx)
+
+        for _ in range(size):
+            s = e
+            e = Node.add(validate=False, tx=tx)
+            Edge.add(s, e, dependence='forward', validate=False, tx=tx)
+
+        # Connect the loop
+        Edge.add(e, f, dependence='forward', validate=False, tx=tx)
+
+    return f
 
 
 def _descendents(n):
@@ -48,19 +67,7 @@ def _descendents(n):
 
 class DependencyChainTestCase(TestCase):
     def test_circle(self):
-        f = s = Node.add()
-        e = Node.add()
-
-        # Create initial edge
-        Edge.add(s, e, dependence='forward')
-
-        for _ in range(10):
-            s = e
-            e = Node.add()
-            Edge.add(s, e, dependence='forward')
-
-        # Connect the loop
-        Edge.add(e, f, dependence='forward')
+        f = _build_circle()
 
         # Trigger delete
         Node.remove(f.uuid)

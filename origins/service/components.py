@@ -8,7 +8,8 @@ def prepare(n, r=None):
     n = n.to_dict()
 
     if not r:
-        r = Component.resource(n['uuid']).uuid
+        r = Component.resource(n['uuid'])
+        n['resource'] = r
 
     n['links'] = {
         'self': {
@@ -16,7 +17,7 @@ def prepare(n, r=None):
                             _external=True),
         },
         'resource': {
-            'href': url_for('resource', uuid=r, _external=True)
+            'href': url_for('resource', uuid=r.uuid, _external=True)
         },
     }
 

@@ -61,8 +61,8 @@ class Relationship(Edge):
                                   .format(node.model_type))
 
     @classmethod
-    def _add(cls, node, tx):
-        prov = Edge._add(node, tx)
+    def _add(cls, node, validate, tx):
+        prov = Edge._add(node, validate=validate, tx=tx)
 
         # Define managing relationship
         Edge.add(start=node.resource,
@@ -70,6 +70,7 @@ class Relationship(Edge):
                  type='manages',
                  direction='bidirected',
                  dependence='inverse',
+                 validate=validate,
                  tx=tx)
 
         # Defining inclusion to resource
@@ -78,21 +79,22 @@ class Relationship(Edge):
                  type='includes',
                  direction='bidirected',
                  dependence='none',
+                 validate=validate,
                  tx=tx)
 
         return prov
 
     @classmethod
-    def _set(cls, old, new, tx):
+    def _set(cls, old, new, validate, tx):
         # Invalidate old version
         cls._invalidate(old, tx=tx)
 
         # Add new version
-        prov = Edge._add(new, tx=tx)
+        prov = Edge._add(new, validate=validate, tx=tx)
 
         # Trigger the change dependency. This must occur after the new
         # node has been added so it is visible in the graph.
-        deps.trigger_change(old, new, tx=tx)
+        deps.trigger_change(old, new, validate=validate, tx=tx)
 
         return prov
 
