@@ -49,7 +49,17 @@ class TrendsTestCase(TestCase):
 
         self.assertEqual(result, [])
 
-    def test_common_relationships(self):
-        result = trends.common_relationships()
+    def test_relationship_types(self):
+        result = trends.relationship_types()
 
         self.assertEqual(result, [{'count': 5, 'type': 'related'}])
+
+    def test_component_types(self):
+        result = trends.component_types()
+
+        self.assertEqual(result, [{'count': 10, 'type': 'Component'}])
+
+    def test_resource_types(self):
+        result = trends.resource_types()
+
+        self.assertEqual(result, [{'count': 2, 'type': 'Resource'}])
