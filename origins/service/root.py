@@ -12,6 +12,9 @@ class RootResource(restful.Resource):
                 'self': {
                     'href': url_for('root', _external=True),
                 },
+                'search': {
+                    'href': url_for('search', _external=True),
+                },
                 'nodes': {
                     'href': url_for('nodes', _external=True),
                 },

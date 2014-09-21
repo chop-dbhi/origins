@@ -4,7 +4,7 @@ from flask.ext import restful
 from flask_cors import CORS
 from origins import config
 from origins.graph.model import Model
-from . import (root, nodes, edges, resources, components,
+from . import (root, search, nodes, edges, resources, components,
                collections, relationships, trends)
 
 
@@ -43,6 +43,10 @@ routes = [
     (root.RootResource,
      '/',
      'root'),
+
+    (search.SearchResource,
+     '/search/',
+     'search'),
 
     (nodes.NodesResource,
      '/nodes/', 'nodes'),
