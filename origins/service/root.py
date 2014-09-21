@@ -9,6 +9,9 @@ class RootResource(restful.Resource):
             'version': 1.0,
             'title': 'Origins API',
             'links': {
+                'self': {
+                    'href': url_for('root', _external=True),
+                },
                 'nodes': {
                     'href': url_for('nodes', _external=True),
                 },
