@@ -1,5 +1,5 @@
 from ..exceptions import ValidationError, DoesNotExist
-from . import neo4j, traverse
+from . import neo4j, traverse, utils
 from .model import Continuant
 from .edges import Edge
 
@@ -13,6 +13,13 @@ class Collection(Continuant):
 
         MATCH (n:`origins:Resource`$type $predicate)<-[:includes]-(:`origins:Collection` {`origins:uuid`: { uuid }})
         RETURN n
+
+    '''  # noqa
+
+    resource_count_statement = '''
+
+        MATCH (n:`origins:Resource`)<-[:includes]-(:`origins:Collection` {`origins:uuid`: { uuid }})
+        RETURN count(n)
 
     '''  # noqa
 
@@ -60,6 +67,22 @@ class Collection(Continuant):
             result = tx.send(query)
 
             return [Resource.parse(r) for r in result]
+
+    @classmethod
+    def resource_count(cls, uuid, tx=neo4j.tx):
+        statement = utils.prep(cls.resource_count_statement)
+
+        result = tx.send({
+            'statement': statement,
+            'parameters': {
+                'uuid': uuid,
+            },
+        })
+
+        if not result:
+            raise DoesNotExist('collection does not exist')
+
+        return result[0][0]
 
     @classmethod
     def add_resource(cls, uuid, resource, tx=neo4j.tx):

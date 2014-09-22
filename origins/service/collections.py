@@ -8,6 +8,8 @@ from .resources import ResourceResource
 def prepare(n):
     n = n.to_dict()
 
+    n['resource_count'] = Collection.resource_count(n['uuid'])
+
     n['links'] = {
         'self': {
             'href': url_for('collection', uuid=n['uuid'],

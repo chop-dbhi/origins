@@ -52,3 +52,7 @@ class CollectionTestCase(unittest.TestCase):
 
         r1 = Collection.set(r.uuid, label='Special')
         self.assertEqual(Collection.resources(r1.uuid), [c, d])
+
+        self.assertEqual(Collection.resource_count(r.uuid), 0)
+        self.assertEqual(Collection.resource_count(r1.uuid), 2)
+        self.assertEqual(Collection.resource_count(p.uuid), 1)
