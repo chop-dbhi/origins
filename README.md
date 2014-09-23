@@ -58,8 +58,10 @@ redis-cli monitor
 
 ## Deployment
 
-Using [Fig](http://fig.sh):
+The repository contains a [fig.yml](http://fig.sh) file for easy deployments on a single host by running:
 
 ```
 fig up
 ```
+
+For persistence, [volumes should be mounted](https://docs.docker.com/userguide/dockervolumes/) for the `neo4j` and `redis` containers.

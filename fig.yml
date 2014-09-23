@@ -1,17 +1,15 @@
-# Redis instance
+# Redis
+# Requires a data volume for persistence
 redis:
     image: dockerfile/redis
     detach: true
-    volumes:
-        - /data/redis:/data
 
 # Neo4j; pre-configured for Origins
+# Requires a data volume for persistence
 neo4j:
     image: bruth/origins-neo4j
     privileged: true
     detach: true
-    volumes:
-        - /data/neo4j:/neo4j/data
 
 # Origins service
 service:
