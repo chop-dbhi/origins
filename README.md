@@ -2,15 +2,17 @@
 
 [![Build Status](https://travis-ci.org/cbmi/origins.png?branch=master)](https://travis-ci.org/cbmi/origins) [![Coverage Status](https://coveralls.io/repos/cbmi/origins/badge.png)](https://coveralls.io/r/cbmi/origins)
 
-Documentation: https://github.com/cbmi/origins/wiki/
+## Documentation
 
-## CLI
+Please refer to the Origins wiki for getting started and deployment documentation: https://github.com/cbmi/origins/wiki/
 
-The `origins` script is located in the `bin/` directed when cloned or installed on your `PATH` otherwise.
+## Development
 
-```
-origins
-```
+General requirements:
+
+- Python 3.2+
+- Redis 2.8+
+- Neo4j 2.1+
 
 ## Config
 
@@ -31,37 +33,3 @@ Origins uses a JSON-encoded configuration file to customize the behavior of the 
     }
 }
 ```
-
-## Development
-
-### Service
-
-The REST service:
-
-```
-./bin/origins serve --debug [--config /path/to/config.json]
-```
-
-### Events
-
-The events daemon that pushes published events to subscribers:
-
-```
-./bin/origins events --debug [--config /path/to/config.json]
-```
-
-Run the Redis monitor if you're curious:
-
-```
-redis-cli monitor
-```
-
-## Deployment
-
-The repository contains a [fig.yml](http://fig.sh) file for easy deployments on a single host by running:
-
-```
-fig up
-```
-
-For persistence, [volumes should be mounted](https://docs.docker.com/userguide/dockervolumes/) for the `neo4j` and `redis` containers.
