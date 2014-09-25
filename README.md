@@ -8,28 +8,8 @@ Please refer to the Origins wiki for getting started and deployment documentatio
 
 ## Development
 
-General requirements:
+Requirements:
 
 - Python 3.2+
 - Redis 2.8+
 - Neo4j 2.1+
-
-## Config
-
-Origins uses a JSON-encoded configuration file to customize the behavior of the services.
-
-```javascript
-{
-    "host": "localhost",            // Host/IP address of the service.
-    "port": 5000,                   // Port to expose the service on.
-    "debug": false,                 // Turn on for debug messages.
-    "neo4j": {
-        "host": "localhost",        // Host of the Neo4j REST endpoint.
-        "port": 7474                // Port of the Neo4j REST endpoint.
-    },
-    "redis": {
-        "host": "localhost",        // Host of the Redis server.
-        "port": 6379                // Port of the Redis server.
-    }
-}
-```
