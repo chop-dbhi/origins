@@ -33,6 +33,7 @@ DIFF_ATTRS = {
     'description',
     'direction',
     'dependence',
+    'properties',
 }
 
 
