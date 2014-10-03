@@ -23,7 +23,7 @@ class MockHandler(logging.Handler):
 
 class Neo4jTestCase(unittest.TestCase):
     def setUp(self):
-        neo4j.purge()
+        neo4j.client.purge()
 
     def test_batch(self):
         with neo4j.client.transaction(batch_size=2) as tx:
@@ -109,7 +109,8 @@ class Neo4jTestCase(unittest.TestCase):
         data = tx.commit()
 
         self.assertEqual(len(tx._queue), 0)
-        self.assertEqual(len(data), 2)
+        # Deferred statements do not return their data
+        self.assertIsNone(data)
 
     def test_uncommitted(self):
         handler = MockHandler(logging.ERROR)

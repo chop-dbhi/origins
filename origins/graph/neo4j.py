@@ -130,6 +130,14 @@ class Client(object):
     def transaction(self, batch_size=None, autocommit=False):
         return Transaction(self, batch_size, autocommit)
 
+    def purge(self, *args, **kwargs):
+        "Deletes all nodes and relationships."
+        tx = self.transaction()
+        tx.commit('MATCH (n) '
+                  'OPTIONAL MATCH (n)-[r]-() '
+                  'DELETE r, n ',
+                  *args, **kwargs)
+
 
 class Transaction(object):
     def __init__(self, client, batch_size=None, autocommit=False):
@@ -317,14 +325,6 @@ class Transaction(object):
         logger.debug('rollback: {}'.format(self.transaction_uri))
 
         self._close()
-
-
-def purge(*args, **kwargs):
-    "Deletes all nodes and relationships."
-    tx.send('MATCH (n) '
-            'OPTIONAL MATCH (n)-[r]-() '
-            'DELETE r, n ',
-            *args, **kwargs)
 
 
 def debug():

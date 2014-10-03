@@ -7,7 +7,7 @@ from origins.graph.components import Component
 
 class ComponentTestCase(unittest.TestCase):
     def setUp(self):
-        neo4j.purge()
+        neo4j.client.purge()
 
         self.r = Resource.add()
 

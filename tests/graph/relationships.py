@@ -8,7 +8,7 @@ from origins.graph.resources import Resource
 
 class RelationshipTestCase(unittest.TestCase):
     def setUp(self):
-        neo4j.purge()
+        neo4j.client.purge()
 
         self.r = Resource.add()
 

@@ -12,7 +12,7 @@ class ServiceTestCase(unittest.TestCase):
     path = ''
 
     def setUp(self):
-        neo4j.purge()
+        neo4j.client.purge()
 
     def req(self, method, path=None, urivars=None, data=None, params=None,
             headers=None):

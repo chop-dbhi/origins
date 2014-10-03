@@ -5,5 +5,5 @@ from origins.graph import neo4j
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        neo4j.purge()
+        neo4j.client.purge()
         events.purge()

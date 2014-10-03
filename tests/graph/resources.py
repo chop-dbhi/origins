@@ -6,7 +6,7 @@ from origins.graph import Resource, Component, Relationship
 
 class ResourceTestCase(unittest.TestCase):
     def setUp(self):
-        neo4j.purge()
+        neo4j.client.purge()
 
     def test_match(self):
         r0 = Resource.add()

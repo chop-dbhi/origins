@@ -7,7 +7,7 @@ from origins.graph.resources import Resource
 
 class CollectionTestCase(unittest.TestCase):
     def setUp(self):
-        neo4j.purge()
+        neo4j.client.purge()
 
     def test_match(self):
         r0 = Collection.add()
