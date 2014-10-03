@@ -38,14 +38,12 @@ def _parse_container(prov_data):
 
 
 def prepare_props(comp_id, attrs, uuid, time):
-    # Copy properties. For relation types, ignore relation attributes
-    relations = PROV_TYPES[comp_id]
     props = {}
+    relations = PROV_RELATIONS.get(comp_id)
 
+    # Copy properties. For relation types, ignore relation attributes
     for key in attrs:
-        # Ignore relation-based attributes since they are defined
-        # as edges in the graph
-        if key not in relations:
+        if not relations or key not in relations:
             props[key] = attrs[key]
 
     props['origins:uuid'] = uuid
