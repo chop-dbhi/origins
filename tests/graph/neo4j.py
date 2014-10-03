@@ -109,8 +109,8 @@ class Neo4jTestCase(unittest.TestCase):
         data = tx.commit()
 
         self.assertEqual(len(tx._queue), 0)
-        # Deferred statements do not return their data
-        self.assertIsNone(data)
+
+        self.assertEqual(len(data), 2)
 
     def test_uncommitted(self):
         handler = MockHandler(logging.ERROR)

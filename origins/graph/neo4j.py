@@ -219,20 +219,8 @@ class Transaction(object):
 
         return resp, resp_data,
 
-    def _send(self, statements, parameters, commit=False, defer=False):
-        if self._closed:
-            raise Neo4jError('transaction closed')
-
-        statements = _normalize_statements(statements, parameters)
-
-        self._queue.extend(statements)
-
-        # Wait to send the requests
-        if defer:
-            return
-
-        statements = self._queue
-        self._queue = []
+    def _send_statements(self, statements, commit):
+        "Sends a set of series of statements in batches."
         resp_data = None
 
         if self.batch_size:
@@ -278,6 +266,34 @@ class Transaction(object):
 
         return resp_data
 
+    def _send(self, statements, parameters, commit=False, defer=False):
+        if self._closed:
+            raise Neo4jError('transaction closed')
+
+        statements = _normalize_statements(statements, parameters)
+
+        # A deferred send extends the queue, otherwise the queue is flushed
+        # and the passed statements are immediately sent. This is required
+        # for getting the expected results back.
+        if defer:
+            self._queue.extend(statements)
+            return
+
+        # If non-deferred statements are passed send the queued statements,
+        # otherwise send the queued statements returning the response.
+        if statements:
+            if self._queue:
+                self._send_statements(self._queue, commit=False)
+
+            resp = self._send_statements(statements, commit=commit)
+        else:
+            resp = self._send_statements(self._queue, commit=commit)
+
+        # Reset queue
+        self._queue = []
+
+        return resp
+
     def send(self, statements, parameters=None, defer=False):
         """Sends statements to an existing transaction or opens a new one.
 
@@ -302,7 +318,8 @@ class Transaction(object):
         if 'commit' in data:
             self.commit_uri = data['commit']
 
-        return _normalize_results(data['results'])
+        if data:
+            return _normalize_results(data['results'])
 
     def commit(self, statements=None, parameters=None):
         "Commits an open transaction or performs a single transaction request."
@@ -315,7 +332,8 @@ class Transaction(object):
 
         self._close()
 
-        return _normalize_results(data['results'])
+        if data:
+            return _normalize_results(data['results'])
 
     def rollback(self):
         if not self.commit_uri:
