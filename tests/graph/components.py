@@ -45,12 +45,3 @@ class ComponentTestCase(unittest.TestCase):
         r = Component.resource(c.uuid)
 
         self.assertEqual(r, self.r)
-
-    def test_resource_dependence(self):
-        c = Component.add(resource=self.r)
-
-        # Remove resource
-        Resource.remove(self.r.uuid)
-
-        self.assertRaises(DoesNotExist, Component.get_by_id, c.id,
-                          resource=self.r)

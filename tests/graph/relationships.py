@@ -50,12 +50,3 @@ class RelationshipTestCase(unittest.TestCase):
         r = Relationship.resource(c.uuid)
 
         self.assertEqual(r, self.r)
-
-    def test_resource_dependence(self):
-        c = Relationship.add(self.a0, self.b0, resource=self.r)
-
-        # Remove resource
-        Resource.remove(self.r.uuid)
-
-        self.assertRaises(DoesNotExist, Relationship.get_by_id, c.id,
-                          resource=self.r)

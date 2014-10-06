@@ -12,9 +12,9 @@ LIMIT { limit }
 
 
 USED_COMPONENTS = '''
-MATCH (cmp:`origins:Component`)<-[con:`includes`]-(res:`origins:Resource`)
+MATCH (cmp:`origins:Component`)<-[con:`origins:includes`]-(res:`origins:Resource`)
 WHERE NOT (cmp)<-[:`prov:entity`]-(:`prov:Invalidation`)
-    AND NOT (res)-[:`manages`]->(cmp)
+    AND NOT (res)-[:`origins:manages`]->(cmp)
 RETURN cmp, count(con) as cnt
 ORDER BY cnt DESC
 LIMIT { limit }
@@ -22,7 +22,7 @@ LIMIT { limit }
 
 
 CONNECTED_RESOURCES = '''
-MATCH (res:`origins:Resource`)-[:`manages`]->(rel:`origins:Relationship`)
+MATCH (res:`origins:Resource`)-[:`origins:manages`]->(rel:`origins:Relationship`)
 WHERE NOT (rel)<-[:`prov:entity`]-(:`prov:Invalidation`)
 RETURN res, count(rel) as cnt
 ORDER BY cnt DESC
@@ -31,11 +31,11 @@ LIMIT { limit }
 
 
 USED_RESOURCES = '''
-MATCH (res:`origins:Resource`)-[:`includes`]->(cmp:`origins:Component`)
+MATCH (res:`origins:Resource`)-[:`origins:includes`]->(cmp:`origins:Component`)
 WHERE NOT (res)<-[:`prov:entity`]-(:`prov:Invalidation`)
-    AND NOT (res)-[:`manages`]->(cmp)
+    AND NOT (res)-[:`origins:manages`]->(cmp)
 WITH cmp
-MATCH (cmp)<-[:`manages`]-(res:`origins:Resource`)
+MATCH (cmp)<-[:`origins:manages`]-(res:`origins:Resource`)
 RETURN res, count(cmp) as cnt
 ORDER BY cnt DESC
 LIMIT { limit }

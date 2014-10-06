@@ -1,7 +1,6 @@
 from origins.exceptions import ValidationError, InvalidStateError
 from .model import Continuant
 from . import neo4j, utils, deps
-from .edges import Edge
 
 
 class Component(Continuant):
@@ -11,17 +10,39 @@ class Component(Continuant):
 
     get_by_id_statement = '''
 
-        MATCH (:`origins:Resource` {`origins:uuid`: { resource }})-[:manages]->(n:`origins:Component` {`origins:id`: { id }})
+        MATCH (:`origins:Resource` {`origins:uuid`: { resource }})-[:`origins:manages`]->(n:`origins:Component` {`origins:id`: { id }})
+            WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
         RETURN n
 
     '''  # noqa
 
-    # Gets the component's resource. This does not use the physical edge since
-    # the component being looked up may be invalid
+    # Gets the component's resource.
     get_resource_statement = '''
 
-        MATCH (:`origins:Component` {`origins:uuid`: { uuid }})<-[:`origins:end`]-(:`origins:Edge` {`origins:type`: 'manages'})-[:`origins:start`]->(n:`origins:Resource`)
+        MATCH (:`origins:Component` {`origins:uuid`: { uuid }})<-[:`origins:manages`]-(n:`origins:Resource`)
         RETURN n
+
+    '''  # noqa
+
+    link_resource_statement = '''
+
+        MATCH (r:`origins:Resource` {`origins:uuid`: { resource }}),
+              (n:`origins:Component` {`origins:uuid`: { component }})
+
+        CREATE (r)-[:`origins:includes`]->(n),
+               (r)-[:`origins:manages`]->(n)
+
+    '''  # noqa
+
+    copy_resources = '''
+
+        MATCH (o:`origins:Component` {`origins:uuid`: { old }}),
+              (n:`origins:Component` {`origins:uuid`: { new }}),
+              (o)<-[:`origins:manages`]-(m:`origins:Resource`),
+              (o)<-[:`origins:includes`]-(i:`origins:Resource`)
+
+        CREATE (m)-[:`origins:manages`]->(n),
+               (i)-[:`origins:includes`]->(n)
 
     '''  # noqa
 
@@ -62,23 +83,17 @@ class Component(Continuant):
     def _add(cls, node, validate, tx):
         prov = Continuant._add(node, validate=validate, tx=tx)
 
-        # Define managing relationship
-        Edge.add(start=node.resource,
-                 end=node,
-                 type='manages',
-                 direction='bidirected',
-                 dependence='inverse',
-                 validate=validate,
-                 tx=tx)
+        statement = utils.prep(cls.link_resource_statement)
 
-        # Defining inclusion to resource
-        Edge.add(start=node.resource,
-                 end=node,
-                 type='includes',
-                 direction='bidirected',
-                 dependence='none',
-                 validate=validate,
-                 tx=tx)
+        query = {
+            'statement': statement,
+            'parameters': {
+                'resource': node.resource.uuid,
+                'component': node.uuid,
+            }
+        }
+
+        tx.send(query, defer=not validate)
 
         return prov
 
@@ -89,6 +104,18 @@ class Component(Continuant):
 
         # Add new version
         prov = Continuant._add(new, validate=validate, tx=tx)
+
+        statement = utils.prep(cls.copy_resources)
+
+        query = {
+            'statement': statement,
+            'parameters': {
+                'old': old.uuid,
+                'new': new.uuid,
+            }
+        }
+
+        tx.send(query, defer=not validate)
 
         # Trigger the change dependency. This must occur after the new
         # node has been added so it is visible in the graph.

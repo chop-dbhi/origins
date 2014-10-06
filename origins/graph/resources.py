@@ -1,7 +1,6 @@
 from origins.exceptions import ValidationError, DoesNotExist
 from .model import Continuant
-from .edges import Edge
-from . import neo4j, traverse
+from . import neo4j, traverse, utils
 
 
 class Resource(Continuant):
@@ -9,47 +8,56 @@ class Resource(Continuant):
 
     model_type = 'Resource'
 
-    match_components_statement = '''
+    match_included_statement = '''
 
-        MATCH (n:`origins:Component`$type $predicate)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        MATCH (:`origins:Resource` {`origins:uuid`: { uuid }})-[:`origins:includes`]->(n$model$type $predicate)
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
         RETURN n
 
     '''  # noqa
 
-    match_managed_components_statement = '''
+    match_managed_statement = '''
 
-        MATCH (n:`origins:Component`$type $predicate)<-[:manages]-(:`origins:Resource` {`origins:uuid`: { uuid }})
+        MATCH (:`origins:Resource` {`origins:uuid`: { uuid }})-[:`origins:manages`]->(n$model$type $predicate)
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
         RETURN n
 
     '''  # noqa
 
-    search_components_statement = '''
+    search_included_statement = '''
 
-        MATCH (n:`origins:Component`$type)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
-        WHERE $predicate
+        MATCH (:`origins:Resource` {`origins:uuid`: { uuid }})-[:`origins:includes`]->(n$model$type)
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+            AND $predicate
         RETURN n
 
     '''  # noqa
 
-    match_relationships_statement = '''
+    create_include_statement = '''
 
-        MATCH (n:`origins:Relationship`$type $predicate)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
-        RETURN n
+        MATCH (r:`origins:Resource` {`origins:uuid`: { resource }}),
+              (n$model$type {`origins:uuid`: { item }})
 
-    '''  # noqa
-
-    match_managed_relationships_statement = '''
-
-        MATCH (n:`origins:Relationship`$type $predicate)<-[:manages]-(:`origins:Resource` {`origins:uuid`: { uuid }})
-        RETURN n
+        CREATE (r)-[:`origins:includes`]->(n)
 
     '''  # noqa
 
-    search_relationships_statement = '''
+    copy_items_statement = '''
 
-        MATCH (n:`origins:Relationship`$type)<-[:includes]-(:`origins:Resource` {`origins:uuid`: { uuid }})
-        WHERE $predicate
-        RETURN n
+        MATCH (o:`origins:Resource` {`origins:uuid`: { old }}),
+              (n:`origins:Resource` {`origins:uuid`: { new }})
+
+        MATCH (o)-[:`origins:manages`]->(m)
+            WHERE NOT (m)<-[:`prov:entity`]-(:`prov:Invalidation`)
+
+        CREATE (n)-[:`origins:manages`]->(m)
+
+        WITH DISTINCT o, n
+
+        MATCH (o)-[:`origins:includes`]->(i)
+            WHERE NOT (i)<-[:`prov:entity`]-(:`prov:Invalidation`)
+
+        CREATE (n)-[:`origins:includes`]->(i)
 
     '''  # noqa
 
@@ -59,6 +67,24 @@ class Resource(Continuant):
         if node.uuid != node.id and cls.exists_by_id(node.id, tx):
             raise ValidationError('{} with id {} already exists'
                                   .format(cls.model_name, id))
+
+    @classmethod
+    def _set(cls, old, new, validate, tx):
+        prov = Continuant._set(old, new, validate, tx)
+
+        statement = utils.prep(cls.copy_items_statement)
+
+        query = {
+            'statement': statement,
+            'parameters': {
+                'old': old.uuid,
+                'new': new.uuid,
+            }
+        }
+
+        tx.send(query, defer=not validate)
+
+        return prov
 
     @classmethod
     def components(cls, uuid, predicate=None, type=None, limit=None, skip=None,
@@ -73,14 +99,16 @@ class Resource(Continuant):
                 raise ValidationError('resource does not exist')
 
             if predicate:
-                query = traverse.search(cls.search_components_statement,
+                query = traverse.search(cls.search_included_statement,
                                         predicate=predicate,
                                         type=type,
+                                        model=Component.model_name,
                                         limit=limit,
                                         skip=skip)
             else:
-                query = traverse.match(cls.match_components_statement,
+                query = traverse.match(cls.match_included_statement,
                                        type=type,
+                                       model=Component.model_name,
                                        limit=limit,
                                        skip=skip)
 
@@ -100,8 +128,9 @@ class Resource(Continuant):
             if not cls.exists(uuid, tx=tx):
                 raise ValidationError('resource does not exist')
 
-            query = traverse.match(cls.match_managed_components_statement,
+            query = traverse.match(cls.match_managed_statement,
                                    type=type,
+                                   model=Component.model_name,
                                    limit=limit,
                                    skip=skip)
 
@@ -119,10 +148,19 @@ class Resource(Continuant):
             except DoesNotExist:
                 raise ValidationError('resource does not exist')
 
-            Edge.add(start=resource,
-                     end=component,
-                     type='includes',
-                     tx=tx)
+            statement = utils.prep(cls.create_include_statement,
+                                   model=component.model_name,
+                                   type=component.type)
+
+            query = {
+                'statement': statement,
+                'parameters': {
+                    'resource': resource.uuid,
+                    'item': component.uuid,
+                }
+            }
+
+            tx.send(query, defer=True)
 
     @classmethod
     def relationships(cls, uuid, predicate=None, type=None, limit=None,
@@ -137,14 +175,16 @@ class Resource(Continuant):
                 raise ValidationError('resource does not exist')
 
             if predicate:
-                query = traverse.search(cls.search_relationships_statement,
+                query = traverse.search(cls.search_included_statement,
                                         predicate=predicate,
                                         type=type,
+                                        model=Relationship.model_name,
                                         limit=limit,
                                         skip=skip)
             else:
-                query = traverse.match(cls.match_relationships_statement,
+                query = traverse.match(cls.match_included_statement,
                                        type=type,
+                                       model=Relationship.model_name,
                                        limit=limit,
                                        skip=skip)
 
@@ -164,8 +204,9 @@ class Resource(Continuant):
             if not cls.exists(uuid, tx=tx):
                 raise ValidationError('resource does not exist')
 
-            query = traverse.match(cls.match_managed_relationships_statement,
+            query = traverse.match(cls.match_managed_statement,
                                    type=type,
+                                   model=Relationship.model_name,
                                    limit=limit,
                                    skip=skip)
 
@@ -183,7 +224,16 @@ class Resource(Continuant):
             except DoesNotExist:
                 raise ValidationError('resource does not exist')
 
-            Edge.add(start=resource,
-                     end=relationship,
-                     type='includes',
-                     tx=tx)
+            statement = utils.prep(cls.create_include_statement,
+                                   model=relationship.model_name,
+                                   type=relationship.type)
+
+            query = {
+                'statement': statement,
+                'parameters': {
+                    'resource': resource.uuid,
+                    'item': relationship.uuid,
+                }
+            }
+
+            tx.send(query, defer=True)

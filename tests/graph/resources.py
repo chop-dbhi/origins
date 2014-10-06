@@ -64,3 +64,19 @@ class ResourceTestCase(unittest.TestCase):
         self.assertEqual(Resource.relationships(p.uuid), [d])
         self.assertEqual(Resource.managed_relationships(r.uuid), [c])
         self.assertEqual(Resource.managed_relationships(p.uuid), [d])
+
+    def test_revision(self):
+        r = Resource.add()
+
+        x = Component.add(resource=r)
+        y = Component.add(resource=r)
+
+        c = Relationship.add(x, y, resource=r)
+
+        r1 = Resource.set(r.uuid, label='Update')
+
+        self.assertEqual(Resource.components(r1.uuid), [x, y])
+        self.assertEqual(Resource.managed_components(r1.uuid), [x, y])
+
+        self.assertEqual(Resource.relationships(r1.uuid), [c])
+        self.assertEqual(Resource.managed_relationships(r1.uuid), [c])
