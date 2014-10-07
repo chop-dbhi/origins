@@ -34,7 +34,7 @@ class Component(Continuant):
 
     '''  # noqa
 
-    copy_resources = '''
+    copy_resources_statement = '''
 
         MATCH (o:`origins:Component` {`origins:uuid`: { old }}),
               (n:`origins:Component` {`origins:uuid`: { new }}),
@@ -105,7 +105,7 @@ class Component(Continuant):
         # Add new version
         prov = Continuant._add(new, validate=validate, tx=tx)
 
-        statement = utils.prep(cls.copy_resources)
+        statement = utils.prep(cls.copy_resources_statement)
 
         query = {
             'statement': statement,

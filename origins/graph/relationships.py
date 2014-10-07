@@ -37,7 +37,7 @@ class Relationship(Edge):
 
     '''  # noqa
 
-    copy_resources = '''
+    copy_resources_statement = '''
 
         MATCH (o:`origins:Relationship` {`origins:uuid`: { old }}),
               (n:`origins:Relationship` {`origins:uuid`: { new }}),
@@ -108,7 +108,7 @@ class Relationship(Edge):
         # Add new version
         prov = Edge._add(new, validate=validate, tx=tx)
 
-        statement = utils.prep(cls.copy_resources)
+        statement = utils.prep(cls.copy_resources_statement)
 
         query = {
             'statement': statement,
