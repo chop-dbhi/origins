@@ -34,6 +34,8 @@ DIFF_ATTRS = {
     'direction',
     'dependence',
     'properties',
+    'start',
+    'end',
 }
 
 

@@ -1,6 +1,5 @@
 from collections import defaultdict
-from origins import events
-from . import utils, provenance
+from . import utils
 
 
 # Returns all edges and the *other* node of the edge
@@ -18,52 +17,39 @@ RETURN n, type(r), o
 '''  # noqa
 
 
-DEPENDENT_EDGES = '''
-MATCH (n$model {`origins:uuid`: { uuid }}),
-	(n)-[:`origins:start`|`origins:end`*]-(e:`origins:Edge`)
+# Finds all dependent nodes. Returns the dependent node along with
+# the trigger. Dependent nodes should be grouped to collect all
+# the possible triggers.
+DEPENDENT_NODES = '''
+MATCH ($model {`origins:uuid`: { uuid }})<-[_r:`origins:dependency`*]-(d)
+WHERE NOT (d)<-[:`prov:entity`]-(:`prov:Invalidation`)
 
-WHERE NOT (e)<-[:`prov:entity`]-(:`prov:Invalidation`)
+WITH _r UNWIND _r as r
 
-WITH e AS n
-
-MATCH (n)-[:`origins:start`]->(s),
-	  (n)-[:`origins:end`]->(e)
-
-RETURN n, s, e
+RETURN startNode(r), endNode(r)
 '''  # noqa
 
 
-def _update(current, start, end, validate, tx):
-    # Removes the physical edge between the two nodes
-    current._invalidate(current, tx)
+# Finds all edges to dependent nodes. The edges of the trigger node is
+# unioned with all dependent nodes' edges. Returns the node and the edg .
+DEPENDENT_EDGES = '''
+MATCH (d$model {`origins:uuid`: { uuid }})<-[:`origins:start`|`origins:end`]-(e:`origins:Edge`)
+WHERE NOT (e)<-[:`prov:entity`]-(:`prov:Invalidation`)
 
-    if current.start != start:
-        trigger = start
-    elif current.end != end:
-        trigger = end
-    else:
-        trigger = None  # noqa
+RETURN e, d
 
-    edge = current.derive(current, {
-        'start': start,
-        'end': end,
-    })
+UNION
 
-    prov = current._add(edge, validate=validate, tx=tx)
+MATCH ($model {`origins:uuid`: { uuid }})<-[:`origins:dependency`*]-(d)
+WHERE NOT (d)<-[:`prov:entity`]-(:`prov:Invalidation`)
 
-    # TODO add trigger
-    prov_spec = provenance.set(current.uuid, edge.uuid,
-                               reason='origins:NodeChange')
-    prov_spec['wasGeneratedBy'] = prov['wasGeneratedBy']
-    prov_spec['wasDerivedFrom']['wdf']['prov:generation'] = 'wgb'
-    prov = provenance.load(prov_spec, tx=tx)
+WITH d
 
-    events.publish('edge.update', {
-        'edge': edge.to_dict(),
-        'prov': prov,
-    })
+MATCH (d)<-[:`origins:start`|`origins:end`]-(e:`origins:Edge`)
+WHERE NOT (e)<-[:`prov:entity`]-(:`prov:Invalidation`)
 
-    return edge
+RETURN e, d
+'''  # noqa
 
 
 def trigger_change(old, new, validate, tx):
@@ -96,11 +82,11 @@ def trigger_change(old, new, validate, tx):
 
         # Forward trigger
         if edge.start == old and edge.direction in {'bidirected', 'directed'}:
-            _update(edge, new, edge.end, validate=validate, tx=tx)
+            edge.set(edge, start=new, end=edge.end, validate=validate, tx=tx)
 
         # Reverse trigger
         elif edge.end == old and edge.direction in {'bidirected', 'reverse'}:  # noqa
-            _update(edge, edge.start, new, validate=validate, tx=tx)
+            edge.set(edge, start=edge.start, end=new, validate=validate, tx=tx)
 
         # No updates, remove
         else:
@@ -114,7 +100,7 @@ def trigger_remove(node, validate, tx):
     """
     from . import models
 
-    statement = utils.prep(DEPENDENT_EDGES, model=node.model_name)
+    statement = utils.prep(DEPENDENT_NODES, model=node.model_name)
 
     query = {
         'statement': statement,
@@ -125,34 +111,37 @@ def trigger_remove(node, validate, tx):
 
     # Map of nodes and edges to the triggers
     nodes = defaultdict(set)
-    edges = defaultdict(set)
 
     # No triggers for initial node
     nodes[node] = set()
 
-    for n, s, e in tx.send(query):
-        start = models[s['origins:model']].parse(s)
-        end = models[e['origins:model']].parse(e)
+    # Dependent node and dependency trigger
+    for d, t in tx.send(query):
+        d = models[d['origins:model']].parse(d)
+        t = models[t['origins:model']].parse(t)
 
-        model = models[n['origins:model']]
-        edge = model.parse(n, start=start, end=end)
+        nodes[d].add(t)
 
-        # Node is being removed, remove the edge
-        if start in nodes:
-            edges[edge].add(start)
+    statement = utils.prep(DEPENDENT_EDGES, model=node.model_name)
 
-            # Mutual dependence or inverse will remove the end node
-            if edge.dependence in {'mutual', 'inverse'}:
-                nodes[end].add(start)
+    query = {
+        'statement': statement,
+        'parameters': {
+            'uuid': node.uuid,
+        }
+    }
 
-        elif end in nodes:
-            edges[edge].add(end)
+    edges = defaultdict(set)
 
-            if edge.dependence in {'mutual', 'forward'}:
-                nodes[start].add(end)
+    # Dependent edge and node trigger
+    for e, t in tx.send(query):
+        e = models[e['origins:model']].parse(e)
+        t = models[t['origins:model']].parse(t)
+
+        edges[e].add(t)
 
     for edge, triggers in edges.items():
-        model._remove(edge, reason='origins:NodeRemoved', validate=validate,
-                      tx=tx)
+        edge._remove(edge, reason='origins:NodeRemoved', validate=validate,
+                     tx=tx)
 
-    return nodes
+    return dict(nodes)

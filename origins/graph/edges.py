@@ -1,5 +1,5 @@
 from origins.exceptions import DoesNotExist, ValidationError
-from . import traverse, utils
+from . import traverse, utils, provenance
 from .model import Continuant
 from .packer import pack, unpack
 
@@ -120,6 +120,15 @@ class Edge(Continuant):
 
     '''
 
+    dependency_edge_statement = '''
+
+        MATCH (s$start_model {`origins:uuid`: { start }}),
+              (e$end_model {`origins:uuid`: { end }})
+
+        CREATE (s)-[:`origins:dependency`]->(e)
+
+    '''
+
     def __init__(self, start=None, end=None, id=None, type=None, label=None,
                  description=None, uuid=None, time=None, sha1=None,
                  properties=None, model=None, dependence=None, direction=None,
@@ -183,6 +192,8 @@ class Edge(Continuant):
     def to_dict(self):
         attrs = super(Edge, self).to_dict()
 
+        attrs['start'] = self.start.uuid
+        attrs['end'] = self.end.uuid
         attrs['dependence'] = self.dependence
         attrs['direction'] = self.direction
 
@@ -317,3 +328,48 @@ class Edge(Continuant):
 
         if end.invalidation:
             raise ValidationError('invalid end node {}'.format(end))
+
+    @classmethod
+    def _add(cls, node, validate, tx):
+        query = cls.add_query(node)
+        defer = not validate
+
+        if defer:
+            tx.send(query, defer=defer)
+        else:
+            if not tx.send(query):
+                raise Exception('did not successfully add {}'.format(node))
+
+        if node.dependence == MUTUAL_DEPENDENCE \
+                or node.dependence == FORWARD_DEPENDENCE:
+
+            statement = utils.prep(cls.dependency_edge_statement,
+                                   start_model=node.start.model_name,
+                                   end_model=node.end.model_name)
+
+            tx.send({
+                'statement': statement,
+                'parameters': {
+                    'start': node.start.uuid,
+                    'end': node.end.uuid,
+                }
+            }, defer=defer)
+
+        if node.dependence == MUTUAL_DEPENDENCE \
+                or node.dependence == INVERSE_DEPENDENCE:
+
+            statement = utils.prep(cls.dependency_edge_statement,
+                                   start_model=node.end.model_name,
+                                   end_model=node.start.model_name)
+
+            tx.send({
+                'statement': statement,
+                'parameters': {
+                    'start': node.end.uuid,
+                    'end': node.start.uuid,
+                }
+            }, defer=defer)
+
+        prov_spec = provenance.add(node.uuid)
+
+        return provenance.load(prov_spec, tx=tx)
