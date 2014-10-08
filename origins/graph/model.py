@@ -85,12 +85,13 @@ class Model(object):
             label = None
 
         if label:
-            return '"{}" r.{}'.format(label, self.uuid[:8])
+            return '<{}: "{}" r.{}>'.format(self.model_name, label,
+                                            self.uuid[:8])
 
-        return 'r.{}'.format(self.uuid[:8])
+        return '<{}: r.{}>'.format(self.model_name, self.uuid[:8])
 
     def __repr__(self):
-        return '<{}: {}>'.format(self.__class__.__name__, str(self))
+        return self.__str__()
 
     def __eq__(self, other):
         if hasattr(other, 'uuid'):
@@ -149,7 +150,10 @@ class Model(object):
         }
 
     def diff(self, other):
-        return utils.diff_attrs(self.to_dict(), other.to_dict(),
+        if isinstance(other, Model):
+            other = other.to_dict()
+
+        return utils.diff_attrs(self.to_dict(), other,
                                 allowed=DIFF_ATTRS)
 
     # Returns all
