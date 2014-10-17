@@ -90,8 +90,8 @@ def trigger_change(old, new, validate, tx):
 
         # No updates, remove
         else:
-            model._remove(edge, reason='origins:NodeChange', trigger=new,
-                          validate=validate, tx=tx)
+            edge._remove(edge, reason='origins:NodeChange', trigger=new,
+                         validate=validate, tx=tx)
 
 
 def trigger_remove(node, validate, tx):

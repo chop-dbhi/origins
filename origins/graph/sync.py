@@ -168,7 +168,6 @@ def sync(data, create=True, add=True, remove=True, update=True, tx=neo4j.tx):
                 if not local:
                     if remove:
                         Component.remove(remote, validate=False, tx=tx)
-
                         removed_components.add(remote.id)
                         output['components']['removed'] += 1
 

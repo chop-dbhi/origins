@@ -40,6 +40,66 @@ DIFF_ATTRS = {
 
 
 class Model(object):
+    # Returns all
+    match_statement = '''
+        MATCH (n$model$type $predicate)
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+        RETURN n, null
+    '''
+
+    # Search nodes with predicate
+    search_statement = '''
+        MATCH (n$model$type)
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+            AND $predicate
+        RETURN n, null
+    '''
+
+    # Returns single node by UUID. The model nor type is applied here since
+    # the lookup is by UUID
+    get_statement = '''
+        MATCH (n$model {`origins:uuid`: { uuid }})
+        OPTIONAL MATCH (n)<-[:`prov:entity`]-(i:`prov:Invalidation`)
+        RETURN n, i
+        LIMIT 1
+    '''
+
+    get_by_id_statement = '''
+        MATCH (n$model$type {`origins:id`: { id }})
+            WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+        RETURN n, null
+        LIMIT 1
+    '''
+
+    # Return 1 if the node exists
+    exists_statement = '''
+        MATCH (n$model {`origins:uuid`: { uuid }})
+        RETURN true
+        LIMIT 1
+    '''
+
+    # Return 1 if the node exists
+    exists_by_id_statement = '''
+        MATCH (n$model {`origins:id`: { id }})
+        RETURN true
+        LIMIT 1
+    '''
+
+    # Creates a node
+    # The `prov:Entity` and `origins:Node` labels are fixed.
+    add_statement = '''
+        CREATE (n$model$type:`prov:Entity` { attrs })
+        RETURN 1
+    '''
+
+    # Removes the `$type` label for a node. Type labels are only set while
+    # the node is valid.
+    invalidate_statement = '''
+        MATCH (n$model {`origins:uuid`: { uuid }})
+        REMOVE n$type
+        RETURN 1
+    '''
+
     def __init__(self, id=None, type=None, label=None, description=None,
                  properties=None, uuid=None, time=None, model=None,
                  sha1=None, invalidation=None):
@@ -155,66 +215,6 @@ class Model(object):
 
         return utils.diff_attrs(self.to_dict(), other,
                                 allowed=DIFF_ATTRS)
-
-    # Returns all
-    match_statement = '''
-        MATCH (n$model$type $predicate)
-        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-        RETURN n, null
-    '''
-
-    # Search nodes with predicate
-    search_statement = '''
-        MATCH (n$model$type)
-        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-            AND $predicate
-        RETURN n, null
-    '''
-
-    # Returns single node by UUID. The model nor type is applied here since
-    # the lookup is by UUID
-    get_statement = '''
-        MATCH (n$model {`origins:uuid`: { uuid }})
-        OPTIONAL MATCH (n)<-[:`prov:entity`]-(i:`prov:Invalidation`)
-        RETURN n, i
-        LIMIT 1
-    '''
-
-    get_by_id_statement = '''
-        MATCH (n$model$type {`origins:id`: { id }})
-            WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-        RETURN n, null
-        LIMIT 1
-    '''
-
-    # Return 1 if the node exists
-    exists_statement = '''
-        MATCH (n$model {`origins:uuid`: { uuid }})
-        RETURN true
-        LIMIT 1
-    '''
-
-    # Return 1 if the node exists
-    exists_by_id_statement = '''
-        MATCH (n$model {`origins:id`: { id }})
-        RETURN true
-        LIMIT 1
-    '''
-
-    # Creates a node
-    # The `prov:Entity` and `origins:Node` labels are fixed.
-    add_statement = '''
-        CREATE (n$model$type:`prov:Entity` { attrs })
-        RETURN 1
-    '''
-
-    # Removes the `$type` label for a node. Type labels are only set while
-    # the node is valid.
-    invalidate_statement = '''
-        MATCH (n$model {`origins:uuid`: { uuid }})
-        REMOVE n$type
-        RETURN 1
-    '''
 
     @classmethod
     def match_query(cls, predicate=None, limit=None, skip=None, type=None):

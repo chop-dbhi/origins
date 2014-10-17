@@ -53,8 +53,8 @@ class Edge(Continuant):
     search_statement = '''
 
         MATCH (n$model$type)
-            WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
-                AND $predicate
+        WHERE NOT (n)<-[:`prov:entity`]-(:`prov:Invalidation`)
+            AND $predicate
         WITH n
         MATCH (n)-[:`origins:start`]->(s$start_model),
               (n)-[:`origins:end`]->(e$end_model)
@@ -336,9 +336,8 @@ class Edge(Continuant):
 
         if defer:
             tx.send(query, defer=defer)
-        else:
-            if not tx.send(query):
-                raise Exception('did not successfully add {}'.format(node))
+        elif not tx.send(query):
+            raise Exception('did not successfully add {}'.format(node))
 
         if node.dependence == MUTUAL_DEPENDENCE \
                 or node.dependence == FORWARD_DEPENDENCE:
