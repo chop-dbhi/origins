@@ -186,8 +186,6 @@ def sync(data, create=True, add=True, remove=True, update=True, tx=neo4j.tx):
                     continue
 
                 local = relationships.get(remote.id)
-                start = local.get('start')
-                end = local.get('end')
 
                 # No longer exists
                 if not local:
@@ -197,26 +195,27 @@ def sync(data, create=True, add=True, remove=True, update=True, tx=neo4j.tx):
                         output['relationships']['removed'] += 1
 
                 elif update:
-                    # TODO should this confirm the UUIDs are the same?
+                    start = local.get('start')
+                    end = local.get('end')
+
+                    # If there is a diff, check for a conflict
+                    if start in removed_components:
+                        raise ValidationError('relationship {} has '
+                                              'changed, but the start '
+                                              'component has been '
+                                              'removed')
+
+                    if end in removed_components:
+                        raise ValidationError('relationship {} has '
+                                              'changed, but the end '
+                                              'component has been '
+                                              'removed')
+
                     rev = Relationship.set(remote, validate=False, tx=tx,
                                            **local)
 
-                    # Changes have been made
                     if rev:
                         output['relationships']['updated'] += 1
-
-                        # If there is a diff, check for a conflict
-                        if start in removed_components:
-                            raise ValidationError('relationship {} has '
-                                                  'changed, but the start '
-                                                  'component has been '
-                                                  'removed')
-
-                        if end in removed_components:
-                            raise ValidationError('relationship {} has '
-                                                  'changed, but the end '
-                                                  'component has been '
-                                                  'removed')
 
                 relationship_revisions[remote.id] = remote.uuid
 
@@ -244,6 +243,7 @@ def sync(data, create=True, add=True, remove=True, update=True, tx=neo4j.tx):
 
                 remote = Relationship.add(resource=resource, tx=tx,
                                           validate=False, **local)
+
                 output['relationships']['added'] += 1
                 relationship_revisions[remote.id] = remote.uuid
 
