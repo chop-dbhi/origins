@@ -2,10 +2,16 @@ from flask import url_for
 from origins.exceptions import ValidationError
 from origins.graph import Relationship, Resource
 from .edges import EdgesResource, EdgeResource
+from . import components
 
 
 def prepare(n, r=None):
+    s = components.prepare(n.start)
+    e = components.prepare(n.end)
+
     n = n.to_dict()
+    n['start'] = s
+    n['end'] = e
 
     if not r:
         r = Relationship.resource(n['uuid']).to_dict()
@@ -20,6 +26,15 @@ def prepare(n, r=None):
         'resource': {
             'href': url_for('resource', uuid=r['uuid'], _external=True)
         },
+        'start': {
+            'href': url_for('component', uuid=s['uuid'],
+                            _external=True),
+        },
+        'end': {
+            'href': url_for('component', uuid=e['uuid'],
+                            _external=True),
+        },
+
     }
 
     return n

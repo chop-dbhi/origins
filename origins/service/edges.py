@@ -1,15 +1,28 @@
 from flask import url_for
 from origins.exceptions import ValidationError
 from origins.graph import Edge, Node
-from .nodes import NodesResource, NodeResource
+from . import nodes
 
 
 def prepare(n):
+    s = nodes.prepare(n.start)
+    e = nodes.prepare(n.end)
+
     n = n.to_dict()
+    n['start'] = s
+    n['end'] = e
 
     n['links'] = {
         'self': {
             'href': url_for('edge', uuid=n['uuid'],
+                            _external=True),
+        },
+        'start': {
+            'href': url_for('node', uuid=s['uuid'],
+                            _external=True),
+        },
+        'end': {
+            'href': url_for('node', uuid=e['uuid'],
                             _external=True),
         },
     }
@@ -17,7 +30,7 @@ def prepare(n):
     return n
 
 
-class EdgesResource(NodesResource):
+class EdgesResource(nodes.NodesResource):
     model = Edge
 
     attr_keys = (
@@ -48,7 +61,7 @@ class EdgesResource(NodesResource):
         return attrs
 
 
-class EdgeResource(NodeResource):
+class EdgeResource(nodes.NodeResource):
     model = Edge
 
     attr_keys = (

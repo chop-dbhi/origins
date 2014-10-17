@@ -55,6 +55,14 @@ routes = [
      '/nodes/<uuid>/',
      'node'),
 
+    (nodes.NodeRevisionsResource,
+     '/nodes/<uuid>/revisions/',
+     'node-revisions'),
+
+    (nodes.NodeEdgesResource,
+     '/nodes/<uuid>/edges/',
+     'node-edges'),
+
     (edges.EdgesResource,
      '/edges/',
      'edges'),
@@ -90,6 +98,14 @@ routes = [
     (components.ComponentResource,
      '/components/<uuid>/',
      'component'),
+
+    (components.ComponentRevisionsResource,
+     '/components/<uuid>/revisions/',
+     'component-revisions'),
+
+    (components.ComponentRelationshipsResource,
+     '/components/<uuid>/relationships/',
+     'component-relationships'),
 
     (relationships.RelationshipsResource,
      '/relationships/',

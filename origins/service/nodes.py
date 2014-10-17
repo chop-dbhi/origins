@@ -1,6 +1,6 @@
 from flask import url_for, request
 from flask.ext import restful
-from origins.graph import Node
+from origins.graph import Node, generic
 from origins.exceptions import DoesNotExist, ValidationError
 from . import utils
 
@@ -10,8 +10,11 @@ def prepare(n):
 
     n['links'] = {
         'self': {
-            'href': url_for('nodes', _external=True),
+            'href': url_for('node', uuid=n['uuid'], _external=True),
         },
+        'revisions': {
+            'href': url_for('node-revisions', uuid=n['uuid'], _external=True)
+        }
     }
 
     return n
@@ -173,3 +176,38 @@ class NodeResource(restful.Resource):
             return {'message': str(e)}, 422
 
         return '', 204
+
+
+class NodeRevisionsResource(restful.Resource):
+    model = Node
+
+    def prepare(self, n):
+        return prepare(n)
+
+    def get(self, uuid):
+        try:
+            n = self.model.get(uuid)
+        except DoesNotExist as e:
+            return {'message': str(e)}, 404
+
+        revs = generic.revisions(n)
+
+        return [self.prepare(r) for r in revs], 200
+
+
+class NodeEdgesResource(restful.Resource):
+    model = Node
+
+    def prepare(self, r):
+        from . import edges
+        return edges.prepare(r)
+
+    def get(self, uuid):
+        try:
+            n = self.model.get(uuid)
+        except DoesNotExist as e:
+            return {'message': str(e)}, 404
+
+        edges = generic.edges(n)
+
+        return [self.prepare(r) for r in edges], 200
