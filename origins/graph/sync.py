@@ -178,7 +178,7 @@ def sync(data, create=True, add=True, remove=True, update=True, tx=neo4j.tx):
                     if rev:
                         output['components']['updated'] += 1
 
-                component_revisions[remote.id] = remote.id
+                component_revisions[remote.id] = remote.uuid
 
             for remote in Resource.managed_relationships(resource.uuid,
                                                          tx=tx):
