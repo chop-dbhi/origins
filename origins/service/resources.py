@@ -9,6 +9,7 @@ from origins.graph.sync import sync
 from .nodes import NodesResource, NodeResource
 from .components import ComponentResource
 from .relationships import RelationshipResource
+from . import components, relationships
 
 
 def prepare(n):
@@ -73,22 +74,7 @@ class ResourceSyncResource(restful.Resource):
 
 class ResourceComponentsResource(NodesResource):
     def prepare(self, n, r):
-        n = n.to_dict()
-
-        n['resource'] = r
-
-        n['links'] = {
-            'self': {
-                'href': url_for('component', uuid=n['uuid'],
-                                _external=True),
-            },
-            'resource': {
-                'href': url_for('resource', uuid=r['uuid'],
-                                _external=True),
-            },
-        }
-
-        return n
+        return components.prepare(n, r)
 
     def get(self, uuid):
         try:
@@ -139,22 +125,7 @@ class ResourceComponentsResource(NodesResource):
 
 class ResourceRelationshipsResource(NodesResource):
     def prepare(self, n, r):
-        n = n.to_dict()
-
-        n['resource'] = r
-
-        n['links'] = {
-            'self': {
-                'href': url_for('relationship', uuid=n['uuid'],
-                                _external=True),
-            },
-            'resource': {
-                'href': url_for('resource', uuid=r['uuid'],
-                                _external=True),
-            },
-        }
-
-        return n
+        return relationships.prepare(n, r)
 
     def get(self, uuid):
         try:
