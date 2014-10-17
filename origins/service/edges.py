@@ -55,8 +55,8 @@ class EdgesResource(nodes.NodesResource):
 
         attrs = super(EdgesResource, self).get_attrs(data)
 
-        attrs['start'] = Node(uuid=data['start'])
-        attrs['end'] = Node(uuid=data['end'])
+        attrs['start'] = Node.get(data['start'])
+        attrs['end'] = Node.get(data['end'])
 
         return attrs
 

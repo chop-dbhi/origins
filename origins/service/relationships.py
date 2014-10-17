@@ -60,8 +60,8 @@ class RelationshipsResource(EdgesResource):
         attrs = super(EdgesResource, self).get_attrs(data)
 
         attrs['resource'] = Resource(uuid=data['resource'])
-        attrs['start'] = Relationship.start_model(uuid=data['start'])
-        attrs['end'] = Relationship.end_model(uuid=data['end'])
+        attrs['start'] = Relationship.start_model.get(uuid=data['start'])
+        attrs['end'] = Relationship.end_model.get(uuid=data['end'])
 
         return attrs
 
