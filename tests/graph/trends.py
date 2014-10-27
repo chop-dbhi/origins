@@ -26,13 +26,13 @@ class TrendsTestCase(TestCase):
     def test_used_components(self):
         result = trends.used_components()
 
-        self.assertCountEqual([r['component'] for r in result], self.r1_cmps)
+        self.assertCountEqual([r['item'] for r in result], self.r1_cmps)
 
     def test_connected_resources(self):
         result = trends.connected_resources()
 
         self.assertEqual(result[0], {
-            'resource': self.r1,
+            'item': self.r1,
             'count': 5,
         })
 
@@ -40,7 +40,7 @@ class TrendsTestCase(TestCase):
         result = trends.used_resources()
 
         self.assertEqual(result[0], {
-            'resource': self.r1,
+            'item': self.r1,
             'count': 5,
         })
 
@@ -52,14 +52,14 @@ class TrendsTestCase(TestCase):
     def test_relationship_types(self):
         result = trends.relationship_types()
 
-        self.assertEqual(result, [{'count': 5, 'type': 'related'}])
+        self.assertEqual(result, [{'count': 5, 'item': 'related'}])
 
     def test_component_types(self):
         result = trends.component_types()
 
-        self.assertEqual(result, [{'count': 10, 'type': 'Component'}])
+        self.assertEqual(result, [{'count': 10, 'item': 'Component'}])
 
     def test_resource_types(self):
         result = trends.resource_types()
 
-        self.assertEqual(result, [{'count': 2, 'type': 'Resource'}])
+        self.assertEqual(result, [{'count': 2, 'item': 'Resource'}])

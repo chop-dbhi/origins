@@ -87,7 +87,7 @@ def connected_components(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'component': Component.parse(r[0]),
+        'item': Component.parse(r[0]),
         'count': r[1]
     } for r in tx.send(query)]
 
@@ -101,7 +101,7 @@ def used_components(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'component': Component.parse(r[0]),
+        'item': Component.parse(r[0]),
         'count': r[1]
     } for r in tx.send(query)]
 
@@ -115,7 +115,7 @@ def connected_resources(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'resource': Resource.parse(r[0]),
+        'item': Resource.parse(r[0]),
         'count': r[1]
     } for r in tx.send(query)]
 
@@ -129,7 +129,7 @@ def used_resources(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'resource': Resource.parse(r[0]),
+        'item': Resource.parse(r[0]),
         'count': r[1]
     } for r in tx.send(query)]
 
@@ -143,7 +143,7 @@ def component_sources(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'component': Component.parse(r[0]),
+        'item': Component.parse(r[0]),
         'count': r[1]
     } for r in tx.send(query)]
 
@@ -157,7 +157,7 @@ def resource_types(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'type': r[0],
+        'item': r[0],
         'count': r[1],
     } for r in tx.send(query)]
 
@@ -171,7 +171,7 @@ def component_types(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'type': r[0],
+        'item': r[0],
         'count': r[1],
     } for r in tx.send(query)]
 
@@ -185,6 +185,6 @@ def relationship_types(limit=10, tx=neo4j.tx):
     }
 
     return [{
-        'type': r[0],
+        'item': r[0],
         'count': r[1],
     } for r in tx.send(query)]
