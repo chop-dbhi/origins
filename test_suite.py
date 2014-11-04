@@ -9,16 +9,15 @@ if __name__ == '__main__':
 
     args = sys.argv[1:]
 
+    from origins import config
+
     if '--debug' in args:
         args.remove('--debug')
-
-        import logging
-        from origins.graph import neo4j
-
-        neo4j.debug()
-        handler = logging.StreamHandler()
-        handler.setLevel(logging.DEBUG)
-        neo4j.logger.addHandler(handler)
+        config.set_loglevel('DEBUG')
+    else:
+        # Set above critical bound to prevent any messages from
+        # being emitted
+        config.set_loglevel(100)
 
     tests = None
 

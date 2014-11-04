@@ -8,7 +8,6 @@ from origins import config
 
 logger = logging.getLogger(__name__)
 
-logger.setLevel(logging.INFO)
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 7474
@@ -345,15 +344,8 @@ class Transaction(object):
         self._close()
 
 
-def debug():
-    logger.setLevel(logging.DEBUG)
-
-
 # Initialize the default client
 client = Client(**config.options['neo4j'])
 
 # Default transaction with auto-commit enabled
 tx = client.transaction(autocommit=True)
-
-if config.options['debug']:
-    debug()

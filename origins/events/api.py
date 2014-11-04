@@ -15,14 +15,12 @@ __all__ = (
     'watch',
     'unwatch',
     'purge',
-    'debug',
     'client',
     'logger',
 )
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 client = StrictRedis(decode_responses=True, **config.options['redis'])
 
@@ -109,11 +107,3 @@ def unwatch(uuid, handler):
 def purge():
     "Resets the redis database."
     client.flushdb()
-
-
-def debug():
-    logger.setLevel(logging.DEBUG)
-
-
-if config.options['debug']:
-    debug()

@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import logging
+import logging.config
 from copy import deepcopy
 
 
@@ -20,6 +22,34 @@ default_options = {
         'host': 'localhost',
         'port': 6379,
         'db': 0,
+    },
+
+    'logging': {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+            }
+        },
+        'loggers': {
+            'origins': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+            'origins.events': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': True,
+            },
+            'origins.graph.neo4j': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': True,
+            },
+        },
     },
 }
 
@@ -58,6 +88,7 @@ def set_options(opts=None):
 
     options = make_options(opts)
 
+    setup_logging(options)
     return options
 
 
@@ -65,7 +96,27 @@ def make_options(options=None):
     if not options:
         options = {}
 
-    return _defaults(options, default_options)
+    options = _defaults(options, default_options)
+    setup_logging(options)
+
+    return options
+
+
+def setup_logging(options):
+    if 'logging' in options:
+        logging.config.dictConfig(options['logging'])
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+
+
+def set_loglevel(level):
+    if 'handlers' not in options['logging']:
+        return
+
+    for opts in options['logging']['handlers'].values():
+        opts['level'] = level
+
+    setup_logging(options)
 
 
 # Load config options from environment
