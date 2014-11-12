@@ -10,6 +10,10 @@ class ValidationError(OriginsError):
     pass
 
 
+class ResultError(OriginsError):
+    pass
+
+
 class InvalidStateError(OriginsError):
     amendment = 'This error should not happen, please open an issue ' \
                 'at https://github.com/cbmi/origins/issues'

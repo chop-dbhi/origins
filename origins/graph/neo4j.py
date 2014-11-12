@@ -4,6 +4,7 @@ import atexit
 import logging
 import requests
 from origins import config
+from origins.exceptions import ResultError
 
 
 logger = logging.getLogger(__name__)
@@ -87,7 +88,7 @@ def _normalize_statements(statements, parameters):
     }]
 
 
-def _merge_response(output, data):
+def _combine_response(output, data):
     if output is None:
         return data
 
@@ -205,22 +206,22 @@ class Transaction(object):
         "Sends a request to the server."
         # Prevent overhead of serialization
         if logger.level <= logging.DEBUG:
-            logger.debug(json.dumps(payload, indent=4))
+            logger.debug(json.dumps(payload['statements'], indent=4))
 
         data = json.dumps(payload)
         resp = self._session.post(url, data=data, headers=HEADERS)
 
         resp.raise_for_status()
-        resp_data = resp.json()
+        data = resp.json()
 
-        if resp_data['errors']:
-            raise Neo4jError(resp_data['errors'])
+        if data['errors']:
+            raise Neo4jError(data['errors'])
 
-        return resp, resp_data,
+        return resp, data
 
     def _send_statements(self, statements, commit):
         "Sends a set of series of statements in batches."
-        resp_data = None
+        combined = None
 
         if self.batch_size:
             batch_size = self.batch_size
@@ -239,31 +240,53 @@ class Transaction(object):
                 else:
                     url = SINGLE_TRANSACTION_URI_TMPL.format(self.client.uri)
 
-                logger.debug('commiting batch {}/{} to {}'
-                             .format(i + 1, batches, url))
+                logger.debug('commiting batch %d/%d to %s', i+1, batches, url)
             else:
                 url = self.transaction_uri
 
-                logger.debug('sending batch {}/{} to {}'
-                             .format(i + 1, batches, url))
+                logger.debug('sending batch %d/%d to %s', i+1, batches, url)
 
             start, end = i * self.batch_size, (i + 1) * self.batch_size
 
-            data = {'statements': statements[start:end]}
+            batch = statements[start:end]
 
-            resp, _resp_data = self._send_request(url, data)
-            resp_data = _merge_response(resp_data, _resp_data)
+            resp, data = self._send_request(url, {
+                'statements': batch
+            })
+
+            # Check for expected results in batch
+            for i, query in enumerate(batch):
+                if 'expected' in query:
+                    expected = query['expected']
+                    result = data['results'][i]['data']
+
+                    if result:
+                        result = result[0]['row'][0]
+                    else:
+                        result = None
+
+                    # Expected assumes to be a single value
+                    if result != expected:
+                        if logger.level <= logging.DEBUG:
+                            logger.debug('expected %r, but got %r for:\n%s',
+                                         expected, result,
+                                         json.dumps(query, indent=4))
+
+                        raise ResultError('expected {!r}, but got {!r}'
+                                          .format(expected, result), query)
+
+            combined = _combine_response(combined, data)
 
             # Implicit switch to transaction URL
             if 'location' in resp.headers:
                 url = self.transaction_uri = resp.headers['location']
 
-            if 'commit' in resp_data:
-                self.commit_uri = resp_data['commit']
+            if 'commit' in combined:
+                self.commit_uri = combined['commit']
 
             self._batches += 1
 
-        return resp_data
+        return combined
 
     def _send(self, statements, parameters, commit=False, defer=False):
         if self._closed:
@@ -339,7 +362,7 @@ class Transaction(object):
             raise Neo4jError('no pending transaction')
 
         self._session.delete(self.transaction_uri, headers=HEADERS)
-        logger.debug('rollback: {}'.format(self.transaction_uri))
+        logger.debug('rollback: %s', self.transaction_uri)
 
         self._close()
 
