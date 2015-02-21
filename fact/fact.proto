@@ -1,0 +1,15 @@
+package fact;
+
+message ProtoFact {
+    optional string Domain = 1;
+	required string Operation = 2;
+	required int64 Time = 3;
+    required string EntityDomain = 4;
+    required string Entity = 5;
+    required string AttributeDomain = 6;
+    required string Attribute = 7;
+    required string ValueDomain = 8;
+    required string Value = 9;
+    optional string Transaction = 10;
+	required bool Inferred = 11;
+}

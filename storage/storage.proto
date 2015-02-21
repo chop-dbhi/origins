@@ -1,0 +1,11 @@
+package storage;
+
+message ProtoPartition {
+    repeated uint64 SegmentKeys = 1 [packed=true];
+}
+
+message ProtoStore {
+    required string Name = 1;
+    required string Codec = 2;
+    required int32 Version = 3;
+}

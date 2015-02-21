@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/chop-dbhi/origins/identity"
+	"github.com/golang/protobuf/proto"
 )
 
 func ParseOperation(s string) (string, error) {
@@ -59,7 +60,61 @@ type Fact struct {
 	Attribute   *identity.Ident
 	Value       *identity.Ident
 	Transaction *identity.Ident
-	inferred    bool
+	Inferred    bool
+}
+
+// Proto returns an initialized ProtoFact.
+func (f *Fact) Proto() proto.Message {
+	return &ProtoFact{}
+}
+
+// ToProto returns a protobuf version of the Fact.
+func (f *Fact) ToProto() (proto.Message, error) {
+	m := ProtoFact{
+		Operation:       proto.String(f.Operation),
+		Time:            proto.Int64(f.Time),
+		EntityDomain:    proto.String(f.Entity.Domain),
+		Entity:          proto.String(f.Entity.Local),
+		AttributeDomain: proto.String(f.Attribute.Domain),
+		Attribute:       proto.String(f.Attribute.Local),
+		ValueDomain:     proto.String(f.Value.Domain),
+		Value:           proto.String(f.Value.Local),
+		Inferred:        proto.Bool(f.Inferred),
+	}
+
+	if f.Transaction != nil {
+		m.Transaction = proto.String(f.Transaction.Local)
+	}
+
+	return &m, nil
+}
+
+// FromProto populates the value with the contents of the message.
+func (f *Fact) FromProto(m proto.Message) error {
+	x := m.(*ProtoFact)
+
+	f.Domain = x.GetDomain()
+	f.Time = x.GetTime()
+	f.Entity = &identity.Ident{
+		Domain: x.GetEntityDomain(),
+		Local:  x.GetEntity(),
+	}
+	f.Attribute = &identity.Ident{
+		Domain: x.GetAttributeDomain(),
+		Local:  x.GetAttribute(),
+	}
+	f.Value = &identity.Ident{
+		Domain: x.GetValueDomain(),
+		Local:  x.GetValue(),
+	}
+	f.Inferred = x.GetInferred()
+
+	f.Transaction = &identity.Ident{
+		Domain: "",
+		Local:  x.GetTransaction(),
+	}
+
+	return nil
 }
 
 // String satisfies the Stringer interface.
