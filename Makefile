@@ -7,6 +7,7 @@ doc:
 	godoc -http=:6060
 
 install:
+	go get github.com/sirupsen/logrus
 	go get golang.org/x/tools/cmd/cover
 
 test:
