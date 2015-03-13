@@ -72,23 +72,33 @@ func (tx *transaction) evaluate(f *fact.Fact) (fact.Facts, error) {
 }
 
 // write takes a map of domains to facts and writes them to the store.
-func (tx *transaction) write(domains map[string]fact.Facts) error {
+func (tx *transaction) write(domains map[string]fact.Facts, commit bool) []*Result {
 	// Timestamp
 	ts := tx.time.Unix()
 
+	l := len(domains)
+
+	rchan := make(chan *Result, l)
+
 	wg := sync.WaitGroup{}
-	wg.Add(len(domains))
+	wg.Add(l)
 
 	// Write the facts to the store.
 	for domain, facts := range domains {
 		go func(d string, f fact.Facts) {
-			n, err := tx.store.WriteSegment(d, ts, f)
+			n, err := tx.store.WriteSegment(d, ts, f, commit)
 
-			if err != nil {
-				logrus.Errorf("Wrror writing to %v: %s", d, err)
-			} else {
-				logrus.Infof("Wrote %d facts (%d bytes) to %v", len(f), n, d)
+			r := Result{
+				Store:  tx.store.String(),
+				Domain: domain,
+				Time:   tx.time,
+				Count:  len(f),
+				Bytes:  n,
+				Error:  err,
+				Faked:  !commit,
 			}
+
+			rchan <- &r
 
 			wg.Done()
 		}(domain, facts)
@@ -96,11 +106,21 @@ func (tx *transaction) write(domains map[string]fact.Facts) error {
 
 	wg.Wait()
 
-	return nil
+	close(rchan)
+
+	i := 0
+	results := make([]*Result, l)
+
+	for r := range rchan {
+		results[i] = r
+		i += 1
+	}
+
+	return results
 }
 
-func (tx *transaction) Exec(commit bool) error {
-	logrus.Debugf("start transaction for store %s", tx.store)
+func (tx *transaction) Exec(commit bool) ([]*Result, error) {
+	logrus.Debugf("begin transaction for store %s", tx.store)
 
 	if tx.strict {
 		logrus.Debug("strict transacting enabled")
@@ -126,7 +146,7 @@ func (tx *transaction) Exec(commit bool) error {
 		// Real error; exit the transaction.
 		if err != nil && err != io.EOF {
 			logrus.Error(err)
-			return err
+			return nil, err
 		}
 
 		// Iterate over the buffered facts and process them.
@@ -134,7 +154,7 @@ func (tx *transaction) Exec(commit bool) error {
 			facts, err = tx.evaluate(buf[i])
 
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			for _, f = range facts {
@@ -153,26 +173,21 @@ func (tx *transaction) Exec(commit bool) error {
 		}
 	}
 
-	// Commit the transaction.
-	if commit {
-		if err = tx.write(domains); err != nil {
-			return err
-		}
+	results := tx.write(domains, commit)
 
+	if commit {
 		logrus.Debugf("transaction committed to store %s", tx.store)
 	} else {
 		logrus.Debugf("transaction not committed to store %s", tx.store)
 	}
 
-	logrus.Debugf("end transaction in %s store", tx.store)
-
-	return nil
+	return results, nil
 }
 
 // Transact transacts facts into a store. A domain is passed which will be used as the
 // default for facts without a specified domain. If strict is true, all facts must
 // match domain. If commit is true, the facts will be written to the store.
-func Transact(s *storage.Store, r fact.Reader, domain string, strict bool, commit bool) error {
+func Transact(s *storage.Store, r fact.Reader, domain string, strict bool, commit bool) ([]*Result, error) {
 	// Lock the store
 	s.Lock()
 	defer s.Unlock()

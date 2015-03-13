@@ -68,6 +68,11 @@ type Store struct {
 	sync.Mutex
 }
 
+// String satisfies the fmt.Stringer interface.
+func (s *Store) String() string {
+	return s.Name
+}
+
 func (s *Store) Proto() proto.Message {
 	return &ProtoStore{}
 }
@@ -277,7 +282,7 @@ func (r *storeReader) Read(facts fact.Facts) (int, error) {
 
 // WriteSegment writes a segment to storage. The number of bytes written are returned
 // or an error.
-func (s *Store) WriteSegment(domain string, tx interface{}, facts fact.Facts) (int, error) {
+func (s *Store) WriteSegment(domain string, tx interface{}, facts fact.Facts, commit bool) (int, error) {
 	if len(facts) == 0 {
 		logrus.Warn("No facts to write.")
 		return 0, nil
@@ -350,10 +355,12 @@ func (s *Store) WriteSegment(domain string, tx interface{}, facts fact.Facts) (i
 		total += size
 	}
 
-	err = part.Write(key, segment)
+	if commit {
+		err = part.Write(key, segment)
 
-	if err != nil {
-		return 0, err
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return total, nil

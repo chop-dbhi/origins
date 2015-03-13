@@ -52,6 +52,6 @@ var statsCmd = &cobra.Command{
 			total += n
 		}
 
-		fmt.Printf("total facts: %d\n", total)
+		fmt.Printf("Total facts: %d\n", total)
 	},
 }

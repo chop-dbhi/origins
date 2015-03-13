@@ -23,6 +23,7 @@ var writeCmd = &cobra.Command{
 
 		format := viper.GetString("format")
 		domain := viper.GetString("domain")
+		fake := viper.GetBool("fake")
 
 		if len(args) == 0 {
 			cmd.Help()
@@ -64,11 +65,15 @@ var writeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		err = transactor.Transact(store, reader, domain, true, true)
+		results, err := transactor.Transact(store, reader, domain, true, !fake)
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
+		}
+
+		for _, r := range results {
+			fmt.Println(r)
 		}
 	},
 }
@@ -76,9 +81,11 @@ var writeCmd = &cobra.Command{
 func init() {
 	flags := writeCmd.Flags()
 
-	flags.String("format", "csv", "The format of the facts being written to the store. Choices are: csv, json")
-	flags.String("domain", "", "The domain to write the facts to. If not supplied, the fact domain attribute must be defined.")
+	flags.String("format", "csv", "Format of the facts being written to the store. Choices are: csv, json")
+	flags.String("domain", "", "Domain to write the facts to. If not supplied, the fact domain attribute must be defined.")
+	flags.Bool("fake", false, "Set to prevent data from being written to the store.")
 
 	viper.BindPFlag("format", flags.Lookup("format"))
 	viper.BindPFlag("domain", flags.Lookup("domain"))
+	viper.BindPFlag("fake", flags.Lookup("fake"))
 }

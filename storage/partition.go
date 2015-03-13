@@ -249,7 +249,7 @@ func initPartition(key string, engine Engine) (*partition, error) {
 			return nil, err
 		}
 
-		logrus.Infof("loaded existing partition: %s", p.storeKey)
+		logrus.Debugf("Loaded existing partition: %s", p.storeKey)
 	}
 
 	return &p, nil
