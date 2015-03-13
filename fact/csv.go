@@ -102,7 +102,7 @@ func isEmpty(r []string) bool {
 	return true
 }
 
-func (r *csvReader) Read() (*Fact, error) {
+func (r *csvReader) read() (*Fact, error) {
 	var (
 		err    error
 		record []string
@@ -222,10 +222,35 @@ func (r *csvReader) Read() (*Fact, error) {
 
 		f.Value = r.idents.Add(dom, val)
 
-		logrus.Infof("processed fact %v", &f)
+		logrus.Debugf("Processed fact %v", &f)
 
 		return &f, nil
 	}
+}
+
+// Read satisfies the fact.Reader interface.
+func (r *csvReader) Read(facts Facts) (int, error) {
+	var (
+		f   *Fact
+		err error
+		l   = len(facts)
+	)
+
+	for i := 0; i < l; i++ {
+		f, err = r.read()
+
+		// EOF or error
+		if err != nil {
+			return i, err
+		}
+
+		// Add fact.
+		if f != nil {
+			facts[i] = f
+		}
+	}
+
+	return l, nil
 }
 
 func CSVReader(reader io.Reader) (*csvReader, error) {

@@ -29,7 +29,7 @@ func Init(cfg *Config) (*Store, error) {
 	var err error
 
 	if cfg.Name == "" {
-		logrus.Infof("No store name specified, using '%v'", defaultStoreName)
+		logrus.Debugf("No store name specified, using '%v'", defaultStoreName)
 		cfg.Name = defaultStoreName
 	}
 

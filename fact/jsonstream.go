@@ -79,7 +79,7 @@ func (r *jsonStreamReader) next() ([]byte, error) {
 	}
 }
 
-func (r *jsonStreamReader) Read() (*Fact, error) {
+func (r *jsonStreamReader) read() (*Fact, error) {
 	b, err := r.next()
 
 	// Real error.
@@ -200,10 +200,35 @@ func (r *jsonStreamReader) Read() (*Fact, error) {
 
 	f.Value = &ident
 
-	fmt.Println(f, err)
+	logrus.Debugf("Processed fact %v", &f)
 
 	// Error will be nil or EOF
 	return &f, nil
+}
+
+// Read satisfies the fact.Reader interface.
+func (r *jsonStreamReader) Read(facts Facts) (int, error) {
+	var (
+		f   *Fact
+		err error
+		l   = len(facts)
+	)
+
+	for i := 0; i < l; i++ {
+		f, err = r.read()
+
+		// EOF or error
+		if err != nil {
+			return i, err
+		}
+
+		// Add fact.
+		if f != nil {
+			facts[i] = f
+		}
+	}
+
+	return l, nil
 }
 
 // JSONStreamReader returns a reader that parsed a stream of newline-delimited

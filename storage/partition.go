@@ -18,8 +18,6 @@ const (
 	segmentKeyFmt = "%s.%d"
 )
 
-type segmentKeys []uint64
-
 // segment is a chunk of bytes in a partition.
 type segment struct {
 	key      uint64
@@ -31,7 +29,7 @@ type segment struct {
 // chunked up into one or more segments of data. The parti
 type partition struct {
 	// SegmentKeys is an ordered slice of segment keys.
-	SegmentKeys segmentKeys
+	SegmentKeys []uint64
 
 	// segments is a local cache of segments that have created or loaded
 	// in this session.
@@ -142,12 +140,10 @@ func (p *partition) Write(key uint64, data []byte) error {
 	}
 
 	if err := p.engine.SetMany(batch); err != nil {
-		delete(p.segments, s.key)
-		p.SegmentKeys = p.SegmentKeys[:len(p.SegmentKeys)-1]
 		return err
 	}
 
-	// Add segment to local cache.
+	// Add segment to local cache after the write succeeded
 	p.segments[s.key] = s
 	p.SegmentKeys = p.temp.SegmentKeys
 	p.temp.SegmentKeys = nil
@@ -205,7 +201,7 @@ func (r *partitionReader) Read(buf []byte) (int, error) {
 			r.pos = 0
 
 			// No more segments available
-			if r.index >= len(r.p.SegmentKeys) {
+			if r.index+1 > len(r.p.SegmentKeys) {
 				return i, io.EOF
 			}
 
@@ -240,7 +236,7 @@ func initPartition(key string, engine Engine) (*partition, error) {
 	}
 
 	p := partition{
-		SegmentKeys: make(segmentKeys, 0),
+		SegmentKeys: make([]uint64, 0),
 		engine:      engine,
 		storeKey:    key,
 		segments:    make(map[uint64]*segment),
@@ -249,7 +245,7 @@ func initPartition(key string, engine Engine) (*partition, error) {
 
 	// Partition already exists, populate the header.
 	if b != nil {
-		if err = headerCodec.Unmarshal(b, p.SegmentKeys); err != nil {
+		if err = headerCodec.Unmarshal(b, &p); err != nil {
 			return nil, err
 		}
 

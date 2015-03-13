@@ -73,7 +73,10 @@ func TestStoreWriteSegment(t *testing.T) {
 	}
 
 	output = make(fact.Facts, len(input))
-	n, err = store.Read(domain, output)
+
+	r, err := store.Reader(domain)
+
+	n, err = r.Read(output)
 
 	if err != nil {
 		t.Fatal(err)

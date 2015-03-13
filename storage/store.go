@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/golang/protobuf/proto"
@@ -62,6 +63,9 @@ type Store struct {
 	engine   Engine
 	codec    Codec
 	parts    map[string]*partition
+
+	// Embed mutex methods in the store.
+	sync.Mutex
 }
 
 func (s *Store) Proto() proto.Message {
@@ -105,7 +109,7 @@ func (s *Store) init() error {
 			return err
 		}
 
-		logrus.Infof("initialized new store named '%s'", s.Name)
+		logrus.Debugf("Initialized new store named '%s'", s.Name)
 	} else {
 		if err := headerCodec.Unmarshal(b, s); err != nil {
 			return err
@@ -119,7 +123,7 @@ func (s *Store) init() error {
 			logrus.Fatalf("Store uses codec '%s', but the default is '%s'.", s.Codec, defaultCodec)
 		}
 
-		logrus.Infof("initialized existing store named '%s'", s.Name)
+		logrus.Debugf("Initialized existing store named '%s'", s.Name)
 	}
 
 	// Setup internal fields.
@@ -140,9 +144,7 @@ func (s *Store) writeHeader() error {
 	return s.engine.Set(s.storeKey, b)
 }
 
-func (s *Store) initPartition(k string) (*partition, error) {
-	// TODO(bjr) add lock, so the same partition cannot be created
-
+func (s *Store) initPartition(domain string) (*partition, error) {
 	var (
 		p   *partition
 		ok  bool
@@ -150,49 +152,57 @@ func (s *Store) initPartition(k string) (*partition, error) {
 	)
 
 	// Check if in local cache.
-	p, ok = s.parts[k]
+	p, ok = s.parts[domain]
 
 	if ok {
-		logrus.Debugf("found partition %v in local cache", k)
+		logrus.Debugf("found partition %v in local cache", domain)
 		return p, nil
 	}
 
 	// TODO(bjr) check in other cache (e.g. memcache)
 
 	// Partition key
-	key := fmt.Sprintf(partitionKeyFmt, s.storeKey, k)
+	storeKey := fmt.Sprintf(partitionKeyFmt, s.storeKey, domain)
 
-	p, err = initPartition(key, s.engine)
+	p, err = initPartition(storeKey, s.engine)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Store in the local cache.
-	s.parts[k] = p
+	s.parts[domain] = p
 
 	return p, nil
 }
 
-// Read populates the passed slice of facts in the specified domain.
-func (s *Store) Read(domain string, facts fact.Facts) (int, error) {
-	// Initialize
-	if facts == nil {
-		logrus.Panicf("facts not initialized")
-	}
-
-	var (
-		p   *partition
-		ok  bool
-		err error
-	)
-
-	p, ok = s.parts[domain]
+func (s *Store) Reader(domain string) (*storeReader, error) {
+	_, ok := s.parts[domain]
 
 	if !ok {
-		if p, err = s.initPartition(domain); err != nil {
-			return 0, err
+		if _, err := s.initPartition(domain); err != nil {
+			return nil, err
 		}
+	}
+
+	return &storeReader{
+		s: s,
+		r: s.parts[domain].Reader(),
+	}, nil
+}
+
+type storeReader struct {
+	s *Store
+
+	// The partition being read from.
+	r *partitionReader
+}
+
+// Read satisfies the fact.Reader interface.
+func (r *storeReader) Read(facts fact.Facts) (int, error) {
+	// Initialize
+	if facts == nil {
+		logrus.Panicf("Facts not initialized")
 	}
 
 	var (
@@ -200,24 +210,27 @@ func (s *Store) Read(domain string, facts fact.Facts) (int, error) {
 		i int
 		// Number of bytes read
 		n int
+
+		err error
+
 		// Binary error code
 		berr int
+
 		// Size of the fact in bytes.
 		size uint64
+
 		// 2 byte length prefix per fact.
 		prefix = make([]byte, 2, 2)
+
 		// Fact buffer
 		buf []byte
 	)
 
-	// Initialize a partition reader.
-	r := p.Reader()
-
 	for ; i < len(facts); i++ {
-		n, err = r.Read(prefix)
+		n, err = r.r.Read(prefix)
 
 		if err == io.EOF {
-			return i, nil
+			return i, err
 		}
 
 		if err != nil {
@@ -225,21 +238,21 @@ func (s *Store) Read(domain string, facts fact.Facts) (int, error) {
 		}
 
 		if n != framePrefixFactSize {
-			logrus.Panicf("frame prefix should be %d, got %d", framePrefixFactSize, n)
+			logrus.Panicf("Frame prefix should be %d, got %d", framePrefixFactSize, n)
 		}
 
 		size, berr = binary.Uvarint(prefix)
 
 		if berr < 0 {
-			logrus.Panicf("cannot decode frame prefix: uvarint code %d", berr)
+			logrus.Panicf("Cannot decode frame prefix: uvarint code %d", berr)
 		}
 
 		buf = make([]byte, size)
 
-		n, err = r.Read(buf)
+		n, err = r.r.Read(buf)
 
 		if err == io.EOF {
-			logrus.Panicf("got unexpected EOF after %d bytes, expected %d", n, size)
+			logrus.Panicf("Got unexpected EOF after %d bytes, expected %d", n, size)
 		}
 
 		if err != nil {
@@ -247,12 +260,12 @@ func (s *Store) Read(domain string, facts fact.Facts) (int, error) {
 		}
 
 		if size != uint64(n) {
-			logrus.Panicf("frame size should be %d, got %d", size, n)
+			logrus.Panicf("Frame size should be %d, got %d", size, n)
 		}
 
 		f := fact.Fact{}
 
-		if err = s.codec.Unmarshal(buf, &f); err != nil {
+		if err = r.s.codec.Unmarshal(buf, &f); err != nil {
 			return i, err
 		}
 
@@ -264,16 +277,29 @@ func (s *Store) Read(domain string, facts fact.Facts) (int, error) {
 
 // WriteSegment writes a segment to storage. The number of bytes written are returned
 // or an error.
-func (s *Store) WriteSegment(domain string, key uint64, facts fact.Facts) (int, error) {
+func (s *Store) WriteSegment(domain string, tx interface{}, facts fact.Facts) (int, error) {
 	if len(facts) == 0 {
-		logrus.Panicf("no facts to write")
+		logrus.Warn("No facts to write.")
+		return 0, nil
 	}
 
 	var (
 		err  error
+		key  uint64
 		part *partition
 		ok   bool
 	)
+
+	switch x := tx.(type) {
+	case uint64:
+		key = x
+	case int64:
+		key = uint64(x)
+	case int:
+		key = uint64(x)
+	default:
+		return 0, errors.New(fmt.Sprintf("Segment key must be an integer value, got %T", tx))
+	}
 
 	part, ok = s.parts[domain]
 

@@ -10,12 +10,19 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func ParseOperation(s string) (string, error) {
+type Operation string
+
+const (
+	AssertOp  Operation = "assert"
+	RetractOp Operation = "retract"
+)
+
+func ParseOperation(s string) (Operation, error) {
 	switch strings.ToLower(s) {
 	case "", "assert":
-		return "assert", nil
+		return AssertOp, nil
 	case "retract":
-		return "retract", nil
+		return RetractOp, nil
 	}
 
 	return "", errors.New(fmt.Sprintf("unknown operation: %s", s))
@@ -54,7 +61,7 @@ func ParseTime(s string) (int64, error) {
 // Fact represents a valid and prepared fact.
 type Fact struct {
 	Domain      string
-	Operation   string
+	Operation   Operation
 	Time        int64
 	Entity      *identity.Ident
 	Attribute   *identity.Ident
@@ -71,7 +78,7 @@ func (f *Fact) Proto() proto.Message {
 // ToProto returns a protobuf version of the Fact.
 func (f *Fact) ToProto() (proto.Message, error) {
 	m := ProtoFact{
-		Operation:       proto.String(f.Operation),
+		Operation:       proto.String(string(f.Operation)),
 		Time:            proto.Int64(f.Time),
 		EntityDomain:    proto.String(f.Entity.Domain),
 		Entity:          proto.String(f.Entity.Local),
@@ -138,7 +145,7 @@ func Assert(e, a, v, t *identity.Ident) *Fact {
 		Attribute:   a,
 		Value:       v,
 		Transaction: t,
-		Operation:   "assert",
+		Operation:   AssertOp,
 	}
 }
 
@@ -149,7 +156,7 @@ func Retract(e, a, v, t *identity.Ident) *Fact {
 		Attribute:   a,
 		Value:       v,
 		Transaction: t,
-		Operation:   "retract",
+		Operation:   RetractOp,
 	}
 }
 
@@ -163,7 +170,7 @@ func AssertString(e, a, v string) *Fact {
 		Entity:    eident,
 		Attribute: aident,
 		Value:     vident,
-		Operation: "assert",
+		Operation: AssertOp,
 	}
 }
 
@@ -177,6 +184,6 @@ func RetractString(e, a, v string) *Fact {
 		Entity:    eident,
 		Attribute: aident,
 		Value:     vident,
-		Operation: "retract",
+		Operation: RetractOp,
 	}
 }
