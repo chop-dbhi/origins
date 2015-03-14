@@ -46,9 +46,12 @@ var writeCmd = &cobra.Command{
 			r = f
 		}
 
+		// Wrap in a reader to handle carriage returns.
+		r = &UniversalReader{r}
+
 		var (
-			reader fact.Reader
 			err    error
+			reader fact.Reader
 		)
 
 		switch format {
@@ -57,7 +60,7 @@ var writeCmd = &cobra.Command{
 		case "json":
 			reader, err = fact.JSONStreamReader(r)
 		default:
-			fmt.Println("Unknown format %s", format)
+			fmt.Printf("Unknown format %s\n", format)
 		}
 
 		if err != nil {
