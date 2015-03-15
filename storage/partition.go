@@ -153,34 +153,117 @@ func (p *partition) Write(key uint64, data []byte) error {
 
 // Reader returns a partition reader which provide isolated control over
 // reading the segments in the partition.
-func (p *partition) Reader() *partitionReader {
-	return &partitionReader{
-		p: p,
+func (p *partition) Reader(t0, t1 int64) *partitionReader {
+	pr := partitionReader{
+		part: p,
+		t0:   t0,
+		t1:   t1,
 	}
+
+	// Bounds of the range
+	pr.start = 0
+	pr.stop = len(p.SegmentKeys)
+
+	// Non-zero lower bound.
+	if pr.t0 > 0 {
+		// Set out of range.
+		pr.start = -1
+
+		for i, t := range p.SegmentKeys {
+			// Time of this segment equals or exceeds the lower bound.
+			if t >= uint64(pr.t0) {
+				pr.start = i
+				break
+			}
+		}
+	}
+
+	pr.index = pr.start
+
+	// Non-zero upper bound.
+	if pr.t1 > 0 {
+		// Walk backwards until t1 exceeds t.
+		for i := len(p.SegmentKeys) - 1; i >= 0; i-- {
+			t := p.SegmentKeys[i]
+
+			// Time of segment is less than or equal to the upper bound.
+			// Set next index as the stop.
+			if uint64(pr.t1) >= t {
+				pr.stop = i + 1
+				break
+			}
+		}
+	}
+
+	return &pr
 }
 
 type partitionReader struct {
 	// Pointer to the partition for access to the header and engine.
-	p *partition
-	// Current index in the header keys. This corresponds to a segment key.
+	part *partition
+
+	// Time range
+	t0 int64
+	t1 int64
+
+	// Start and stop segment indexes.
+	start int
+	stop  int
+
+	// Current index in the header corresponding to a segment key.
 	index int
+
 	// Current byte position in the segment.
 	pos int
 }
 
+// MinTime returns the reader's minimum time boundary.
+func (r *partitionReader) MinTime() int64 {
+	if r.t0 == 0 {
+		return -1
+	}
+
+	return r.t0
+}
+
+// MinTime returns the reader's maximum time boundary.
+func (r *partitionReader) MaxTime() int64 {
+	if r.t1 == 0 {
+		return -1
+	}
+
+	return r.t1
+}
+
+// StartTime returns the start time of the facts bounded by the min time.
+func (r *partitionReader) StartTime() int64 {
+	if r.start >= len(r.part.SegmentKeys) {
+		return -1
+	}
+
+	return int64(r.part.SegmentKeys[uint64(r.start)])
+}
+
+// EndTime returns the end time of the facts bounded by the max time.
+func (r *partitionReader) EndTime() int64 {
+	if r.stop-1 >= len(r.part.SegmentKeys) {
+		return -1
+	}
+
+	return int64(r.part.SegmentKeys[uint64(r.stop-1)])
+}
+
 // Read satisfies the io.Reader interface.
 func (r *partitionReader) Read(buf []byte) (int, error) {
-	// Empty partition
-	if len(r.p.SegmentKeys) == 0 {
-		logrus.Debugf("partition is empty")
+	// Empty partition or out of range
+	if len(r.part.SegmentKeys) == 0 || r.index == -1 || r.index == r.stop {
 		return 0, io.EOF
 	}
 
-	// Key to a segment.
-	key := r.p.SegmentKeys[r.index]
+	key := r.part.SegmentKeys[r.index]
 
 	// Get the segment and the length of the data slice.
-	seg := r.p.get(key)
+	seg := r.part.get(key)
 	slen := len(seg.data)
 
 	// Length of the buffer
@@ -195,18 +278,18 @@ func (r *partitionReader) Read(buf []byte) (int, error) {
 			break
 		}
 
-		// check if the segment as run out, load the next one
+		// check if the segment has run out, load the next one
 		if r.pos >= slen {
 			r.index += 1
 			r.pos = 0
 
-			// No more segments available
-			if r.index+1 > len(r.p.SegmentKeys) {
+			// Stop
+			if r.index == r.stop {
 				return i, io.EOF
 			}
 
-			key = r.p.SegmentKeys[r.index]
-			seg = r.p.get(key)
+			key := r.part.SegmentKeys[r.index]
+			seg = r.part.get(key)
 			slen = len(seg.data)
 		}
 

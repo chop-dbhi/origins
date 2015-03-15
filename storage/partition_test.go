@@ -46,7 +46,7 @@ func TestPartitionReader__Full(t *testing.T) {
 	part.Write(2, b)
 	part.Write(3, b)
 
-	r := part.Reader()
+	r := part.Reader(0, 0)
 
 	// 1000 byte buffer, allocated as zeros
 	buf := make([]byte, 1000)
@@ -78,7 +78,7 @@ func TestPartitionReader__Incr(t *testing.T) {
 	part.Write(2, b)
 	part.Write(3, b)
 
-	r := part.Reader()
+	r := part.Reader(0, 0)
 	buf := make([]byte, 10)
 
 	// Track iterations
@@ -121,7 +121,7 @@ func TestPartitionReader__Lazy(t *testing.T) {
 	// Clear local cache
 	part.segments = make(map[uint64]*segment)
 
-	r := part.Reader()
+	r := part.Reader(0, 0)
 	buf := make([]byte, 10)
 
 	// Track iterations
@@ -149,6 +149,68 @@ func TestPartitionReader__Lazy(t *testing.T) {
 
 		i += 1
 	}
+}
+
+// Fetches segments from storage transparently.
+func TestPartitionReader__Range(t *testing.T) {
+	engine, _ := open(nil)
+	part, _ := initPartition("test.partition", engine)
+
+	b := make([]byte, 100)
+
+	// Emulate different time points.
+	part.Write(1, b)
+	part.Write(3, b)
+	part.Write(5, b)
+
+	var (
+		n   int
+		err error
+		r   *partitionReader
+	)
+
+	buf := make([]byte, 1000)
+
+	// Upper bound
+	r = part.Reader(0, 2)
+
+	assert.Equal(t, r.index, 0)
+	assert.Equal(t, r.stop, 1)
+
+	n, err = r.Read(buf)
+
+	assert.Equal(t, 100, n)
+	assert.Equal(t, io.EOF, err)
+
+	// Lower bound
+	r = part.Reader(2, 0)
+
+	assert.Equal(t, r.index, 1)
+	assert.Equal(t, r.stop, 3)
+
+	n, err = r.Read(buf)
+
+	assert.Equal(t, 200, n)
+	assert.Equal(t, io.EOF, err)
+
+	// Slice
+	r = part.Reader(2, 4)
+
+	assert.Equal(t, r.index, 1)
+	assert.Equal(t, r.stop, 2)
+
+	n, err = r.Read(buf)
+
+	assert.Equal(t, 100, n)
+	assert.Equal(t, io.EOF, err)
+
+	// Out of range
+	r = part.Reader(6, 0)
+
+	n, err = r.Read(buf)
+
+	assert.Equal(t, 0, n)
+	assert.Equal(t, io.EOF, err)
 }
 
 func benchPartitionWrite(b *testing.B, engine Engine, n int) {
