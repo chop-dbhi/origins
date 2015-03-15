@@ -40,22 +40,34 @@ var timeLayouts = []string{
 	time.ANSIC,
 }
 
-func ParseTime(s string) (int64, error) {
-	var (
-		t   time.Time
-		err error
-	)
+func ParseTime(t interface{}) (int64, error) {
+	switch x := t.(type) {
+	case string:
+		var (
+			t   time.Time
+			err error
+		)
 
-	for _, layout := range timeLayouts {
-		t, err = time.Parse(layout, s)
+		for _, layout := range timeLayouts {
+			t, err = time.Parse(layout, x)
 
-		if err == nil {
-			return t.Unix(), nil
+			if err == nil {
+				return t.Unix(), nil
+			}
 		}
+	case int:
+		return int64(x), nil
+	case int64:
+		return x, nil
+	case time.Duration:
+		n := time.Now()
+		n = n.Add(-x)
+		return n.Unix(), nil
+	case time.Time:
+		return x.Unix(), nil
 	}
 
-	err = errors.New(fmt.Sprintf("could not parse time: %s", s))
-	return 0, err
+	return 0, errors.New(fmt.Sprintf("could not parse %v as time", t))
 }
 
 // Fact represents a valid and prepared fact.

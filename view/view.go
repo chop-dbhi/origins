@@ -1,32 +1,10 @@
 package view
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
-	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/storage"
 )
-
-func ParseTime(t interface{}) (int64, error) {
-	switch x := t.(type) {
-	case string:
-		return fact.ParseTime(x)
-	case int:
-		return int64(x), nil
-	case int64:
-		return x, nil
-	case time.Duration:
-		n := time.Now()
-		n = n.Add(-x)
-		return n.Unix(), nil
-	case time.Time:
-		return x.Unix(), nil
-	}
-
-	return 0, errors.New(fmt.Sprintf("could not parse %v as time", t))
-}
 
 // View provides methods for computing aggregates on the store.
 type View struct {

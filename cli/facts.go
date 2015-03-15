@@ -37,14 +37,14 @@ var factsCmd = &cobra.Command{
 			format = viper.GetString("facts.format")
 		)
 
-		min, err = view.ParseTime(smin)
+		min, err = fact.ParseTime(smin)
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		max, err = view.ParseTime(smax)
+		max, err = fact.ParseTime(smax)
 
 		if err != nil {
 			fmt.Println(err)
