@@ -1,12 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
-	"github.com/chop-dbhi/origins/fact"
+	"github.com/chop-dbhi/origins/view"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var statsCmd = &cobra.Command{
@@ -22,36 +23,35 @@ var statsCmd = &cobra.Command{
 		store := initStore()
 
 		var (
-			n   int
 			err error
+			min = viper.GetInt("min")
+			max = viper.GetInt("max")
 		)
 
-		r, err := store.Reader(args[0])
+		// Current view of the store.
+		v, err := view.Range(store, min, max)
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		total := 0
-		buf := make(fact.Facts, 100)
+		// View of the passed domain.
+		dv := v.Domain(args[0])
 
-		for {
-			n, err = r.Read(buf)
+		stats := dv.Stats()
 
-			if err == io.EOF {
-				total += n
-				break
-			}
-
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			total += n
-		}
-
-		fmt.Printf("Total facts: %d\n", total)
+		b, _ := json.MarshalIndent(&stats, "", "\t")
+		fmt.Println(string(b))
 	},
+}
+
+func init() {
+	flags := statsCmd.Flags()
+
+	flags.Int64("min", 0, "The min time of the view.")
+	flags.Int64("max", 0, "The max time of the view.")
+
+	viper.BindPFlag("min", flags.Lookup("min"))
+	viper.BindPFlag("max", flags.Lookup("max"))
 }
