@@ -10,14 +10,15 @@ import (
 
 // Domain is view for a particular domain.
 type Domain struct {
-	Domain string
-	store  *storage.Store
-	t0     int64
-	t1     int64
+	Name string
+
+	store *storage.Store
+	min   int64
+	max   int64
 }
 
 func (d *Domain) reader() *storage.Reader {
-	r, err := d.store.RangeReader(d.Domain, d.t0, d.t1)
+	r, err := d.store.RangeReader(d.Name, d.min, d.max)
 
 	if err != nil {
 		panic(err)
@@ -39,17 +40,17 @@ func (d *Domain) Stats() *Stats {
 
 func (d *Domain) Transactions() fact.Facts {
 	// This *is* a transaction domain, return it's own facts.
-	if strings.HasPrefix(d.Domain, "origins.tx.") {
+	if strings.HasPrefix(d.Name, "origins.tx.") {
 		return d.Facts()
 	}
 
-	domain := fmt.Sprintf("origins.tx.%s", d.Domain)
+	domain := fmt.Sprintf("origins.tx.%s", d.Name)
 
 	v := Domain{
-		Domain: domain,
-		store:  d.store,
-		t0:     d.t0,
-		t1:     d.t1,
+		Name:  domain,
+		store: d.store,
+		min:   d.min,
+		max:   d.max,
 	}
 
 	return v.Facts()
@@ -61,4 +62,9 @@ func (d *Domain) Facts() fact.Facts {
 	facts, _ := fact.ReadAll(r)
 
 	return facts
+}
+
+// Reader returns a fact.Reader for this view.
+func (d *Domain) Reader() fact.Reader {
+	return d.reader()
 }

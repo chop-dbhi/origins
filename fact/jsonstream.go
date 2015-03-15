@@ -233,11 +233,57 @@ func (r *jsonStreamReader) Read(facts Facts) (int, error) {
 
 // JSONStreamReader returns a reader that parsed a stream of newline-delimited
 // JSON-encoded facts.
-func JSONStreamReader(reader io.Reader) (*jsonStreamReader, error) {
+func JSONStreamReader(reader io.Reader) *jsonStreamReader {
 	r := jsonStreamReader{
 		reader: reader,
 		buf:    make([]byte, 200),
 	}
 
-	return &r, nil
+	return &r
+}
+
+type jsonStreamWriter struct {
+	writer io.Writer
+}
+
+func (w *jsonStreamWriter) marshal(f *Fact) []byte {
+	b, err := json.Marshal(f)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+func (w *jsonStreamWriter) Write(facts Facts) (int, error) {
+	// Buffer to reduce the number of calls to flush.
+	var (
+		n   int
+		b   []byte
+		err error
+		nl  = []byte{'\n'}
+	)
+
+	for _, f := range facts {
+		b = w.marshal(f)
+
+		if _, err = w.writer.Write(b); err != nil {
+			return n, err
+		}
+
+		if _, err = w.writer.Write(nl); err != nil {
+			return n, err
+		}
+
+		n += 1
+	}
+
+	return n, nil
+}
+
+func JSONStreamWriter(writer io.Writer) *jsonStreamWriter {
+	return &jsonStreamWriter{
+		writer: writer,
+	}
 }

@@ -38,6 +38,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/chop-dbhi/origins/identity"
@@ -48,6 +49,18 @@ var (
 	ErrHeaderRequired = errors.New("A header is required with field names.")
 	ErrRequiredFields = errors.New("The entity, attribute, and value fields are required.")
 )
+
+var csvHeader = []string{
+	"domain",
+	"operation",
+	"valid time",
+	"entity domain",
+	"entity",
+	"attribute domain",
+	"attribute",
+	"value domain",
+	"value",
+}
 
 // parseHeader normalizes the header fields so they can be mapped to the
 func parseHeader(r []string) (map[string]int, error) {
@@ -253,7 +266,7 @@ func (r *csvReader) Read(facts Facts) (int, error) {
 	return l, nil
 }
 
-func CSVReader(reader io.Reader) (*csvReader, error) {
+func CSVReader(reader io.Reader) *csvReader {
 	cr := csv.NewReader(reader)
 
 	// Set CSV parameters
@@ -271,5 +284,74 @@ func CSVReader(reader io.Reader) (*csvReader, error) {
 		idents: &cache,
 	}
 
-	return &r, nil
+	return &r
+}
+
+type csvWriter struct {
+	writer *csv.Writer
+	head   bool
+}
+
+func (w *csvWriter) record(f *Fact) []string {
+	var time string
+
+	if f.Time == 0 {
+		time = ""
+	} else {
+		time = strconv.FormatInt(f.Time, 10)
+	}
+
+	return []string{
+		f.Domain,
+		string(f.Operation),
+		time,
+		f.Entity.Domain,
+		f.Entity.Local,
+		f.Attribute.Domain,
+		f.Attribute.Local,
+		f.Value.Domain,
+		f.Value.Local,
+	}
+}
+
+func (w *csvWriter) Write(facts Facts) (int, error) {
+	// Buffer to reduce the number of calls to flush.
+	var (
+		n   int
+		err error
+	)
+
+	if !w.head {
+		w.head = true
+
+		// Add header
+		if err = w.writer.Write(csvHeader); err != nil {
+			return 0, err
+		}
+	}
+
+	for _, f := range facts {
+		if err = w.writer.Write(w.record(f)); err != nil {
+			return n, err
+		}
+
+		n += 1
+	}
+
+	// Flush and check for an error
+	w.writer.Flush()
+
+	if err = w.writer.Error(); err != nil {
+		return n, err
+	}
+
+	return n, nil
+}
+
+func CSVWriter(writer io.Writer) *csvWriter {
+	w := csv.NewWriter(writer)
+
+	return &csvWriter{
+		writer: w,
+	}
 }

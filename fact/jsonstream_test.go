@@ -93,11 +93,7 @@ func TestJSONStreamReader(t *testing.T) {
 		}
 	}
 
-	r, err := JSONStreamReader(buf)
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	r := JSONStreamReader(buf)
 
 	facts, err := ReadAll(r)
 

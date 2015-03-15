@@ -11,25 +11,28 @@ import (
 	"github.com/spf13/viper"
 )
 
-var writeCmd = &cobra.Command{
-	Use: "write (<file>| -)",
+var loadCmd = &cobra.Command{
+	Use: "load",
 
-	Short: "Writes facts to the store.",
+	Short: "Loads facts to the store.",
 
-	Long: `write takes a path to a file or "-" to read from stdin.`,
+	Long: `load takes a path to a file or "-" to read from stdin.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		store := initStore()
-
-		format := viper.GetString("format")
-		domain := viper.GetString("domain")
-		fake := viper.GetBool("fake")
-
 		if len(args) == 0 {
 			cmd.Help()
 		}
 
-		var r io.Reader
+		store := initStore()
+
+		var (
+			r   io.Reader
+			err error
+
+			format = viper.GetString("load.format")
+			domain = viper.GetString("load.domain")
+			fake   = viper.GetBool("load.fake")
+		)
 
 		if args[0] == "-" {
 			r = os.Stdin
@@ -49,22 +52,15 @@ var writeCmd = &cobra.Command{
 		// Wrap in a reader to handle carriage returns.
 		r = &UniversalReader{r}
 
-		var (
-			err    error
-			reader fact.Reader
-		)
+		var reader fact.Reader
 
 		switch format {
 		case "csv":
-			reader, err = fact.CSVReader(r)
-		case "json":
-			reader, err = fact.JSONStreamReader(r)
+			reader = fact.CSVReader(r)
+		case "jsonstream":
+			reader = fact.JSONStreamReader(r)
 		default:
 			fmt.Printf("Unknown format %s\n", format)
-		}
-
-		if err != nil {
-			fmt.Println(err)
 			os.Exit(1)
 		}
 
@@ -82,13 +78,13 @@ var writeCmd = &cobra.Command{
 }
 
 func init() {
-	flags := writeCmd.Flags()
+	flags := loadCmd.Flags()
 
-	flags.String("format", "csv", "Format of the facts being written to the store. Choices are: csv, json")
-	flags.String("domain", "", "Domain to write the facts to. If not supplied, the fact domain attribute must be defined.")
+	flags.String("format", "csv", "Format of the facts being written to the store. Choices are: csv, jsonstream")
+	flags.String("domain", "", "Domain to load the facts to. If not supplied, the fact domain attribute must be defined.")
 	flags.Bool("fake", false, "Set to prevent data from being written to the store.")
 
-	viper.BindPFlag("format", flags.Lookup("format"))
-	viper.BindPFlag("domain", flags.Lookup("domain"))
-	viper.BindPFlag("fake", flags.Lookup("fake"))
+	viper.BindPFlag("load.format", flags.Lookup("format"))
+	viper.BindPFlag("load.domain", flags.Lookup("domain"))
+	viper.BindPFlag("load.fake", flags.Lookup("fake"))
 }

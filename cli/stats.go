@@ -23,20 +23,29 @@ var statsCmd = &cobra.Command{
 		store := initStore()
 
 		var (
-			err error
-			min = viper.GetInt("min")
-			max = viper.GetInt("max")
+			err      error
+			min, max int64
+
+			smin = viper.GetInt("stats.min")
+			smax = viper.GetInt("stats.max")
 		)
 
-		// Current view of the store.
-		v, err := view.Range(store, min, max)
+		min, err = view.ParseTime(smin)
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		// View of the passed domain.
+		max, err = view.ParseTime(smax)
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		// View for the domain.
+		v := view.Range(store, min, max)
 		dv := v.Domain(args[0])
 
 		stats := dv.Stats()
@@ -52,6 +61,6 @@ func init() {
 	flags.Int64("min", 0, "The min time of the view.")
 	flags.Int64("max", 0, "The max time of the view.")
 
-	viper.BindPFlag("min", flags.Lookup("min"))
-	viper.BindPFlag("max", flags.Lookup("max"))
+	viper.BindPFlag("stats.min", flags.Lookup("min"))
+	viper.BindPFlag("stats.max", flags.Lookup("max"))
 }

@@ -180,6 +180,12 @@ func (s *Store) initPartition(domain string) (*partition, error) {
 	return p, nil
 }
 
+// Close closes the underlying engine. Store operations that rely on the
+// engine should be assumed to be fail.
+func (s *Store) Close() error {
+	return s.engine.Close()
+}
+
 func (s *Store) Reader(domain string) (*Reader, error) {
 	_, ok := s.parts[domain]
 

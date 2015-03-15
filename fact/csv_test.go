@@ -30,11 +30,7 @@ func TestCSVReader(t *testing.T) {
 
 	buf := bytes.NewBufferString(csvString)
 
-	r, err := CSVReader(buf)
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	r := CSVReader(buf)
 
 	facts, err := ReadAll(r)
 
@@ -64,7 +60,7 @@ func TestCSVReaderFile(t *testing.T) {
 
 	defer f.Close()
 
-	r, _ := CSVReader(f)
+	r := CSVReader(f)
 	facts, _ := ReadAll(r)
 
 	assert.Equal(t, 72, len(facts))
