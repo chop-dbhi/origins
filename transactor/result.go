@@ -1,16 +1,13 @@
 package transactor
 
-import (
-	"fmt"
-	"time"
-)
+import "fmt"
 
 // Result contains information about facts being written to a store for a
 // particular domain.
 type Result struct {
 	Store  string
 	Domain string
-	Time   time.Time
+	Time   int64
 	Count  int
 	Bytes  int
 	Error  error

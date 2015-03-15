@@ -42,7 +42,7 @@ type transaction struct {
 
 	// Time the transaction started. This is also used as the *valid time* of the
 	// facts themselves.
-	time time.Time
+	time int64
 
 	// View of the store at the transaction time.
 	//view *view.View
@@ -68,14 +68,16 @@ func (tx *transaction) evaluate(f *fact.Fact) (fact.Facts, error) {
 		return nil, err
 	}
 
+	// Set the default time.
+	if f.Time == 0 {
+		f.Time = tx.time
+	}
+
 	return fact.Facts{f}, nil
 }
 
 // write takes a map of domains to facts and writes them to the store.
 func (tx *transaction) write(domains map[string]fact.Facts, commit bool) []*Result {
-	// Timestamp
-	ts := tx.time.Unix()
-
 	l := len(domains)
 
 	rchan := make(chan *Result, l)
@@ -86,11 +88,11 @@ func (tx *transaction) write(domains map[string]fact.Facts, commit bool) []*Resu
 	// Write the facts to the store.
 	for domain, facts := range domains {
 		go func(d string, f fact.Facts) {
-			n, err := tx.store.WriteSegment(d, ts, f, commit)
+			n, err := tx.store.WriteSegment(d, tx.time, f, commit)
 
 			r := Result{
 				Store:  tx.store.String(),
-				Domain: domain,
+				Domain: d,
 				Time:   tx.time,
 				Count:  len(f),
 				Bytes:  n,
@@ -193,7 +195,7 @@ func Transact(s *storage.Store, r fact.Reader, domain string, strict bool, commi
 	defer s.Unlock()
 
 	// Get the current time to isolate the view.
-	now := time.Now()
+	now := time.Now().Unix()
 
 	tx := transaction{
 		store:  s,
