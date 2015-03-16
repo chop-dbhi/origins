@@ -127,7 +127,7 @@ func (p *partition) Write(key uint64, data []byte) error {
 	// Add to temp partition for writing to the store.
 	p.temp.SegmentKeys = append(p.SegmentKeys, s.key)
 
-	header, err := headerCodec.Marshal(p.temp)
+	header, err := MarshalProto(p.temp)
 
 	if err != nil {
 		logrus.Panic(err)
@@ -328,7 +328,7 @@ func initPartition(key string, engine Engine) (*partition, error) {
 
 	// Partition already exists, populate the header.
 	if b != nil {
-		if err = headerCodec.Unmarshal(b, &p); err != nil {
+		if err = UnmarshalProto(b, &p); err != nil {
 			return nil, err
 		}
 

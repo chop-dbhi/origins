@@ -6,6 +6,5 @@ message ProtoPartition {
 
 message ProtoStore {
     required string Name = 1;
-    required string Codec = 2;
-    required int32 Version = 3;
+    required int32 Version = 2;
 }

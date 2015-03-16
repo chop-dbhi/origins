@@ -39,8 +39,7 @@ func (m *ProtoPartition) GetSegmentKeys() []uint64 {
 
 type ProtoStore struct {
 	Name             *string `protobuf:"bytes,1,req" json:"Name,omitempty"`
-	Codec            *string `protobuf:"bytes,2,req" json:"Codec,omitempty"`
-	Version          *int32  `protobuf:"varint,3,req" json:"Version,omitempty"`
+	Version          *int32  `protobuf:"varint,2,req" json:"Version,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -51,13 +50,6 @@ func (*ProtoStore) ProtoMessage()    {}
 func (m *ProtoStore) GetName() string {
 	if m != nil && m.Name != nil {
 		return *m.Name
-	}
-	return ""
-}
-
-func (m *ProtoStore) GetCodec() string {
-	if m != nil && m.Codec != nil {
-		return *m.Codec
 	}
 	return ""
 }

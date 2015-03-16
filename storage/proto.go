@@ -14,3 +14,23 @@ type ProtoMessage interface {
 	// FromProto takes a proto message and populates the value with the fields.
 	FromProto(proto.Message) error
 }
+
+func MarshalProto(v ProtoMessage) ([]byte, error) {
+	m, err := v.ToProto()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return proto.Marshal(m)
+}
+
+func UnmarshalProto(b []byte, v ProtoMessage) error {
+	m := v.Proto()
+
+	if err := proto.Unmarshal(b, m); err != nil {
+		return err
+	}
+
+	return v.FromProto(m)
+}

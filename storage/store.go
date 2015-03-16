@@ -27,9 +27,6 @@ const (
 	// Takes the store name.
 	storeKeyFmt = "origins.%s"
 
-	// Default codec type.
-	defaultCodec = "protobuf"
-
 	// Size of the message framing prefix size for a fact in bytes.
 	framePrefixFactSize = 2
 
@@ -38,16 +35,10 @@ const (
 	maxFactSize = 1 << (framePrefixFactSize * 8)
 )
 
-var headerCodec = codecs[defaultCodec]
-
 type Store struct {
 	// Name is the given name of the store. This is used to as the top-level
 	// prefix of storage keys.
 	Name string
-
-	// Codec is the name of the codec used for writing facts to storage. This
-	// is used to determin compatibility of the store with the program.
-	Codec string
 
 	// Version is the version of the store from the last usage. This
 	// is used to determin compatibility of the store with the program.
@@ -60,7 +51,6 @@ type Store struct {
 
 	storeKey string
 	engine   Engine
-	codec    Codec
 	parts    map[string]*partition
 
 	// Embed mutex methods in the store.
@@ -79,7 +69,6 @@ func (s *Store) Proto() proto.Message {
 func (s *Store) ToProto() (proto.Message, error) {
 	return &ProtoStore{
 		Name:    proto.String(s.Name),
-		Codec:   proto.String(s.Codec),
 		Version: proto.Int32(int32(s.Version)),
 	}, nil
 }
@@ -87,7 +76,6 @@ func (s *Store) ToProto() (proto.Message, error) {
 func (s *Store) FromProto(v proto.Message) error {
 	m := v.(*ProtoStore)
 	s.Name = m.GetName()
-	s.Codec = m.GetCodec()
 	s.Version = int(m.GetVersion())
 	return nil
 }
@@ -103,8 +91,6 @@ func (s *Store) init() error {
 		return err
 	}
 
-	s.Codec = defaultCodec
-
 	// Record of store does not exist.
 	if b == nil {
 		s.Version = Version
@@ -115,7 +101,7 @@ func (s *Store) init() error {
 
 		logrus.Debugf("Initialized new store named '%s'", s.Name)
 	} else {
-		if err := headerCodec.Unmarshal(b, s); err != nil {
+		if err := UnmarshalProto(b, s); err != nil {
 			return err
 		}
 
@@ -123,15 +109,10 @@ func (s *Store) init() error {
 			logrus.Fatalf("Store version is '%s', but using '%s' version of the client.", s.Version, Version)
 		}
 
-		if defaultCodec != s.Codec {
-			logrus.Fatalf("Store uses codec '%s', but the default is '%s'.", s.Codec, defaultCodec)
-		}
-
 		logrus.Debugf("Initialized existing store named '%s'", s.Name)
 	}
 
 	// Setup internal fields.
-	s.codec = codecs[s.Codec]
 	s.parts = make(map[string]*partition)
 
 	return nil
@@ -139,7 +120,7 @@ func (s *Store) init() error {
 
 // writeHeader writes the current state of the store to storage.
 func (s *Store) writeHeader() error {
-	b, err := headerCodec.Marshal(s)
+	b, err := MarshalProto(s)
 
 	if err != nil {
 		return err
@@ -269,7 +250,7 @@ func (s *Store) WriteSegment(domain string, tx interface{}, facts fact.Facts, co
 	)
 
 	for _, f := range facts {
-		buf, err = s.codec.Marshal(f)
+		buf, err = MarshalProto(f)
 
 		if err != nil {
 			return 0, err

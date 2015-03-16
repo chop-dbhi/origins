@@ -103,7 +103,7 @@ func (r *Reader) Read(facts fact.Facts) (int, error) {
 
 		f := fact.Fact{}
 
-		if err = r.store.codec.Unmarshal(buf, &f); err != nil {
+		if err = UnmarshalProto(buf, &f); err != nil {
 			return i, err
 		}
 
