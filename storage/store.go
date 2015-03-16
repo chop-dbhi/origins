@@ -168,18 +168,7 @@ func (s *Store) Close() error {
 }
 
 func (s *Store) Reader(domain string) (*Reader, error) {
-	_, ok := s.parts[domain]
-
-	if !ok {
-		if _, err := s.initPartition(domain); err != nil {
-			return nil, err
-		}
-	}
-
-	return &Reader{
-		store:  s,
-		reader: s.parts[domain].Reader(0, 0),
-	}, nil
+	return s.RangeReader(domain, 0, 0)
 }
 
 func (s *Store) RangeReader(domain string, t0, t1 int64) (*Reader, error) {
