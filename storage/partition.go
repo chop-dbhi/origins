@@ -237,6 +237,12 @@ func (r *partitionReader) MaxTime() int64 {
 
 // StartTime returns the start time of the facts bounded by the min time.
 func (r *partitionReader) StartTime() int64 {
+	// Nothing available.
+	if len(r.part.SegmentKeys) == 0 {
+		return -1
+	}
+
+	// Start index exceeds the number keys.
 	if r.start >= len(r.part.SegmentKeys) {
 		return -1
 	}
@@ -246,6 +252,12 @@ func (r *partitionReader) StartTime() int64 {
 
 // EndTime returns the end time of the facts bounded by the max time.
 func (r *partitionReader) EndTime() int64 {
+	// Nothing available.
+	if len(r.part.SegmentKeys) == 0 {
+		return -1
+	}
+
+	// Stop index (exclusive) exceeds the number of keys.
 	if r.stop-1 >= len(r.part.SegmentKeys) {
 		return -1
 	}
