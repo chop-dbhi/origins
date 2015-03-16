@@ -21,9 +21,14 @@ install:
 	go get github.com/golang/protobuf/protoc-gen-go
 	go get gopkg.in/mgo.v2/bson
 	go get gopkg.in/vmihailenco/msgpack.v2
+	go get github.com/spf13/viper
+	go get github.com/spf13/cobra
 
 test:
 	go test -v -cover ./...
+
+build:
+	go build -o bin/origins-cli ./cli
 
 bench:
 	go test -v -run=none -bench=. ./...
