@@ -25,3 +25,17 @@ brew install protobuf
 ```
 
 Otherwise follow [these instructions](https://developers.google.com/protocol-buffers/docs/downloads).
+
+**Install dependencies**
+
+```
+make install
+```
+
+### Protocol Buffers
+
+Google's Protocol Buffers are used for the encoding format of the data written to storage. Code is generated based on PB message files and is version controlled. If the message formats are updated, regenerate the code by calling the `make` target.
+
+```
+make proto
+```
