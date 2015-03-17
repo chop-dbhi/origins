@@ -14,9 +14,9 @@ func TestFactReaderSmallBuf(t *testing.T) {
 	v := identity.New("", "kale")
 
 	facts := Facts{
-		Assert(e, a, v, nil),
-		Assert(e, a, v, nil),
-		Assert(e, a, v, nil),
+		Assert(e, a, v),
+		Assert(e, a, v),
+		Assert(e, a, v),
 	}
 
 	r := NewReader(facts)
@@ -56,9 +56,9 @@ func TestFactReaderLargeBuf(t *testing.T) {
 	v := identity.New("", "kale")
 
 	facts := Facts{
-		Assert(e, a, v, nil),
-		Assert(e, a, v, nil),
-		Assert(e, a, v, nil),
+		Assert(e, a, v),
+		Assert(e, a, v),
+		Assert(e, a, v),
 	}
 
 	r := NewReader(facts)
@@ -93,9 +93,9 @@ func TestReadAll(t *testing.T) {
 	v := identity.New("", "kale")
 
 	facts := Facts{
-		Assert(e, a, v, nil),
-		Assert(e, a, v, nil),
-		Assert(e, a, v, nil),
+		Assert(e, a, v),
+		Assert(e, a, v),
+		Assert(e, a, v),
 	}
 
 	r := NewReader(facts)

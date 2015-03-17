@@ -14,7 +14,7 @@ func BenchmarkProtoMarshal(b *testing.B) {
 	a := identity.New(domain, "is")
 	v := identity.New("", "tall")
 
-	f := fact.Assert(e, a, v, nil)
+	f := fact.Assert(e, a, v)
 
 	for i := 0; i < b.N; i++ {
 		MarshalProto(f)

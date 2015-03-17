@@ -25,8 +25,8 @@ func TestEngine(t *testing.T) {
 	k := "data"
 
 	facts := fact.Facts{
-		fact.Assert(identity.MustParse("test:i1"), nil, nil, nil),
-		fact.Assert(identity.MustParse("test:i2"), nil, nil, nil),
+		fact.Assert(identity.MustParse("test:i1"), nil, nil),
+		fact.Assert(identity.MustParse("test:i2"), nil, nil),
 	}
 
 	b, err := json.Marshal(&facts)

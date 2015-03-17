@@ -59,9 +59,9 @@ func TestStoreWriteSegment(t *testing.T) {
 	v := identity.New("", "tall")
 
 	input = fact.Facts{
-		fact.Assert(e, a, v, nil),
-		fact.Assert(e, a, v, nil),
-		fact.Assert(e, a, v, nil),
+		fact.Assert(e, a, v),
+		fact.Assert(e, a, v),
+		fact.Assert(e, a, v),
 	}
 
 	now := time.Now().Unix()
@@ -111,7 +111,7 @@ func benchWriteSegment(b *testing.B, n int) {
 	input := make(fact.Facts, n)
 
 	for i := 0; i < len(input); i++ {
-		input[i] = fact.Assert(e, a, v, nil)
+		input[i] = fact.Assert(e, a, v)
 	}
 
 	now := uint64(time.Now().Unix())

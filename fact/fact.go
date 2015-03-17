@@ -151,24 +151,22 @@ func (f *Fact) Added() bool {
 }
 
 // Assert returns a fact that is declared to be asserted.
-func Assert(e, a, v, t *identity.Ident) *Fact {
+func Assert(e, a, v *identity.Ident) *Fact {
 	return &Fact{
-		Entity:      e,
-		Attribute:   a,
-		Value:       v,
-		Transaction: t,
-		Operation:   AssertOp,
+		Entity:    e,
+		Attribute: a,
+		Value:     v,
+		Operation: AssertOp,
 	}
 }
 
 // Retract returns a fact that is declared to be retracted.
-func Retract(e, a, v, t *identity.Ident) *Fact {
+func Retract(e, a, v *identity.Ident) *Fact {
 	return &Fact{
-		Entity:      e,
-		Attribute:   a,
-		Value:       v,
-		Transaction: t,
-		Operation:   RetractOp,
+		Entity:    e,
+		Attribute: a,
+		Value:     v,
+		Operation: RetractOp,
 	}
 }
 
