@@ -17,8 +17,10 @@ var statsCmd = &cobra.Command{
 	Short: "Print stats for a domain.",
 
 	Run: func(cmd *cobra.Command, args []string) {
+		// Domain name is required.
 		if len(args) == 0 {
-			cmd.Help()
+			cmd.Usage()
+			os.Exit(1)
 		}
 
 		store := initStore()
