@@ -12,17 +12,13 @@ import (
 )
 
 var loadCmd = &cobra.Command{
-	Use: "load",
+	Use: "load [path]",
 
 	Short: "Loads facts to the store.",
 
 	Long: `load takes a path to a file or "-" to read from stdin.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			cmd.Help()
-		}
-
 		store := initStore()
 
 		var (
@@ -34,7 +30,8 @@ var loadCmd = &cobra.Command{
 			fake   = viper.GetBool("load.fake")
 		)
 
-		if args[0] == "-" {
+		// No path provided, use stdin.
+		if len(args) == 0 {
 			r = os.Stdin
 		} else {
 			f, err := os.Open(args[0])
