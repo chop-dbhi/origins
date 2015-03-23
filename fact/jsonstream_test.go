@@ -5,13 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	logrus.SetLevel(logrus.DebugLevel)
-}
 
 func TestJSONStreamReader(t *testing.T) {
 	records := []map[string]interface{}{

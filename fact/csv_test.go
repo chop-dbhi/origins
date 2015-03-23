@@ -2,17 +2,11 @@ package fact
 
 import (
 	"bytes"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	logrus.SetLevel(logrus.DebugLevel)
-}
 
 func TestCSVReader(t *testing.T) {
 	// Comments and spaces to test parser, mixed case in header, underscores and spaces.
@@ -49,19 +43,4 @@ func TestCSVReader(t *testing.T) {
 
 	assert.Equal(t, secs, bk.Time)
 	assert.Equal(t, "retract", facts[3].Operation)
-}
-
-func TestCSVReaderFile(t *testing.T) {
-	f, err := os.Open("../origins-domains.csv")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer f.Close()
-
-	r := CSVReader(f)
-	facts, _ := ReadAll(r)
-
-	assert.Equal(t, 72, len(facts))
 }
