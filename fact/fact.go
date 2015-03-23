@@ -48,12 +48,22 @@ func ParseTime(t interface{}) (int64, error) {
 			err error
 		)
 
+		// Absolute time
 		for _, layout := range timeLayouts {
 			t, err = time.Parse(layout, x)
 
 			if err == nil {
 				return t.Unix(), nil
 			}
+		}
+
+		// Duration
+		d, err := time.ParseDuration(x)
+
+		if err == nil {
+			n := time.Now()
+			n = n.Add(-d)
+			return n.Unix(), nil
 		}
 	case int:
 		return int64(x), nil
