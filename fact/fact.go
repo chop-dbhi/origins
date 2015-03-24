@@ -113,19 +113,33 @@ func (f *Fact) FromProto(m proto.Message) error {
 	x := m.(*ProtoFact)
 
 	f.Domain = x.GetDomain()
+
+	switch x.GetOperation() {
+	case "assert":
+		f.Operation = AssertOp
+	case "retract":
+		f.Operation = RetractOp
+	default:
+		panic(fmt.Sprintf("Invalid operation %v", x.GetOperation()))
+	}
+
 	f.Time = x.GetTime()
+
 	f.Entity = &identity.Ident{
 		Domain: x.GetEntityDomain(),
 		Local:  x.GetEntity(),
 	}
+
 	f.Attribute = &identity.Ident{
 		Domain: x.GetAttributeDomain(),
 		Local:  x.GetAttribute(),
 	}
+
 	f.Value = &identity.Ident{
 		Domain: x.GetValueDomain(),
 		Local:  x.GetValue(),
 	}
+
 	f.Inferred = x.GetInferred()
 
 	f.Transaction = &identity.Ident{
