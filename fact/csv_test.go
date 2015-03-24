@@ -39,8 +39,8 @@ func TestCSVReader(t *testing.T) {
 	assert.Equal(t, bk.Entity.Domain, "test")
 	assert.Equal(t, bk.Entity.Local, "bob")
 
-	secs := time.Date(2015, 3, 6, 0, 0, 0, 0, time.UTC).Unix()
+	ns := time.Date(2015, 3, 6, 0, 0, 0, 0, time.UTC).UnixNano()
 
-	assert.Equal(t, secs, bk.Time)
+	assert.Equal(t, ns, bk.Time)
 	assert.Equal(t, "retract", facts[3].Operation)
 }

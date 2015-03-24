@@ -1,84 +1,11 @@
 package fact
 
 import (
-	"errors"
 	"fmt"
-	"strings"
-	"time"
 
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/golang/protobuf/proto"
 )
-
-type Operation string
-
-const (
-	AssertOp  Operation = "assert"
-	RetractOp Operation = "retract"
-)
-
-func ParseOperation(s string) (Operation, error) {
-	switch strings.ToLower(s) {
-	case "", "assert":
-		return AssertOp, nil
-	case "retract":
-		return RetractOp, nil
-	}
-
-	return "", errors.New(fmt.Sprintf("unknown operation: %s", s))
-}
-
-var timeLayouts = []string{
-	"2006-01-02",
-	"2006-01-02 3:04 PM",
-	"Jan 02, 2006",
-	time.RFC3339,
-	time.RFC1123,
-	time.RFC1123Z,
-	time.RFC822,
-	time.RFC822Z,
-	time.ANSIC,
-}
-
-func ParseTime(t interface{}) (int64, error) {
-	switch x := t.(type) {
-	case string:
-		var (
-			t   time.Time
-			err error
-		)
-
-		// Absolute time
-		for _, layout := range timeLayouts {
-			t, err = time.Parse(layout, x)
-
-			if err == nil {
-				return t.Unix(), nil
-			}
-		}
-
-		// Duration
-		d, err := time.ParseDuration(x)
-
-		if err == nil {
-			n := time.Now()
-			n = n.Add(-d)
-			return n.Unix(), nil
-		}
-	case int:
-		return int64(x), nil
-	case int64:
-		return x, nil
-	case time.Duration:
-		n := time.Now()
-		n = n.Add(-x)
-		return n.Unix(), nil
-	case time.Time:
-		return x.Unix(), nil
-	}
-
-	return 0, errors.New(fmt.Sprintf("could not parse %v as time", t))
-}
 
 // Fact represents a valid and prepared fact.
 type Fact struct {
@@ -162,7 +89,7 @@ func (f *Fact) FromProto(m proto.Message) error {
 
 // String satisfies the Stringer interface.
 func (f *Fact) String() string {
-	return fmt.Sprintf("(%s %s %s)", f.Entity, f.Attribute, f.Value)
+	return fmt.Sprintf("(%s %s %s %s)", f.Operation, f.Entity, f.Attribute, f.Value)
 }
 
 // Added returns true if the fact is asserted.
@@ -194,7 +121,21 @@ func Retract(e, a, v *identity.Ident) *Fact {
 	}
 }
 
-// AssertRaw returns a fact that is declared to be asserted.
+// AssertTime asserts a fact add a specified time.
+func AssertTime(e, a, v *identity.Ident, t int64) *Fact {
+	f := Assert(e, a, v)
+	f.Time = t
+	return f
+}
+
+// RetractTime retracts a fact add a specified time.
+func RetractTime(e, a, v *identity.Ident, t int64) *Fact {
+	f := Retract(e, a, v)
+	f.Time = t
+	return f
+}
+
+// AssertString returns a fact that is declared to be asserted.
 func AssertString(e, a, v string) *Fact {
 	eident := identity.MustParse(e)
 	aident := identity.MustParse(a)
@@ -208,7 +149,7 @@ func AssertString(e, a, v string) *Fact {
 	}
 }
 
-// Retract returns a fact that is declared to be retracted.
+// RetractString returns a fact that is declared to be retracted.
 func RetractString(e, a, v string) *Fact {
 	eident := identity.MustParse(e)
 	aident := identity.MustParse(a)

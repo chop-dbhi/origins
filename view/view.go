@@ -27,7 +27,7 @@ func (v *View) Domain(n string) *Domain {
 func Range(s *storage.Store, min, max int64) *View {
 	// Explicit upper bound if not set.
 	if max <= 0 {
-		max = time.Now().Unix()
+		max = time.Now().UnixNano()
 	}
 
 	return &View{

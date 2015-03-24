@@ -14,6 +14,8 @@ func TestParseTime(t *testing.T) {
 		time.Now(),
 		time.Minute,
 		"2013-04-10",
+		"April 4, 2013",
+		"Apr 04, 2013",
 	}
 
 	for _, v := range vals {

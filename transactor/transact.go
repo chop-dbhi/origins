@@ -195,7 +195,7 @@ func Transact(s *storage.Store, r fact.Reader, domain string, strict bool, commi
 	defer s.Unlock()
 
 	// Get the current time to isolate the view.
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 
 	tx := transaction{
 		store:  s,
