@@ -1,6 +1,13 @@
 # Origins
 
-[![Build Status](https://travis-ci.org/chop-dbhi/origins.svg?branch=go)](https://travis-ci.org/chop-dbhi/origins)
+[![Build Status](https://travis-ci.org/chop-dbhi/origins.svg?branch=master)](https://travis-ci.org/chop-dbhi/origins)
+
+Origins is an open source bi-temporal database for storing and retrieving facts. It supports "time-travel" queries, aggregate views, and dependency change detection.
+
+This project is in an **alpha** stage of development.
+
+- [Documentation](https://origins.readme.io/docs)
+- Learn how you can [contribute](https://origins.readme.io/v0.9/docs/contributing).
 
 ## Development
 
