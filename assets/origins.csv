@@ -1,0 +1,76 @@
+domain,operation,valid time,entity domain,entity,attribute domain,attribute,value domain,value
+# Attributes,,,,,,,,
+origins,assert,,,attr/ident,,attr/ident,,ident
+origins,assert,,,attr/ident,,attr/label,,Identity
+origins,assert,,,attr/ident,,attr/doc,,Unique identity of the entity in this domain.
+origins,assert,,,attr/ident,,attr/type,,type/string
+origins,assert,,,attr/ident,,attr/cardinality,,cardinality/one
+origins,assert,,,attr/ident,,attr/unique,,TRUE
+origins,assert,,,attr/label,,attr/ident,,label
+origins,assert,,,attr/label,,attr/label,,Label
+origins,assert,,,attr/label,,attr/doc,,Human-readable label of an entity.
+origins,assert,,,attr/label,,attr/type,,string
+origins,assert,,,attr/label,,attr/cardinality,,type/string
+origins,assert,,,attr/label,,attr/unique,,cardinality/one
+origins,assert,,,attr/doc,,attr/ident,,doc
+origins,assert,,,attr/doc,,attr/label,,Documentation
+origins,assert,,,attr/doc,,attr/doc,,Documentation of the identity.
+origins,assert,,,attr/doc,,attr/type,,string
+origins,assert,,,attr/doc,,attr/cardinality,,one
+origins,assert,,,attr/doc,,attr/unique,,FALSE
+origins,assert,,,attr/timestamp,,attr/ident,,timestamp
+origins,assert,,,attr/timestamp,,attr/label,,Timestamp
+origins,assert,,,attr/timestamp,,attr/doc,,Integer in milliseconds since the UNIX epoch.
+origins,assert,,,attr/timestamp,,attr/type,,type/timestamp
+origins,assert,,,attr/timestamp,,attr/cardinality,,cardinality/one
+origins,assert,,,attr/timestamp,,attr/unique,,FALSE
+origins,assert,,,attr/type,,attr/ident,,unique
+origins,assert,,,attr/type,,attr/label,,Unique
+origins,assert,,,attr/type,,attr/doc,,Flags whether this attribute is unique across entities in a domain.
+origins,assert,,,attr/type,,attr/type,,type/ref
+origins,assert,,,attr/type,,attr/cardinality,,cardinality/one
+origins,assert,,,attr/type,,attr/unique,,FALSE
+origins,assert,,,attr/cardinality,,attr/ident,,cardinality
+origins,assert,,,attr/cardinality,,attr/label,,Cardinality
+origins,assert,,,attr/cardinality,,attr/doc,,"The cardinality of an attribute, whether attribute/value pairs can be associated to an entity."
+origins,assert,,,attr/cardinality,,attr/type,,type/ref
+origins,assert,,,attr/cardinality,,attr/cardinality,,cardinality/one
+origins,assert,,,attr/cardinality,,attr/unique,,FALSE
+origins,assert,,,attr/unique,,attr/ident,,unique
+origins,assert,,,attr/unique,,attr/label,,Unique
+origins,assert,,,attr/unique,,attr/doc,,Flags whether this attribute is unique across entities in a domain.
+origins,assert,,,attr/unique,,attr/type,,type/bool
+origins,assert,,,attr/unique,,attr/cardinality,,cardinality/one
+origins,assert,,,attr/unique,,attr/unique,,FALSE
+# Cardinalities,,,,,,,,
+origins,assert,,,cardinality/one,,attr/ident,,cardinality/one
+origins,assert,,,cardinality/one,,attr/label,,One
+origins,assert,,,cardinality/one,,attr/doc,,"Denotes only one attribute/value pair can be asserted at any time on an entity. If a subsequent value is asserted, the previous will be automatically retracted."
+origins,assert,,,cardinality/many,,attr/ident,,cardinality/many
+origins,assert,,,cardinality/many,,attr/label,,Many
+origins,assert,,,cardinality/many,,attr/doc,,Denotes zero or more attribute/value pairs can be asserted on an entity.
+# Types,,,,,,,,
+origins,assert,,,type/string,,attr/ident,,type/string
+origins,assert,,,type/string,,attr/label,,String
+origins,assert,,,type/string,,attr/doc,,String type.
+origins,assert,,,type/integer,,attr/ident,,type/integer
+origins,assert,,,type/integer,,attr/label,,Integer
+origins,assert,,,type/integer,,attr/doc,,64-bit integer type.
+origins,assert,,,type/boolean,,attr/ident,,type/boolean
+origins,assert,,,type/boolean,,attr/label,,Boolean
+origins,assert,,,type/boolean,,attr/doc,,Boolean type.
+origins,assert,,,type/float,,attr/ident,,type/float
+origins,assert,,,type/float,,attr/label,,Float
+origins,assert,,,type/float,,attr/doc,,64-bit float type.
+origins,assert,,,type/date,,attr/ident,,type/date
+origins,assert,,,type/date,,attr/label,,Date
+origins,assert,,,type/date,,attr/doc,,Date type.
+origins,assert,,,type/timestamp,,attr/ident,,type/timestamp
+origins,assert,,,type/timestamp,,attr/label,,Timestamp
+origins,assert,,,type/timestamp,,attr/doc,,Integer in milliseconds since the UNIX epoch.
+origins,assert,,,type/ref,,attr/ident,,type/ref
+origins,assert,,,type/ref,,attr/label,,Reference
+origins,assert,,,type/ref,,attr/doc,,Reference to an entity.
+origins,assert,,,type/any,,attr/ident,,type/any
+origins,assert,,,type/any,,attr/label,,Any
+origins,assert,,,type/any,,attr/doc,,Any type.

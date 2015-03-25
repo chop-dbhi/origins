@@ -1,0 +1,19 @@
+domain,operation,valid time,entity domain,entity,attribute domain,attribute,value domain,value
+origins.macros,assert,,,tx,origins,attr/ident,,tx
+origins.macros,assert,,,tx,origins,attr/label,,Transaction
+origins.macros,assert,,,tx,origins,attr/doc,,A macro that expands to the current transaction.
+origins.macros,assert,,,tx,origins,attr/type,origins,type/ref
+origins.macros,assert,,,tx,origins,attr/cardinality,origins,cardinality/one
+origins.macros,assert,,,tx,origins,attr/unique,,FALSE
+origins.macros,assert,,,now,origins,attr/ident,,now
+origins.macros,assert,,,now,origins,attr/label,,Now
+origins.macros,assert,,,now,origins,attr/doc,,A macro that expands to the current time.
+origins.macros,assert,,,now,origins,attr/type,origins,type/timestamp
+origins.macros,assert,,,now,origins,attr/cardinality,origins,cardinality/one
+origins.macros,assert,,,now,origins,attr/unique,,FALSE
+origins.macros,assert,,,domain,origins,attr/ident,,domain
+origins.macros,assert,,,domain,origins,attr/label,,Domain
+origins.macros,assert,,,domain,origins,attr/doc,,A macro that expands to the current domain.
+origins.macros,assert,,,domain,origins,attr/type,origins,type/ref
+origins.macros,assert,,,domain,origins,attr/cardinality,origins,cardinality/one
+origins.macros,assert,,,domain,origins,attr/unique,,FALSE
