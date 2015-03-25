@@ -74,6 +74,34 @@ func (d *Domain) Reader() fact.Reader {
 	return d.reader()
 }
 
+// Entities returns all local entities in this domain.
+func (d *Domain) Entities() identity.Idents {
+	m := make(map[string]bool)
+	ids := make(identity.Idents, 0)
+
+	var (
+		ok bool
+		s  string
+		f  *fact.Fact
+	)
+
+	for _, f = range d.Facts() {
+		// Only local entities
+		if f.Entity.Domain != d.Name {
+			continue
+		}
+
+		s = f.Entity.String()
+
+		if _, ok = m[s]; !ok {
+			m[s] = true
+			ids = append(ids, f.Entity)
+		}
+	}
+
+	return ids
+}
+
 // Gap holds two facts that represent a subsequent value change.
 type Gap struct {
 	Retracted *identity.Ident

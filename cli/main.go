@@ -28,6 +28,7 @@ func main() {
 	mainCmd.AddCommand(versionCmd)
 	mainCmd.AddCommand(loadCmd)
 	mainCmd.AddCommand(statsCmd)
+	mainCmd.AddCommand(domainsCmd)
 	mainCmd.AddCommand(factsCmd)
 	mainCmd.AddCommand(gapsCmd)
 
