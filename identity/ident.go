@@ -45,6 +45,8 @@ func New(domain, local string) *Ident {
 	}
 }
 
+type Idents []*Ident
+
 // Parse parses a string and returns an Ident value. This is
 // used during parsing of RawFact and is evaluated for the component the
 // identity represents, entity, attribute, or value.

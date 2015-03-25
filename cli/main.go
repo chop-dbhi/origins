@@ -29,6 +29,7 @@ func main() {
 	mainCmd.AddCommand(loadCmd)
 	mainCmd.AddCommand(statsCmd)
 	mainCmd.AddCommand(factsCmd)
+	mainCmd.AddCommand(gapsCmd)
 
 	viper.SetEnvPrefix("ORIGINS_CLI")
 	viper.AutomaticEnv()
