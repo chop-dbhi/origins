@@ -27,6 +27,7 @@ func (f *Fact) Proto() proto.Message {
 // ToProto returns a protobuf version of the Fact.
 func (f *Fact) ToProto() (proto.Message, error) {
 	m := ProtoFact{
+		Domain:          proto.String(f.Domain),
 		Operation:       proto.String(string(f.Operation)),
 		Time:            proto.Int64(f.Time),
 		EntityDomain:    proto.String(f.Entity.Domain),
