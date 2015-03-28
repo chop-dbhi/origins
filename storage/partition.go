@@ -153,11 +153,11 @@ func (p *partition) Write(key uint64, data []byte) error {
 
 // Reader returns a partition reader which provide isolated control over
 // reading the segments in the partition.
-func (p *partition) Reader(t0, t1 int64) *partitionReader {
+func (p *partition) Reader(min, max int64) *partitionReader {
 	pr := partitionReader{
 		part: p,
-		t0:   t0,
-		t1:   t1,
+		min:  min,
+		max:  max,
 	}
 
 	// Bounds of the range
@@ -165,13 +165,13 @@ func (p *partition) Reader(t0, t1 int64) *partitionReader {
 	pr.stop = len(p.SegmentKeys)
 
 	// Non-zero lower bound.
-	if pr.t0 > 0 {
+	if pr.min > 0 {
 		// Set out of range.
 		pr.start = -1
 
 		for i, t := range p.SegmentKeys {
 			// Time of this segment equals or exceeds the lower bound.
-			if t >= uint64(pr.t0) {
+			if t >= uint64(pr.min) {
 				pr.start = i
 				break
 			}
@@ -181,14 +181,14 @@ func (p *partition) Reader(t0, t1 int64) *partitionReader {
 	pr.index = pr.start
 
 	// Non-zero upper bound.
-	if pr.t1 > 0 {
-		// Walk backwards until t1 exceeds t.
+	if pr.max > 0 {
+		// Walk backwards until max exceeds t.
 		for i := len(p.SegmentKeys) - 1; i >= 0; i-- {
 			t := p.SegmentKeys[i]
 
 			// Time of segment is less than or equal to the upper bound.
 			// Set next index as the stop.
-			if uint64(pr.t1) >= t {
+			if uint64(pr.max) >= t {
 				pr.stop = i + 1
 				break
 			}
@@ -203,8 +203,8 @@ type partitionReader struct {
 	part *partition
 
 	// Time range
-	t0 int64
-	t1 int64
+	min int64
+	max int64
 
 	// Start and stop segment indexes.
 	start int
@@ -219,20 +219,20 @@ type partitionReader struct {
 
 // MinTime returns the reader's minimum time boundary.
 func (r *partitionReader) MinTime() int64 {
-	if r.t0 == 0 {
+	if r.min == 0 {
 		return -1
 	}
 
-	return r.t0
+	return r.min
 }
 
 // MinTime returns the reader's maximum time boundary.
 func (r *partitionReader) MaxTime() int64 {
-	if r.t1 == 0 {
+	if r.max == 0 {
 		return -1
 	}
 
-	return r.t1
+	return r.max
 }
 
 // StartTime returns the start time of the facts bounded by the min time.

@@ -10,8 +10,8 @@ import (
 
 type Reader struct {
 	// Time range
-	t0 int64
-	t1 int64
+	min int64
+	max int64
 
 	// Reference to the store.
 	store *Store

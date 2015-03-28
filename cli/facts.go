@@ -31,8 +31,8 @@ var factsCmd = &cobra.Command{
 			min, max int64
 			err      error
 
-			smin   = viper.GetInt("facts.min")
-			smax   = viper.GetInt("facts.max")
+			smin   = viper.GetString("facts.min")
+			smax   = viper.GetString("facts.max")
 			file   = viper.GetString("facts.file")
 			format = viper.GetString("facts.format")
 		)
@@ -97,8 +97,8 @@ var factsCmd = &cobra.Command{
 func init() {
 	flags := factsCmd.Flags()
 
-	flags.Int64("min", 0, "The min time of the view.")
-	flags.Int64("max", 0, "The max time of the view.")
+	flags.String("min", "", "The min tranaction time of facts to read.")
+	flags.String("max", "", "The max tranaction time of facts to read.")
 	flags.String("file", "", "Path to a file to write the facts to.")
 	flags.String("format", "csv", "The output format of the facts.")
 
