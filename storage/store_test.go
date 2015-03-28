@@ -64,7 +64,7 @@ func TestStoreWriteSegment(t *testing.T) {
 		fact.Assert(e, a, v),
 	}
 
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 
 	n, err := store.WriteSegment(domain, uint64(now), input, true)
 
@@ -114,7 +114,7 @@ func benchWriteSegment(b *testing.B, n int) {
 		input[i] = fact.Assert(e, a, v)
 	}
 
-	now := uint64(time.Now().Unix())
+	now := uint64(time.Now().UnixNano())
 
 	for i := 0; i < b.N; i++ {
 		store.WriteSegment(domain, now+uint64(i), input, true)
