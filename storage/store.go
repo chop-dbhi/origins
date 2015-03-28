@@ -181,8 +181,8 @@ func (s *Store) RangeReader(domain string, min, max int64) (*Reader, error) {
 	}
 
 	return &Reader{
-		min:    min,
-		max:    max,
+		Min:    min,
+		Max:    max,
 		store:  s,
 		reader: s.parts[domain].Reader(min, max),
 	}, nil

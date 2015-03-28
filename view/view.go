@@ -8,17 +8,18 @@ import (
 
 // View provides methods for computing aggregates on the store.
 type View struct {
+	Min   int64
+	Max   int64
 	store *storage.Store
-	min   int64
-	max   int64
 }
 
 // Domain returns a sub-view for this domain.
 func (v *View) Domain(n string) *Domain {
 	return &Domain{
-		Name:  n,
-		min:   v.min,
-		max:   v.max,
+		Name: n,
+		Min:  v.Min,
+		Max:  v.Max,
+
 		store: v.store,
 	}
 }
@@ -31,9 +32,9 @@ func Range(s *storage.Store, min, max int64) *View {
 	}
 
 	return &View{
+		Min:   min,
+		Max:   max,
 		store: s,
-		min:   min,
-		max:   max,
 	}
 }
 
