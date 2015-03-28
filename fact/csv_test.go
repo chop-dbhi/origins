@@ -36,6 +36,7 @@ func TestCSVReader(t *testing.T) {
 
 	bk := facts[1]
 
+	assert.Equal(t, AssertOp, bk.Operation)
 	assert.Equal(t, bk.Entity.Domain, "test")
 	assert.Equal(t, bk.Entity.Local, "bob")
 

@@ -77,6 +77,10 @@ func (tx *transaction) evaluate(f *fact.Fact) (fact.Facts, error) {
 		return nil, err
 	}
 
+	if f.Operation == "" {
+		f.Operation = fact.AssertOp
+	}
+
 	// Set the default time.
 	if f.Time == 0 {
 		f.Time = tx.time
