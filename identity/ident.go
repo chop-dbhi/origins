@@ -73,8 +73,8 @@ func Parse(v interface{}) (*Ident, error) {
 
 	id := Ident{}
 
-	// Split into two parts, <domain>/<local>. If only one token is present,
-	// this is a local name. The domain is assumed to be set later.
+	// Split into two parts. If only one token is present,
+	// this is a local name.
 	toks := strings.SplitN(s, domainSep, 2)
 
 	switch len(toks) {
