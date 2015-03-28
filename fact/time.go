@@ -28,6 +28,10 @@ func ParseTime(v interface{}) (int64, error) {
 			err error
 		)
 
+		if x == "" {
+			return 0, nil
+		}
+
 		// Absolute time
 		for _, layout := range timeLayouts {
 			t, err = time.Parse(layout, x)
