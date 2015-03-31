@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/spf13/cobra"
 )
-
-const version = "0.1.0"
 
 // The version command prints the version of the CLI.
 var versionCmd = &cobra.Command{
@@ -15,6 +14,6 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version.",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(version)
+		fmt.Println(origins.Version)
 	},
 }
