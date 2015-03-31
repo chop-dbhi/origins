@@ -13,6 +13,9 @@ type Reader struct {
 	Min int64
 	Max int64
 
+	// Filter is an optional filter function for facts.
+	Filter fact.Filter
+
 	// Reference to the store.
 	store *Store
 
@@ -46,10 +49,14 @@ func (r *Reader) Read(facts fact.Facts) (int, error) {
 	var (
 		// Number of facts decoded.
 		i int
+
 		// Number of bytes read
 		n int
 
 		err error
+
+		// Length of the passed fact buffer.
+		blen = len(facts)
 
 		// Binary error code
 		berr int
@@ -64,7 +71,8 @@ func (r *Reader) Read(facts fact.Facts) (int, error) {
 		buf []byte
 	)
 
-	for ; i < len(facts); i++ {
+	// Loop until the passed buffer is consumed.
+	for i < blen {
 		n, err = r.reader.Read(prefix)
 
 		if err == io.EOF {
@@ -107,7 +115,14 @@ func (r *Reader) Read(facts fact.Facts) (int, error) {
 			return i, err
 		}
 
+		// Ignore the fact if it does not pass the filter.
+		if r.Filter != nil && !r.Filter(&f) {
+			continue
+		}
+
 		facts[i] = &f
+
+		i += 1
 	}
 
 	return i, nil
