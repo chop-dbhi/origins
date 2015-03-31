@@ -32,7 +32,7 @@ func testDomainGaps(t *testing.T, facts fact.Facts) {
 
 	domain := "test"
 
-	_, err := transactor.Transact(store, r, domain, true, true)
+	_, err := transactor.Commit(store, r, domain, true)
 
 	if err != nil {
 		panic(err)

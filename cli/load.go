@@ -12,7 +12,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-func loadFile(store *storage.Store, domain string, format string, fake bool, r io.Reader) {
+func loadFile(store *storage.Store, r io.Reader) {
+
+	var (
+		err error
+
+		format = viper.GetString("load.format")
+		domain = viper.GetString("load.domain")
+		fake   = viper.GetBool("load.fake")
+		strict = viper.GetBool("load.strict")
+	)
+
 	// Wrap in a reader to handle carriage returns.
 	r = &UniversalReader{r}
 
@@ -28,7 +38,13 @@ func loadFile(store *storage.Store, domain string, format string, fake bool, r i
 		os.Exit(1)
 	}
 
-	results, err := transactor.Transact(store, reader, domain, false, !fake)
+	var results []*transactor.Result
+
+	if fake {
+		results, err = transactor.Test(store, reader, domain, strict)
+	} else {
+		results, err = transactor.Commit(store, reader, domain, strict)
+	}
 
 	if err != nil {
 		fmt.Println(err)
@@ -45,20 +61,14 @@ var loadCmd = &cobra.Command{
 
 	Short: "Loads facts into the store.",
 
-	Long: `load takes one or more paths to read or "-" to read from stdin.`,
+	Long: `load reads facts from stdin or from one or more paths specified paths.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		store := initStore()
 
-		var (
-			format = viper.GetString("load.format")
-			domain = viper.GetString("load.domain")
-			fake   = viper.GetBool("load.fake")
-		)
-
 		// No path provided, use stdin.
 		if len(args) == 0 {
-			loadFile(store, domain, format, fake, os.Stdin)
+			loadFile(store, os.Stdin)
 			return
 		}
 
@@ -72,7 +82,7 @@ var loadCmd = &cobra.Command{
 
 			defer file.Close()
 
-			loadFile(store, domain, format, fake, file)
+			loadFile(store, file)
 		}
 	},
 }
@@ -83,8 +93,10 @@ func init() {
 	flags.String("format", "csv", "Format of the facts being written to the store. Choices are: csv, jsonstream")
 	flags.String("domain", "", "Domain to load the facts to. If not supplied, the fact domain attribute must be defined.")
 	flags.Bool("fake", false, "Set to prevent data from being written to the store.")
+	flags.Bool("strict", false, "When true and a default domain is specified, the fact domain must match.")
 
 	viper.BindPFlag("load.format", flags.Lookup("format"))
 	viper.BindPFlag("load.domain", flags.Lookup("domain"))
 	viper.BindPFlag("load.fake", flags.Lookup("fake"))
+	viper.BindPFlag("load.strict", flags.Lookup("strict"))
 }

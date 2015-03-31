@@ -16,83 +16,128 @@ import (
 )
 
 const (
-	// The domain and value corresponding to the current transaction. Assertions
-	// can be made about the transaction by using these values as the entity
-	// identifiers. The actual transaction identity will be the current
-	// timestamp.
-	originsDomain = "origins"
-	txDomain      = "origins.tx"
+	// The domain prefix for managed transaction domains. Each domain has a transaction
+	// domain associated with it that contains facts about the transactions that are
+	// applied to the domain.
+	domainTxPrefix = "origins.tx.%s"
+
+	// Name of the managed "domains" domain which stores facts about all domains in the
+	// database.
 	domainsDomain = "origins.domains"
+
+	// Name of the managed "macros" domain which contains entities that serve as macros
+	// in facts.
+	macrosDomain = "origins.macros"
 )
 
 func TransactionError(s string) error {
-	return errors.New(fmt.Sprintf("transaction error: %s", s))
+	return errors.New(fmt.Sprintf("Transaction error: %s", s))
 }
 
 func TransactionErrorf(s string, v ...interface{}) error {
 	msg := fmt.Sprintf(s, v...)
-	return errors.New(fmt.Sprintf("transaction error: %s", msg))
+	return errors.New(fmt.Sprintf("Transaction error: %s", msg))
 }
 
-type transaction struct {
+type Transaction struct {
+	// Time is the time the transaction started.
+	Time int64
+
 	// Store the transaction applies to.
-	store *storage.Store
-
-	// Reader of facts
-	reader fact.Reader
-
-	// Default domain for unbound facts.
-	domain string
-
-	// Check to ensure only facts in the specified domain are being processed.
-	strict bool
-
-	// Time the transaction started. This is also used as the *valid time* of the
-	// facts themselves.
-	time int64
+	Store *storage.Store
 
 	// View of the store at the transaction time.
 	view *view.View
+
+	txs map[string]*fact.Fact
+
+	domains map[string]fact.Facts
 }
 
-// evaluate evaluates a fact. It is compared against the previous version of the
-// fact if available and the schema characteristics of the associated attribute.
-func (tx *transaction) evaluate(f *fact.Fact) (fact.Facts, error) {
-	var err error
+// newDomainFacts creates a fact about a domain.
+func (tx *Transaction) newDomainFacts(d string) fact.Facts {
+	var (
+		e, a, v *identity.Ident
+		f       *fact.Fact
+		facts   = make(fact.Facts, 2)
+	)
 
-	// TODO(bjr): protect reserved domains, e.g. origins*. This would require a flag
-	// or alternate method for installing the protected domains themselves.
-	// Set the default domain or assert the strict constraint.
-	if f.Domain == "" {
-		if tx.domain == "" {
-			err = TransactionError("no fact domain specified")
-			logrus.Error(err)
-			return nil, err
+	// Assert the identity of the domain.
+	e = identity.New("", d)
+	a = identity.New("origins", "attr/ident")
+	v = identity.New("", d)
+
+	f = fact.Assert(e, a, v)
+
+	f.Domain = domainsDomain
+
+	facts[0] = f
+
+	// Assert the URI of this domain is local.
+	a = identity.New("origins", "attr/uri")
+	v = identity.New("", ".")
+
+	f = fact.Assert(e, a, v)
+
+	f.Domain = domainsDomain
+
+	facts[1] = f
+
+	return facts
+}
+
+// newDomainTxFact creates a fact about the transaction for a domain.
+func (tx *Transaction) newDomainTxFact(d string) *fact.Fact {
+	domain := fmt.Sprintf("origins.tx.%s", d)
+
+	ident := strconv.FormatInt(tx.Time, 10)
+
+	e := identity.New("", ident)
+	a := identity.New("origins", "attr/ident")
+	v := identity.New("", ident)
+
+	f := fact.Assert(e, a, v)
+
+	f.Domain = domain
+
+	return f
+}
+
+// applyMacros check for macros used in a fact and evaluates them.
+func (tx *Transaction) applyMacros(f *fact.Fact) (*fact.Fact, error) {
+	// Macro domain. Fact is about the domain itself.
+	if f.Entity.Domain == macrosDomain {
+		switch f.Entity.Local {
+		case "domain":
+			f.Entity.Local = f.Domain
+			f.Domain = domainsDomain
+			f.Entity.Domain = domainsDomain
+			break
+		case "tx":
+			f.Entity.Local = f.Domain
+		default:
+			return nil, errors.New(fmt.Sprintf("Unknown entity macro: %s", f.Entity.Local))
 		}
-
-		f.Domain = tx.domain
-	} else if tx.strict && tx.domain != "" && f.Domain != tx.domain {
-		err = TransactionErrorf("fact domain %s is not %s", f.Domain, tx.domain)
-		logrus.Error(err)
-		return nil, err
 	}
 
-	if f.Operation == "" {
-		f.Operation = fact.AssertOp
+	if f.Value.Domain == macrosDomain {
+		switch f.Value.Local {
+		case "now":
+			f.Value.Domain = ""
+			f.Value.Local = strconv.FormatInt(tx.Time, 10)
+			break
+		default:
+			return nil, errors.New(fmt.Sprintf("Unknown value macro: %s", f.Value.Local))
+		}
 	}
 
-	// Set the default time.
-	if f.Time == 0 {
-		f.Time = tx.time
-	}
-
-	return fact.Facts{f}, nil
+	return f, nil
 }
 
-// write takes a map of domains to facts and writes them to the store. Domains
-// are written in parallel.
-func (tx *transaction) write(domains map[string]fact.Facts, commit bool) []*Result {
-	l := len(domains)
+// write performs the processing to the write the facts to storage. Whether they
+// get physically written is determined by the `commit` flag.
+func (tx *Transaction) write(commit bool) []*Result {
+	l := len(tx.domains)
 
 	rchan := make(chan *Result, l)
 
@@ -100,14 +145,14 @@ func (tx *transaction) write(domains map[string]fact.Facts, commit bool) []*Resu
 	wg.Add(l)
 
 	// Write the facts to the store.
-	for domain, facts := range domains {
+	for domain, facts := range tx.domains {
 		go func(d string, f fact.Facts) {
-			n, err := tx.store.WriteSegment(d, tx.time, f, commit)
+			n, err := tx.Store.WriteSegment(d, tx.Time, f, commit)
 
 			r := Result{
-				Store:  tx.store.String(),
+				Store:  tx.Store.String(),
 				Domain: d,
-				Time:   tx.time,
+				Time:   tx.Time,
 				Count:  len(f),
 				Bytes:  n,
 				Error:  err,
@@ -135,99 +180,100 @@ func (tx *transaction) write(domains map[string]fact.Facts, commit bool) []*Resu
 	return results
 }
 
-func (tx *transaction) newDomainFact(d string) *fact.Fact {
-	t := strconv.FormatInt(tx.time, 10)
+// evaluate evaluates a fact. It is compared against the previous version of the
+// fact if available and the schema characteristics of the associated attribute.
+func (tx *Transaction) evaluate(f *fact.Fact, domain string, strict bool) (*fact.Fact, error) {
+	var err error
 
-	e := identity.New(domainsDomain, d)
-	a := identity.New("origins", "attr/timestamp")
-	v := identity.New("", t)
+	// TODO(bjr): protect reserved domains, e.g. origins*. This would require a flag
+	// or alternate method for installing the protected domains themselves.
+	// Set the default domain or assert the strict constraint.
+	if f.Domain == "" {
+		if domain == "" {
+			err = TransactionError("no fact domain specified")
+			logrus.Error(err)
+			return nil, err
+		}
 
-	f := fact.Assert(e, a, v)
-	f.Domain = domainsDomain
-	f.Time = tx.time
-
-	return f
-}
-
-// fact returns a set of facts which represent the transaction for a particular
-// domain. Transactions are managed under the `origins.tx.<domain>` domain.
-func (tx *transaction) newTxfact(d string) *fact.Fact {
-	domain := fmt.Sprintf("origins.tx.%s", d)
-
-	t := strconv.FormatInt(tx.time, 10)
-
-	e := identity.New(domain, t)
-	a := identity.New("origins", "attr/timestamp")
-	v := identity.New("", t)
-
-	f := fact.Assert(e, a, v)
-
-	f.Domain = domain
-	f.Time = tx.time
-
-	return f
-}
-
-func (tx *transaction) Exec(commit bool) ([]*Result, error) {
-	logrus.Debugf("begin transaction for store %s", tx.store)
-
-	if tx.strict {
-		logrus.Debug("strict transacting enabled")
+		f.Domain = domain
+	} else if strict && domain != "" && f.Domain != domain {
+		err = TransactionErrorf("fact domain %s is not %s", f.Domain, domain)
+		logrus.Error(err)
+		return nil, err
 	}
 
+	if f.Operation == "" {
+		f.Operation = fact.AssertOp
+	}
+
+	// Apply macros
+	f, err = tx.applyMacros(f)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+func (tx *Transaction) transact(f *fact.Fact, domain string, strict bool) (*fact.Fact, error) {
+	f, err := tx.evaluate(f, domain, strict)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Skipped fact.
+	if f == nil {
+		return nil, nil
+	}
+
+	// Split facts by domain.
+	if facts, ok := tx.domains[f.Domain]; !ok {
+		// Assert transaction facts for the domain.
+		txf := tx.newDomainTxFact(f.Domain)
+		tx.txs[f.Domain] = txf
+
+		dfacts := tx.newDomainFacts(f.Domain)
+
+		tx.domains[dfacts[0].Domain] = dfacts
+		tx.domains[txf.Domain] = fact.Facts{txf}
+		tx.domains[f.Domain] = fact.Facts{f}
+	} else {
+		tx.domains[f.Domain] = append(facts, f)
+	}
+
+	// Set the transaction entity.
+	f.Transaction = tx.txs[f.Domain].Entity
+
+	return f, nil
+}
+
+// Transact reads facts from reader and evaluates them them against a "current" view of the database.
+// In addition to evaluation, facts are asserted for the domains and transactions.
+func (tx *Transaction) Transact(reader fact.Reader, domain string, strict bool) error {
 	var (
-		n     int
-		f     *fact.Fact
-		facts fact.Facts
-		err   error
+		n   int
+		f   *fact.Fact
+		err error
 	)
 
 	// Buffer to read from the reader.
 	buf := make(fact.Facts, 10)
 
-	// Facts by domain.
-	domains := make(map[string]fact.Facts)
-
-	// Transactions by domain.
-	txs := make(map[string]*fact.Fact)
-
 	for {
 		// Fill the buffer.
-		n, err = tx.reader.Read(buf)
+		n, err = reader.Read(buf)
 
 		// Real error; exit the transaction.
 		if err != nil && err != io.EOF {
 			logrus.Error(err)
-			return nil, err
+			return err
 		}
 
 		// Iterate over the buffered facts and process them.
-		for i := 0; i < n; i++ {
-			facts, err = tx.evaluate(buf[i])
-
-			if err != nil {
-				return nil, err
-			}
-
-			for _, f = range facts {
-				// Split into separate fact sets per domain.
-				if l, ok := domains[f.Domain]; !ok {
-					// Assert transaction facts for the domain.
-					txf := tx.newTxfact(f.Domain)
-					txs[f.Domain] = txf
-
-					dmf := tx.newDomainFact(f.Domain)
-
-					domains[dmf.Domain] = fact.Facts{dmf}
-					domains[txf.Domain] = fact.Facts{txf}
-					domains[f.Domain] = fact.Facts{f}
-				} else {
-					domains[f.Domain] = append(l, f)
-				}
-
-				// Set the transaction entity.
-				f.Transaction = txs[f.Domain].Entity
-			}
+		for _, f = range buf[:n] {
+			tx.transact(f, domain, strict)
 		}
 
 		// No more facts to read.
@@ -236,32 +282,100 @@ func (tx *transaction) Exec(commit bool) ([]*Result, error) {
 		}
 	}
 
-	results := tx.write(domains, commit)
+	return nil
+}
 
-	if commit {
-		logrus.Debugf("transaction committed to store %s", tx.store)
-	} else {
-		logrus.Debugf("transaction not committed to store %s", tx.store)
+// Evaluates reads facts from reader and evaluates them against a "current" view of the database.
+func (tx *Transaction) Evaluate(reader fact.Reader, domain string, strict bool) (fact.Facts, error) {
+	var (
+		i, n  int
+		f     *fact.Fact
+		facts = make(fact.Facts, 0)
+		err   error
+	)
+
+	// Buffer to read from the reader.
+	buf := make(fact.Facts, 10)
+
+	for {
+		// Fill the buffer.
+		n, err = reader.Read(buf)
+
+		// Real error; exit the transaction.
+		if err != nil && err != io.EOF {
+			logrus.Error(err)
+			return nil, err
+		}
+
+		// Iterate over the buffered facts and process them.
+		for i, f = range buf[:n] {
+			f, err = tx.evaluate(f, domain, strict)
+
+			if err != nil {
+				return nil, err
+			}
+
+			buf[i] = f
+		}
+
+		facts = append(facts, buf[:n]...)
+
+		// No more facts to read.
+		if err == io.EOF {
+			break
+		}
 	}
+
+	return facts, nil
+}
+
+// Commit writes the transacted facts to storage.
+func (tx *Transaction) Commit() []*Result {
+	return tx.write(true)
+}
+
+// Test performs a fake write to storage.
+func (tx *Transaction) Test() []*Result {
+	return tx.write(false)
+}
+
+// New initializes a new transaction
+func New(store *storage.Store) *Transaction {
+	// Get the current time to isolate the view.
+	now := time.Now().UnixNano()
+
+	return &Transaction{
+		Store:   store,
+		Time:    now,
+		view:    view.Asof(store, now),
+		txs:     make(map[string]*fact.Fact),
+		domains: make(map[string]fact.Facts),
+	}
+}
+
+// Commit is a convenience function for transacting a single reader and writing the facts to storage.
+func Commit(store *storage.Store, reader fact.Reader, domain string, strict bool) ([]*Result, error) {
+	tx := New(store)
+
+	tx.Transact(reader, domain, strict)
+	results := tx.write(true)
 
 	return results, nil
 }
 
-// Transact transacts facts into a store. A domain is passed which will be used as the
-// default for facts without a specified domain. If strict is true, all facts must
-// match domain. If commit is true, the facts will be written to the store.
-func Transact(s *storage.Store, r fact.Reader, domain string, strict bool, commit bool) ([]*Result, error) {
-	// Get the current time to isolate the view.
-	now := time.Now().UnixNano()
+// Test is a convenience function for transacting a single reader without writing the facts to storage.
+// This is used for testing whether a set of facts will transact.
+func Test(store *storage.Store, reader fact.Reader, domain string, strict bool) ([]*Result, error) {
+	tx := New(store)
 
-	tx := transaction{
-		store:  s,
-		reader: r,
-		domain: domain,
-		strict: strict,
-		time:   now,
-		view:   view.Asof(s, now),
-	}
+	tx.Transact(reader, domain, strict)
+	results := tx.write(false)
 
-	return tx.Exec(commit)
+	return results, nil
+}
+
+// Evaluate
+func Evaluate(store *storage.Store, reader fact.Reader, domain string, strict bool) (fact.Facts, error) {
+	tx := New(store)
+	return tx.Evaluate(reader, domain, strict)
 }
