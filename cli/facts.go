@@ -12,13 +12,14 @@ import (
 )
 
 var factsCmd = &cobra.Command{
-	Use: "facts <domain>",
+	Use: "facts <domain> [<entity>]",
 
 	Short: "Output facts for a domain.",
 
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cmd.Help()
+			cmd.Usage()
+			os.Exit(1)
 		}
 
 		store := initStore()
@@ -55,7 +56,15 @@ var factsCmd = &cobra.Command{
 		v := view.Range(store, min, max)
 		dv := v.Domain(args[0])
 
-		fr = dv.Reader()
+		if len(args) > 1 {
+			eid := args[1]
+
+			fr = dv.FilteredReader(func(f *fact.Fact) bool {
+				return f.Entity.Local == eid
+			})
+		} else {
+			fr = dv.Reader()
+		}
 
 		if file == "" {
 			w = os.Stdout
