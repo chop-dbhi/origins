@@ -61,15 +61,28 @@ func (d *Domain) Transactions() fact.Facts {
 
 // Facts returns all facts in this domain.
 func (d *Domain) Facts() fact.Facts {
-	r := d.reader()
+	r := d.Reader()
 	facts, _ := fact.ReadAll(r)
+	return facts
+}
 
+// FilteredFacts returns facts in this domain that pass the filter function.
+func (d *Domain) FilteredFacts(filter fact.Filter) fact.Facts {
+	r := d.FilteredReader(filter)
+	facts, _ := fact.ReadAll(r)
 	return facts
 }
 
 // Reader returns a fact.Reader for this view.
 func (d *Domain) Reader() fact.Reader {
 	return d.reader()
+}
+
+// FilteredReader returns a fact.Reader with a filter function set.
+func (d *Domain) FilteredReader(filter fact.Filter) fact.Reader {
+	r := d.reader()
+	r.Filter = filter
+	return r
 }
 
 // Identities delegates to view.Identities.
