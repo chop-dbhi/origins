@@ -19,6 +19,7 @@ install:
 	go get github.com/golang/protobuf/protoc-gen-go
 	go get github.com/spf13/viper
 	go get github.com/spf13/cobra
+	go get github.com/julienschmidt/httprouter
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover

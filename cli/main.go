@@ -33,6 +33,8 @@ func main() {
 	mainCmd.AddCommand(listCmd)
 	mainCmd.AddCommand(gapsCmd)
 
+	mainCmd.AddCommand(httpCmd)
+
 	viper.SetEnvPrefix("ORIGINS_CLI")
 	viper.AutomaticEnv()
 
