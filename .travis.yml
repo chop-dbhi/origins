@@ -10,7 +10,7 @@ go:
     - tip
 
 install:
-    - make install
+    - make test-install
 
 script:
     - make test

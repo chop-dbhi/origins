@@ -11,9 +11,7 @@ proto:
 	protoc --go_out=. storage/*.proto
 
 install:
-	go get golang.org/x/tools/cmd/cover
 	go get github.com/sirupsen/logrus
-	go get github.com/stretchr/testify/assert
 	go get github.com/peterbourgon/diskv
 	go get github.com/boltdb/bolt
 	go get github.com/mattn/go-sqlite3
@@ -22,6 +20,14 @@ install:
 	go get github.com/spf13/viper
 	go get github.com/spf13/cobra
 
+test-install: install
+	go get golang.org/x/tools/cmd/cover
+	go get github.com/stretchr/testify/assert
+	go get github.com/cespare/prettybench
+
+dev-install: install test-install
+	go get github.com/mitchellh/gox
+
 test:
 	go test -v -cover ./...
 
@@ -29,7 +35,7 @@ build:
 	go build -o bin/origins ./cli
 
 bench:
-	go test -v -run=none -bench=. ./...
+	go test -v -run=none -bench=. ./... | prettybench
 
 fmt:
 	go vet ./...
