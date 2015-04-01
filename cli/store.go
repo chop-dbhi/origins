@@ -1,6 +1,8 @@
 package main
 
 import (
+	"path/filepath"
+
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/storage/boltdb"
 	"github.com/chop-dbhi/origins/storage/disk"
@@ -18,8 +20,14 @@ func initStore() *storage.Store {
 		engine storage.Engine
 	)
 
+	cf := viper.ConfigFileUsed()
+	dir := filepath.Dir(cf)
+
+	// Get path relative to config file.
+	path := filepath.Join(dir, viper.GetString("path"))
+
 	opts := storage.Options{
-		Path: viper.GetString("path"),
+		Path: path,
 	}
 
 	switch viper.GetString("storage") {
