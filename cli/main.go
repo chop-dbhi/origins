@@ -31,6 +31,7 @@ func main() {
 	mainCmd.AddCommand(domainsCmd)
 	mainCmd.AddCommand(factsCmd)
 	mainCmd.AddCommand(listCmd)
+	mainCmd.AddCommand(aggregateCmd)
 	mainCmd.AddCommand(gapsCmd)
 
 	mainCmd.AddCommand(httpCmd)

@@ -85,6 +85,16 @@ func (d *Domain) FilteredReader(filter fact.Filter) fact.Reader {
 	return r
 }
 
+func (d *Domain) Aggregate(id string) *Aggregate {
+	return &Aggregate{
+		Name:   id,
+		Domain: d.Name,
+		Min:    d.Min,
+		Max:    d.Max,
+		store:  d.store,
+	}
+}
+
 // Identities delegates to view.Identities.
 func (d *Domain) Identities(filter IdentityFilter) identity.Idents {
 	return Identities(d.Facts(), filter)
