@@ -27,6 +27,7 @@ var mainCmd = &cobra.Command{
 func main() {
 	mainCmd.AddCommand(versionCmd)
 	mainCmd.AddCommand(loadCmd)
+	mainCmd.AddCommand(evaluateCmd)
 	mainCmd.AddCommand(statsCmd)
 	mainCmd.AddCommand(domainsCmd)
 	mainCmd.AddCommand(factsCmd)
