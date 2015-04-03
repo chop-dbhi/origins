@@ -37,6 +37,11 @@ func (i *Ident) String() string {
 	return Concat(i.Domain, i.Local)
 }
 
+// Is returns true if this identity and the passed one are equal.
+func (i *Ident) Is(j *Ident) bool {
+	return i.Domain == j.Domain && i.Local == j.Local
+}
+
 // New returns a new Ident.
 func New(domain, local string) *Ident {
 	return &Ident{

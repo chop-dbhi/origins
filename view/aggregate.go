@@ -40,7 +40,7 @@ func (m Map) MarshalJSON() ([]byte, error) {
 }
 
 type Aggregate struct {
-	Name   string
+	Ident  *identity.Ident
 	Domain string
 	Min    int64
 	Max    int64
@@ -70,7 +70,7 @@ func (a *Aggregate) Map() Map {
 
 	// Add filter for this aggregate.
 	r.Filter = func(f *fact.Fact) bool {
-		return (f.Entity.Domain == "" || f.Entity.Domain == f.Domain) && f.Entity.Local == a.Name
+		return f.Entity.Is(a.Ident)
 	}
 
 	facts, _ := fact.ReadAll(r)

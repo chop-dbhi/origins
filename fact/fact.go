@@ -19,6 +19,15 @@ type Fact struct {
 	Inferred    bool
 }
 
+// Is returns true if the two facts are equivalent. This excludes transaction time.
+func (f *Fact) Is(f2 *Fact) bool {
+	return (f.Operation == f2.Operation &&
+		f.Time == f2.Time &&
+		f.Entity.Is(f2.Entity) &&
+		f.Attribute.Is(f2.Attribute) &&
+		f.Value.Is(f2.Value))
+}
+
 // Proto returns an initialized ProtoFact.
 func (f *Fact) Proto() proto.Message {
 	return &ProtoFact{}

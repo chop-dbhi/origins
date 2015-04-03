@@ -85,9 +85,9 @@ func (d *Domain) FilteredReader(filter fact.Filter) fact.Reader {
 	return r
 }
 
-func (d *Domain) Aggregate(id string) *Aggregate {
+func (d *Domain) Aggregate(id *identity.Ident) *Aggregate {
 	return &Aggregate{
-		Name:   id,
+		Ident:  id,
 		Domain: d.Name,
 		Min:    d.Min,
 		Max:    d.Max,

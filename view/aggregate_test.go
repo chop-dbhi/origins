@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/chop-dbhi/origins/fact"
+	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/storage/memory"
 	"github.com/chop-dbhi/origins/transactor"
@@ -37,10 +38,15 @@ func TestAggregate(t *testing.T) {
 	v := view.Now(store)
 
 	dv := v.Domain(domain)
-	agg := dv.Aggregate("joe")
+	agg := dv.Aggregate(&identity.Ident{
+		Domain: "",
+		Local:  "joe",
+	})
 
 	m := agg.Map()
 
-	val := m[livesIn.String()][0]
-	assert.Equal(t, pa.Local, val.Local)
+	vals := m[livesIn.String()]
+
+	assert.Equal(t, 1, len(vals))
+	assert.Equal(t, pa.Local, vals[0].Local)
 }

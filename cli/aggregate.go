@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/chop-dbhi/origins/fact"
+	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -54,7 +55,14 @@ var aggregateCmd = &cobra.Command{
 		v := view.Range(store, min, max)
 		dv := v.Domain(domain)
 
-		agg := dv.Aggregate(id)
+		ident, err := identity.Parse(id)
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		agg := dv.Aggregate(ident)
 
 		b, err := json.MarshalIndent(agg.Map(), "", "\t")
 
