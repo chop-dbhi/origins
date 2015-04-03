@@ -162,7 +162,6 @@ func (p *partition) Reader(min, max int64) *partitionReader {
 
 	// Bounds of the range
 	pr.start = 0
-	pr.stop = len(p.SegmentKeys)
 
 	// Non-zero lower bound.
 	if pr.min > 0 {
@@ -182,6 +181,8 @@ func (p *partition) Reader(min, max int64) *partitionReader {
 
 	// Non-zero upper bound.
 	if pr.max > 0 {
+		pr.stop = -1
+
 		// Walk backwards until max exceeds t.
 		for i := len(p.SegmentKeys) - 1; i >= 0; i-- {
 			t := p.SegmentKeys[i]
@@ -193,6 +194,13 @@ func (p *partition) Reader(min, max int64) *partitionReader {
 				break
 			}
 		}
+
+		// Max is smaller than the earliest segment ID.
+		if pr.stop < 0 {
+			pr.stop = 0
+		}
+	} else {
+		pr.stop = len(p.SegmentKeys)
 	}
 
 	return &pr

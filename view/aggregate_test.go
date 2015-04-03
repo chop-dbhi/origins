@@ -5,8 +5,7 @@ import (
 
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
-	"github.com/chop-dbhi/origins/storage"
-	"github.com/chop-dbhi/origins/storage/memory"
+	"github.com/chop-dbhi/origins/testutil"
 	"github.com/chop-dbhi/origins/transactor"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/stretchr/testify/assert"
@@ -21,11 +20,7 @@ func TestAggregate(t *testing.T) {
 		fact.Assert(joe, livesIn, pa),
 	})
 
-	engine, _ := memory.Open(&storage.Options{})
-
-	store, _ := storage.Init(&storage.Config{
-		Engine: engine,
-	})
+	store := testutil.Store()
 
 	domain := "test"
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/storage"
-	"github.com/chop-dbhi/origins/storage/memory"
+	"github.com/chop-dbhi/origins/testutil"
 	"github.com/chop-dbhi/origins/transactor"
 	"github.com/stretchr/testify/assert"
 )
@@ -49,11 +49,7 @@ func loadFacts(t *testing.T, store *storage.Store, expected int) {
 }
 
 func TestTransact(t *testing.T) {
-	engine, _ := memory.Open(&storage.Options{})
-
-	store, _ := storage.Init(&storage.Config{
-		Engine: engine,
-	})
+	store := testutil.Store()
 
 	loadFacts(t, store, 72)
 	loadFacts(t, store, 0)

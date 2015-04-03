@@ -1,10 +1,12 @@
 package view
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
+	"github.com/chop-dbhi/origins/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,4 +64,51 @@ func TestIdentities(t *testing.T) {
 	// ExternalValues
 	ids = Identities(facts, externalValueFilter)
 	assert.Equal(t, identity.Idents{}, ids)
+}
+
+func randomize(facts fact.Facts) fact.Facts {
+	rand.Seed(1337)
+
+	var (
+		j int64
+		l = int64(len(facts))
+	)
+
+	for i, _ := range facts {
+		j = rand.Int63n(l)
+		facts[i], facts[j] = facts[j], facts[i]
+	}
+
+	return facts
+}
+
+func benchIdentities(b *testing.B, n int) {
+	facts := testutil.RandFactsWithTx(n, "")
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		facts = randomize(facts)
+		b.StartTimer()
+		Identities(facts, entityFilter)
+	}
+}
+
+func BenchmarkIdentities__100(b *testing.B) {
+	benchIdentities(b, 100)
+}
+
+func BenchmarkIdentities__1000(b *testing.B) {
+	benchIdentities(b, 1000)
+}
+
+func BenchmarkIdentities__10000(b *testing.B) {
+	benchIdentities(b, 10000)
+}
+
+func BenchmarkIdentities__100000(b *testing.B) {
+	benchIdentities(b, 100000)
+}
+
+func BenchmarkIdentities__1000000(b *testing.B) {
+	benchIdentities(b, 1000000)
 }

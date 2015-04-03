@@ -5,31 +5,16 @@ import (
 	"time"
 
 	"github.com/chop-dbhi/origins/fact"
-	"github.com/chop-dbhi/origins/identity"
-	"github.com/chop-dbhi/origins/storage"
-	"github.com/chop-dbhi/origins/storage/memory"
+	"github.com/chop-dbhi/origins/testutil"
 	"github.com/chop-dbhi/origins/transactor"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	joe     = identity.New("", "joe")
-	livesIn = identity.New("", "lives in")
-	ny      = identity.New("", "New York")
-	ca      = identity.New("", "California")
-	pa      = identity.New("", "Pennsylvania")
-)
-
 func testDomainGaps(t *testing.T, facts fact.Facts) {
 	r := fact.NewReader(facts)
 
-	engine, _ := memory.Open(&storage.Options{})
-
-	store, _ := storage.Init(&storage.Config{
-		Engine: engine,
-	})
-
+	store := testutil.Store()
 	domain := "test"
 
 	_, err := transactor.Commit(store, r, domain, true)

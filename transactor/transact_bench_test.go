@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/chop-dbhi/origins/fact"
-	"github.com/chop-dbhi/origins/storage"
-	"github.com/chop-dbhi/origins/storage/memory"
 	"github.com/chop-dbhi/origins/testutil"
 	"github.com/chop-dbhi/origins/transactor"
 )
@@ -15,11 +13,7 @@ func benchTransactRandomReset(b *testing.B, n int) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		engine, _ := memory.Open(&storage.Options{})
-
-		store, _ := storage.Init(&storage.Config{
-			Engine: engine,
-		})
+		store := testutil.Store()
 
 		facts := testutil.RandFacts(n, "test")
 		r := fact.NewReader(facts)
@@ -44,11 +38,7 @@ func BenchmarkTransactRandomReset__1000(b *testing.B) {
 
 // Random facts, persist across iterations. This tests the redundancy checker.
 func benchTransactRandomPersistent(b *testing.B, n int) {
-	engine, _ := memory.Open(&storage.Options{})
-
-	store, _ := storage.Init(&storage.Config{
-		Engine: engine,
-	})
+	store := testutil.Store()
 
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()

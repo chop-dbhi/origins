@@ -16,10 +16,9 @@ type View struct {
 // Domain returns a sub-view for this domain.
 func (v *View) Domain(n string) *Domain {
 	return &Domain{
-		Name: n,
-		Min:  v.Min,
-		Max:  v.Max,
-
+		Name:  n,
+		Min:   v.Min,
+		Max:   v.Max,
 		store: v.store,
 	}
 }
