@@ -211,6 +211,20 @@ func (tx *Transaction) evaluate(f *fact.Fact, domain string, strict bool) (*fact
 		return nil, err
 	}
 
+	// Check for duplicate
+	dv := tx.view.Domain(f.Domain)
+	r := dv.Reader()
+
+	exists, err := fact.Exists(r, f.Is)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, nil
+	}
+
 	return f, nil
 }
 
@@ -305,18 +319,25 @@ func (tx *Transaction) Evaluate(reader fact.Reader, domain string, strict bool) 
 			return nil, err
 		}
 
+		i = 0
+
 		// Iterate over the buffered facts and process them.
-		for i, f = range buf[:n] {
+		for _, f = range buf[:n] {
 			f, err = tx.evaluate(f, domain, strict)
 
 			if err != nil {
 				return nil, err
 			}
 
+			if f == nil {
+				continue
+			}
+
 			buf[i] = f
+			i += 1
 		}
 
-		facts = append(facts, buf[:n]...)
+		facts = append(facts, buf[:i]...)
 
 		// No more facts to read.
 		if err == io.EOF {

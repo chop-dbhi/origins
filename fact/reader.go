@@ -129,3 +129,37 @@ func ReadAll(r Reader) (Facts, error) {
 
 	return out[:i], nil
 }
+
+// Reads facts until the predicate matches.
+func Exists(r Reader, pred Filter) (bool, error) {
+	var (
+		n   int
+		f   *Fact
+		err error
+	)
+
+	buf := make(Facts, 10)
+
+	for {
+		n, err = r.Read(buf)
+
+		if n > 0 {
+			for _, f = range buf[:n] {
+				if pred(f) {
+					return true, nil
+				}
+			}
+		}
+
+		// Reader is consumed.
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return false, nil
+}
