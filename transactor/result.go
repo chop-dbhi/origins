@@ -2,6 +2,8 @@ package transactor
 
 import "fmt"
 
+type Results map[string]*Result
+
 // Result contains information about facts being written to a store for a
 // particular domain.
 type Result struct {

@@ -38,7 +38,7 @@ func loadFile(store *storage.Store, r io.Reader) {
 		os.Exit(1)
 	}
 
-	var results []*transactor.Result
+	var results transactor.Results
 
 	if fake {
 		results, err = transactor.Test(store, reader, domain, strict)

@@ -136,7 +136,7 @@ func (tx *Transaction) applyMacros(f *fact.Fact) (*fact.Fact, error) {
 
 // write performs the processing to the write the facts to storage. Whether they
 // get physically written is determined by the `commit` flag.
-func (tx *Transaction) write(commit bool) []*Result {
+func (tx *Transaction) write(commit bool) Results {
 	l := len(tx.domains)
 
 	rchan := make(chan *Result, l)
@@ -169,12 +169,10 @@ func (tx *Transaction) write(commit bool) []*Result {
 
 	close(rchan)
 
-	i := 0
-	results := make([]*Result, l)
+	results := make(Results, l)
 
 	for r := range rchan {
-		results[i] = r
-		i += 1
+		results[r.Domain] = r
 	}
 
 	return results
@@ -330,12 +328,12 @@ func (tx *Transaction) Evaluate(reader fact.Reader, domain string, strict bool) 
 }
 
 // Commit writes the transacted facts to storage.
-func (tx *Transaction) Commit() []*Result {
+func (tx *Transaction) Commit() Results {
 	return tx.write(true)
 }
 
 // Test performs a fake write to storage.
-func (tx *Transaction) Test() []*Result {
+func (tx *Transaction) Test() Results {
 	return tx.write(false)
 }
 
@@ -354,7 +352,7 @@ func New(store *storage.Store) *Transaction {
 }
 
 // Commit is a convenience function for transacting a single reader and writing the facts to storage.
-func Commit(store *storage.Store, reader fact.Reader, domain string, strict bool) ([]*Result, error) {
+func Commit(store *storage.Store, reader fact.Reader, domain string, strict bool) (Results, error) {
 	tx := New(store)
 
 	tx.Transact(reader, domain, strict)
@@ -365,7 +363,7 @@ func Commit(store *storage.Store, reader fact.Reader, domain string, strict bool
 
 // Test is a convenience function for transacting a single reader without writing the facts to storage.
 // This is used for testing whether a set of facts will transact.
-func Test(store *storage.Store, reader fact.Reader, domain string, strict bool) ([]*Result, error) {
+func Test(store *storage.Store, reader fact.Reader, domain string, strict bool) (Results, error) {
 	tx := New(store)
 
 	tx.Transact(reader, domain, strict)
