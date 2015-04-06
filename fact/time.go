@@ -3,6 +3,7 @@ package fact
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -49,6 +50,9 @@ func ParseTime(v interface{}) (int64, error) {
 			n = n.Add(-d)
 			return n.UnixNano(), nil
 		}
+
+		// Fallback to a timestamp
+		return strconv.ParseInt(x, 10, 64)
 	case time.Duration:
 		n := time.Now()
 		n = n.Add(-x)
