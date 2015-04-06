@@ -67,12 +67,12 @@ func ServeHTTP() {
 	router.GET("/", httpRoot)
 	router.GET("/stats", httpStats)
 	router.GET("/domains", httpDomains)
-	router.GET("/domains/:ident", httpDomain)
-	router.GET("/domains/:ident/stats", httpDomainStats)
-	router.GET("/domains/:ident/entities", httpDomainEntities)
-	router.GET("/domains/:ident/attributes", httpDomainAttributes)
-	router.GET("/domains/:ident/values", httpDomainValues)
-	router.GET("/domains/:ident/facts", httpDomainFacts)
+	router.GET("/domains/:domain", httpDomain)
+	router.GET("/domains/:domain/stats", httpDomainStats)
+	router.GET("/domains/:domain/entities", httpDomainEntities)
+	router.GET("/domains/:domain/attributes", httpDomainAttributes)
+	router.GET("/domains/:domain/values", httpDomainValues)
+	router.GET("/domains/:domain/facts", httpDomainFacts)
 
 	// Serve it up.
 	logrus.Infof("* Listening on %s...", addr)
@@ -113,7 +113,7 @@ func httpDomains(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func httpDomain(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	//d := p.ByName("ident")
+	//d := p.ByName("domain")
 
 	v := view.Now(store).Domain("origins.domains")
 
@@ -121,7 +121,7 @@ func httpDomain(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 }
 
 func httpDomainStats(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	d := p.ByName("ident")
+	d := p.ByName("domain")
 
 	v := view.Now(store).Domain(d)
 
@@ -129,7 +129,7 @@ func httpDomainStats(w http.ResponseWriter, r *http.Request, p httprouter.Params
 }
 
 func httpDomainEntities(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	d := p.ByName("ident")
+	d := p.ByName("domain")
 
 	v := view.Now(store).Domain(d)
 
@@ -137,7 +137,7 @@ func httpDomainEntities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 }
 
 func httpDomainAttributes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	d := p.ByName("ident")
+	d := p.ByName("domain")
 
 	v := view.Now(store).Domain(d)
 
@@ -145,7 +145,7 @@ func httpDomainAttributes(w http.ResponseWriter, r *http.Request, p httprouter.P
 }
 
 func httpDomainValues(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	d := p.ByName("ident")
+	d := p.ByName("domain")
 
 	v := view.Now(store).Domain(d)
 
@@ -153,7 +153,7 @@ func httpDomainValues(w http.ResponseWriter, r *http.Request, p httprouter.Param
 }
 
 func httpDomainFacts(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	d := p.ByName("ident")
+	d := p.ByName("domain")
 
 	v := view.Now(store).Domain(d)
 
