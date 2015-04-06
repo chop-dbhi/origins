@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/storage/boltdb"
 	"github.com/chop-dbhi/origins/storage/disk"
@@ -73,6 +76,7 @@ func ServeHTTP() {
 	router.GET("/domains/:domain/attributes", httpDomainAttributes)
 	router.GET("/domains/:domain/values", httpDomainValues)
 	router.GET("/domains/:domain/facts", httpDomainFacts)
+	router.GET("/domains/:domain/aggregate/*ident", httpAggregateEntity)
 
 	// Serve it up.
 	logrus.Infof("* Listening on %s...", addr)
@@ -158,4 +162,32 @@ func httpDomainFacts(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	v := view.Now(store).Domain(d)
 
 	jsonResponse(w, v.Facts())
+}
+
+func httpAggregateEntity(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	d := p.ByName("domain")
+	e := p.ByName("ident")
+
+	// Wildcard path matches come with a leading slash.
+	e = strings.TrimPrefix(e, "/")
+
+	// Unescape segments.
+	e, err := url.QueryUnescape(e)
+
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	ident, err := identity.Parse(e)
+
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	v := view.Now(store).Domain(d)
+	a := v.Aggregate(ident)
+
+	jsonResponse(w, a.Map())
 }
