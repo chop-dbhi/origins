@@ -14,9 +14,9 @@ import (
 
 func evaluateFile(store *storage.Store, r io.Reader) {
 	var (
-		format = viper.GetString("evaluate.format")
-		domain = viper.GetString("evaluate.domain")
-		strict = viper.GetBool("evaluate.strict")
+		format = viper.GetString("evaluate_format")
+		domain = viper.GetString("evaluate_domain")
+		strict = viper.GetBool("evaluate_strict")
 	)
 
 	// Wrap in a reader to handle carriage returns.
@@ -93,7 +93,7 @@ func init() {
 	flags.String("domain", "", "Domain to evaluate the facts to. If not supplied, the fact domain attribute must be defined.")
 	flags.Bool("strict", false, "When true and a default domain is specified, the fact domain must match.")
 
-	viper.BindPFlag("evaluate.format", flags.Lookup("format"))
-	viper.BindPFlag("evaluate.domain", flags.Lookup("domain"))
-	viper.BindPFlag("evaluate.strict", flags.Lookup("strict"))
+	viper.BindPFlag("evaluate_format", flags.Lookup("format"))
+	viper.BindPFlag("evaluate_domain", flags.Lookup("domain"))
+	viper.BindPFlag("evaluate_strict", flags.Lookup("strict"))
 }

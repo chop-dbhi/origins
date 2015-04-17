@@ -26,8 +26,8 @@ var listCmd = &cobra.Command{
 			err      error
 			min, max int64
 
-			smin = viper.GetString("list.min")
-			smax = viper.GetString("list.max")
+			smin = viper.GetString("list_min")
+			smax = viper.GetString("list_max")
 		)
 
 		min, err = fact.ParseTime(smin)
@@ -44,7 +44,7 @@ var listCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		filter := viper.GetString("list.filter")
+		filter := viper.GetString("list_filter")
 
 		// Validate filter
 		switch filter {
@@ -114,7 +114,7 @@ func init() {
 	flags.String("max", "", "The max tranaction time of facts to read.")
 	flags.String("filter", "local", "Filters the identities. Choices are: all, local, external.")
 
-	viper.BindPFlag("list.min", flags.Lookup("min"))
-	viper.BindPFlag("list.max", flags.Lookup("max"))
-	viper.BindPFlag("list.filter", flags.Lookup("filter"))
+	viper.BindPFlag("list_min", flags.Lookup("min"))
+	viper.BindPFlag("list_max", flags.Lookup("max"))
+	viper.BindPFlag("list_filter", flags.Lookup("filter"))
 }

@@ -24,6 +24,6 @@ func init() {
 	flags.String("host", "", "The host the HTTP service will listen on.")
 	flags.Int("port", 49110, "The port the HTTP will bind to.")
 
-	viper.BindPFlag("http.host", flags.Lookup("host"))
-	viper.BindPFlag("http.port", flags.Lookup("port"))
+	viper.BindPFlag("http_host", flags.Lookup("host"))
+	viper.BindPFlag("http_port", flags.Lookup("port"))
 }

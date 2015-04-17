@@ -32,10 +32,10 @@ var factsCmd = &cobra.Command{
 			min, max int64
 			err      error
 
-			smin   = viper.GetString("facts.min")
-			smax   = viper.GetString("facts.max")
-			file   = viper.GetString("facts.file")
-			format = viper.GetString("facts.format")
+			smin   = viper.GetString("facts_min")
+			smax   = viper.GetString("facts_max")
+			file   = viper.GetString("facts_file")
+			format = viper.GetString("facts_format")
 		)
 
 		min, err = fact.ParseTime(smin)
@@ -111,8 +111,8 @@ func init() {
 	flags.String("file", "", "Path to a file to write the facts to.")
 	flags.String("format", "csv", "The output format of the facts.")
 
-	viper.BindPFlag("facts.min", flags.Lookup("min"))
-	viper.BindPFlag("facts.max", flags.Lookup("max"))
-	viper.BindPFlag("facts.file", flags.Lookup("file"))
-	viper.BindPFlag("facts.format", flags.Lookup("format"))
+	viper.BindPFlag("facts_min", flags.Lookup("min"))
+	viper.BindPFlag("facts_max", flags.Lookup("max"))
+	viper.BindPFlag("facts_file", flags.Lookup("file"))
+	viper.BindPFlag("facts_format", flags.Lookup("format"))
 }

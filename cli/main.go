@@ -37,7 +37,7 @@ func main() {
 
 	mainCmd.AddCommand(httpCmd)
 
-	viper.SetEnvPrefix("ORIGINS_CLI")
+	viper.SetEnvPrefix("ORIGINS")
 	viper.AutomaticEnv()
 
 	// Default locations for the origins config file.

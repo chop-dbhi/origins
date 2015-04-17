@@ -28,8 +28,8 @@ var aggregateCmd = &cobra.Command{
 			err      error
 			min, max int64
 
-			smin = viper.GetString("aggregate.min")
-			smax = viper.GetString("aggregate.max")
+			smin = viper.GetString("aggregate_min")
+			smax = viper.GetString("aggregate_max")
 		)
 
 		min, err = fact.ParseTime(smin)
@@ -80,6 +80,6 @@ func init() {
 	flags.String("min", "", "The min tranaction time of facts to read.")
 	flags.String("max", "", "The max tranaction time of facts to read.")
 
-	viper.BindPFlag("aggregate.min", flags.Lookup("min"))
-	viper.BindPFlag("aggregate.max", flags.Lookup("max"))
+	viper.BindPFlag("aggregate_min", flags.Lookup("min"))
+	viper.BindPFlag("aggregate_max", flags.Lookup("max"))
 }

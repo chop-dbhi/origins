@@ -20,9 +20,9 @@ func loadFile(store *storage.Store, r io.Reader, format, compression string) {
 	var (
 		err error
 
-		domain = viper.GetString("load.domain")
-		fake   = viper.GetBool("load.fake")
-		strict = viper.GetBool("load.strict")
+		domain = viper.GetString("load_domain")
+		fake   = viper.GetBool("load_fake")
+		strict = viper.GetBool("load_strict")
 	)
 
 	// Apply decompression.
@@ -113,8 +113,8 @@ var loadCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		store := initStore()
 
-		format := viper.GetString("load.format")
-		compression := viper.GetString("load.compression")
+		format := viper.GetString("load_format")
+		compression := viper.GetString("load_compression")
 
 		// No path provided, use stdin.
 		if len(args) == 0 {
@@ -124,8 +124,8 @@ var loadCmd = &cobra.Command{
 
 		for _, fn := range args {
 			// Reset to initial value
-			format = viper.GetString("load.format")
-			compression = viper.GetString("load.compression")
+			format = viper.GetString("load_format")
+			compression = viper.GetString("load_compression")
 
 			if format == "" {
 				format = detectFormat(fn)
@@ -158,9 +158,9 @@ func init() {
 	flags.Bool("fake", false, "Set to prevent data from being written to the store.")
 	flags.Bool("strict", false, "When true and a default domain is specified, the fact domain must match.")
 
-	viper.BindPFlag("load.format", flags.Lookup("format"))
-	viper.BindPFlag("load.compression", flags.Lookup("compression"))
-	viper.BindPFlag("load.domain", flags.Lookup("domain"))
-	viper.BindPFlag("load.fake", flags.Lookup("fake"))
-	viper.BindPFlag("load.strict", flags.Lookup("strict"))
+	viper.BindPFlag("load_format", flags.Lookup("format"))
+	viper.BindPFlag("load_compression", flags.Lookup("compression"))
+	viper.BindPFlag("load_domain", flags.Lookup("domain"))
+	viper.BindPFlag("load_fake", flags.Lookup("fake"))
+	viper.BindPFlag("load_strict", flags.Lookup("strict"))
 }

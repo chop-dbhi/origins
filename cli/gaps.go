@@ -23,7 +23,7 @@ var gapsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		s := viper.GetString("gaps.threshold")
+		s := viper.GetString("gaps_threshold")
 		d, err := time.ParseDuration(s)
 
 		if err != nil {
@@ -59,5 +59,5 @@ func init() {
 
 	flags.String("threshold", "1s", "The maximum duration allowed between a retraction and assertion.")
 
-	viper.BindPFlag("gaps.threshold", flags.Lookup("threshold"))
+	viper.BindPFlag("gaps_threshold", flags.Lookup("threshold"))
 }

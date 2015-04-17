@@ -29,8 +29,8 @@ var statsCmd = &cobra.Command{
 			err      error
 			min, max int64
 
-			smin = viper.GetString("stats.min")
-			smax = viper.GetString("stats.max")
+			smin = viper.GetString("stats_min")
+			smax = viper.GetString("stats_max")
 		)
 
 		min, err = fact.ParseTime(smin)
@@ -64,6 +64,6 @@ func init() {
 	flags.String("min", "", "The min time of the view.")
 	flags.String("max", "", "The max time of the view.")
 
-	viper.BindPFlag("stats.min", flags.Lookup("min"))
-	viper.BindPFlag("stats.max", flags.Lookup("max"))
+	viper.BindPFlag("stats_min", flags.Lookup("min"))
+	viper.BindPFlag("stats_max", flags.Lookup("max"))
 }
