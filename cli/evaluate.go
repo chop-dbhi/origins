@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/transactor"
@@ -20,7 +21,7 @@ func evaluateFile(store *storage.Store, r io.Reader) {
 	)
 
 	// Wrap in a reader to handle carriage returns.
-	r = &UniversalReader{r}
+	r = &origins.UniversalReader{r}
 
 	var reader fact.Reader
 

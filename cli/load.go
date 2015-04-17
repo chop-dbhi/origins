@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/transactor"
@@ -45,7 +46,7 @@ func loadFile(store *storage.Store, r io.Reader, format, compression string) {
 
 	// Wrap in a reader to handle carriage returns before passing
 	// it into the CSV reader.
-	r = &UniversalReader{r}
+	r = &origins.UniversalReader{r}
 
 	var reader fact.Reader
 
