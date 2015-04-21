@@ -5,9 +5,7 @@ import (
 
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/storage/boltdb"
-	"github.com/chop-dbhi/origins/storage/disk"
 	"github.com/chop-dbhi/origins/storage/memory"
-	"github.com/chop-dbhi/origins/storage/sqlite"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -31,12 +29,8 @@ func initStore() *storage.Store {
 	}
 
 	switch viper.GetString("storage") {
-	case "diskv":
-		engine, err = disk.Open(&opts)
 	case "boltdb":
 		engine, err = boltdb.Open(&opts)
-	case "sqlite":
-		engine, err = sqlite.Open(&opts)
 	case "memory":
 		engine, err = memory.Open(&opts)
 	default:

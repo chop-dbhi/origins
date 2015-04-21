@@ -12,9 +12,7 @@ proto:
 
 install:
 	go get github.com/sirupsen/logrus
-	go get github.com/peterbourgon/diskv
 	go get github.com/boltdb/bolt
-	go get github.com/mattn/go-sqlite3
 	go get github.com/golang/protobuf/proto
 	go get github.com/golang/protobuf/protoc-gen-go
 	go get github.com/spf13/viper

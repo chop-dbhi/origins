@@ -54,7 +54,7 @@ func main() {
 
 	flags.String("loglevel", "info", "Level of log messages to emit. Choices are: debug, info, warn, error, fatal, panic.")
 	flags.String("path", "", "Path to a file or directory filesystem-based storage backends.")
-	flags.String("storage", "", "Storage backend. Choices are: boltdb, diskv, sqlite, and memory.")
+	flags.String("storage", "", "Storage backend. Choices are: boltdb and memory.")
 	flags.String("config", "", "Path to config file.")
 
 	viper.BindPFlag("loglevel", flags.Lookup("loglevel"))
