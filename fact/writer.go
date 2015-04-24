@@ -9,9 +9,9 @@ type Writer interface {
 	Write(Facts) (int, error)
 }
 
-// WriteReader reads all facts from the reader and writes them to the writer.
+// ReadWriter reads all facts from the reader and writes them to the writer.
 // The number of facts written is returned and an error if present.
-func WriteReader(reader Reader, writer Writer) (int, error) {
+func ReadWriter(reader Reader, writer Writer) (int, error) {
 	var (
 		n, rn, wn  int
 		rerr, werr error

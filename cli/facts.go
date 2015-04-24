@@ -92,7 +92,7 @@ var factsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		n, err := fact.WriteReader(fr, fw)
+		n, err := fact.ReadWriter(fr, fw)
 
 		if err != nil {
 			fmt.Println(err)

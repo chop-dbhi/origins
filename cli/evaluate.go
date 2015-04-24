@@ -45,7 +45,7 @@ func evaluateFile(store *storage.Store, r io.Reader) {
 	fr := fact.NewReader(facts)
 	fw := fact.CSVWriter(os.Stdout)
 
-	n, err := fact.WriteReader(fr, fw)
+	n, err := fact.ReadWriter(fr, fw)
 
 	if err != nil {
 		fmt.Println(err)
