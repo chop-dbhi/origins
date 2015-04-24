@@ -3,6 +3,7 @@ package fact
 import (
 	"testing"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,8 +25,8 @@ func init() {
 	v3 := identity.New("", "red")
 	v4 := identity.New("", "blue")
 
-	t0 := MustParseTime("2015-01-01")
-	t1 := MustParseTime("2015-01-02")
+	t0 := origins.MustParseTime("2015-01-01")
+	t1 := origins.MustParseTime("2015-01-02")
 
 	bobName = AssertTime(e1, a1, v1, t0)
 	bobColor = AssertTime(e1, a2, v3, t0)
