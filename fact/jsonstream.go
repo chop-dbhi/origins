@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/sirupsen/logrus"
 )
@@ -22,6 +23,7 @@ type auxFact struct {
 
 type jsonStreamReader struct {
 	reader io.Reader
+	idents *identity.Cache
 	buf    []byte
 	eof    bool
 }
@@ -79,16 +81,14 @@ func (r *jsonStreamReader) next() ([]byte, error) {
 	}
 }
 
-func (r *jsonStreamReader) read() (*Fact, error) {
-	b, err := r.next()
-
-	// Real error.
-	if err != nil {
-		return nil, err
-	}
-
+// Parse JSON-encoded bytes into a fact.
+func (r *jsonStreamReader) parse(b []byte) (*Fact, error) {
 	// Decode into an auxillary fact.
-	var af auxFact
+	var (
+		af  auxFact
+		err error
+	)
+
 	err = json.Unmarshal(b, &af)
 
 	if err != nil {
@@ -114,7 +114,7 @@ func (r *jsonStreamReader) read() (*Fact, error) {
 		// Time; string or int
 		switch x := af.Time.(type) {
 		case string:
-			t, err := ParseTime(x)
+			t, err := origins.ParseTime(x)
 
 			if err != nil {
 				logrus.Error(err)
@@ -132,78 +132,94 @@ func (r *jsonStreamReader) read() (*Fact, error) {
 	}
 
 	// Entity; string (local) or object
-	ident := identity.Ident{}
+	var (
+		v             interface{}
+		ok            bool
+		domain, local string
+	)
 
 	switch x := af.Entity.(type) {
 	case map[string]interface{}:
-		if v, ok := x["domain"]; ok {
-			ident.Domain = v.(string)
+		if v, ok = x["domain"]; ok {
+			domain = v.(string)
 		}
 
-		if v, ok := x["local"]; ok {
-			ident.Local = v.(string)
+		if v, ok = x["local"]; ok {
+			local = v.(string)
 		}
 	case string:
-		ident.Local = x
+		local = x
 	}
 
-	if ident.Local == "" {
-		err = errors.New(fmt.Sprintf("invalid entity format: %v", af.Entity))
+	if local == "" {
+		err = errors.New(fmt.Sprintf("json: invalid entity format %v", af.Entity))
 		return nil, err
 	}
 
-	f.Entity = &ident
+	f.Entity = r.idents.Add(domain, local)
 
-	// Attribute; string (local) or object
-	ident = identity.Ident{}
+	// Reset
+	domain = ""
+	local = ""
 
 	switch x := af.Attribute.(type) {
 	case map[string]interface{}:
-		if v, ok := x["domain"]; ok {
-			ident.Domain = v.(string)
+		if v, ok = x["domain"]; ok {
+			domain = v.(string)
 		}
 
-		if v, ok := x["local"]; ok {
-			ident.Local = v.(string)
+		if v, ok = x["local"]; ok {
+			local = v.(string)
 		}
 	case string:
-		ident.Local = x
+		local = x
 	}
 
-	if ident.Local == "" {
-		err = errors.New(fmt.Sprintf("invalid attribute format: %v", af.Attribute))
+	if local == "" {
+		err = errors.New(fmt.Sprintf("json: invalid attribute format %v", af.Attribute))
 		return nil, err
 	}
 
-	f.Attribute = &ident
+	f.Attribute = r.idents.Add(domain, local)
 
-	// Value; string (local) or object
-	ident = identity.Ident{}
+	// Reset
+	domain = ""
+	local = ""
 
 	switch x := af.Value.(type) {
 	case map[string]interface{}:
-		if v, ok := x["domain"]; ok {
-			ident.Domain = v.(string)
+		if v, ok = x["domain"]; ok {
+			domain = v.(string)
 		}
 
-		if v, ok := x["local"]; ok {
-			ident.Local = v.(string)
+		if v, ok = x["local"]; ok {
+			local = v.(string)
 		}
 	case string:
-		ident.Local = x
+		local = x
 	}
 
-	if ident.Local == "" {
-		err = errors.New(fmt.Sprintf("invalid value format: %v", af.Value))
+	if local == "" {
+		err = errors.New(fmt.Sprintf("json: invalid value format %v", af.Value))
 		return nil, err
 	}
 
-	f.Value = &ident
-
-	logrus.Debugf("Processed fact %v", &f)
+	f.Value = r.idents.Add(domain, local)
 
 	// Error will be nil or EOF
 	return &f, nil
+}
+
+// Read and parse the next JSON document.
+func (r *jsonStreamReader) read() (*Fact, error) {
+	b, err := r.next()
+
+	// Real error.
+	if err != nil {
+		return nil, err
+	}
+
+	return r.parse(b)
 }
 
 // Read satisfies the fact.Reader interface.
@@ -234,8 +250,11 @@ func (r *jsonStreamReader) Read(facts Facts) (int, error) {
 // JSONStreamReader returns a reader that parsed a stream of newline-delimited
 // JSON-encoded facts.
 func JSONStreamReader(reader io.Reader) *jsonStreamReader {
+	cache := make(identity.Cache)
+
 	r := jsonStreamReader{
 		reader: reader,
+		idents: &cache,
 		buf:    make([]byte, 200),
 	}
 
