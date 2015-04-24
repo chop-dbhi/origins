@@ -41,6 +41,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/sirupsen/logrus"
 )
@@ -53,12 +54,12 @@ var (
 var csvHeader = []string{
 	"domain",
 	"operation",
-	"valid time",
-	"entity domain",
+	"valid_time",
+	"entity_domain",
 	"entity",
-	"attribute domain",
+	"attribute_domain",
 	"attribute",
-	"value domain",
+	"value_domain",
 	"value",
 }
 
@@ -115,11 +116,94 @@ func isEmpty(r []string) bool {
 	return true
 }
 
+func (r *csvReader) parse(record []string) (*Fact, error) {
+	// Map row values to fact fields.
+	var (
+		ok        bool
+		idx, rlen int
+		val       string
+		dom       string
+		f         = Fact{}
+	)
+
+	rlen = len(record)
+
+	// Domain
+	if idx, ok = r.header["domain"]; ok && idx < rlen {
+		f.Domain = record[idx]
+	}
+
+	// Operation
+	if idx, ok = r.header["operation"]; ok && idx < rlen {
+		op, err := ParseOperation(record[idx])
+
+		if err != nil {
+			logrus.Error(err)
+			return nil, err
+		}
+
+		f.Operation = op
+	}
+
+	// Valid time
+	if idx, ok = r.header["valid_time"]; ok && idx < rlen {
+		val = record[idx]
+
+		if val != "" {
+			t, err := origins.ParseTime(val)
+
+			if err != nil {
+				logrus.Error(err)
+				return nil, err
+			}
+
+			f.Time = t
+		}
+	}
+
+	// Entity
+	idx, _ = r.header["entity"]
+	val = record[idx]
+
+	if idx, ok = r.header["entity_domain"]; ok && idx < rlen {
+		dom = record[idx]
+	} else {
+		dom = ""
+	}
+
+	f.Entity = r.idents.Add(dom, val)
+
+	// Attribute
+	idx, _ = r.header["attribute"]
+	val = record[idx]
+
+	if idx, ok = r.header["attribute_domain"]; ok && idx < rlen {
+		dom = record[idx]
+	} else {
+		dom = ""
+	}
+
+	f.Attribute = r.idents.Add(dom, val)
+
+	// Value
+	idx, _ = r.header["value"]
+	val = record[idx]
+
+	if idx, ok = r.header["value_domain"]; ok && idx < rlen {
+		dom = record[idx]
+	} else {
+		dom = ""
+	}
+
+	f.Value = r.idents.Add(dom, val)
+
+	return &f, nil
+}
+
 func (r *csvReader) read() (*Fact, error) {
 	var (
 		err    error
 		record []string
-		rlen   int
 	)
 
 	// Logic defined in a loop to skip comments.
@@ -132,14 +216,10 @@ func (r *csvReader) read() (*Fact, error) {
 
 		// Line with all empty strings.
 		if isEmpty(record) {
-			logrus.Debug("skipping empty line")
 			continue
 		}
 
-		rlen = len(record)
-
 		if record[0] != "" && record[0][0] == '#' {
-			logrus.Debug("skipping comment line")
 			continue
 		}
 
@@ -153,91 +233,10 @@ func (r *csvReader) read() (*Fact, error) {
 
 			r.header = h
 
-			logrus.Debug("header found and cleaned")
 			continue
 		}
 
-		// Map row values to fact fields.
-		var (
-			ok  bool
-			idx int
-			val string
-			dom string
-			f   = Fact{}
-		)
-
-		// Domain
-		if idx, ok = r.header["domain"]; ok && idx < rlen {
-			f.Domain = record[idx]
-		}
-
-		// Operation
-		if idx, ok = r.header["operation"]; ok && idx < rlen {
-			op, err := ParseOperation(record[idx])
-
-			if err != nil {
-				logrus.Error(err)
-				return nil, err
-			}
-
-			f.Operation = op
-		}
-
-		// Valid time
-		if idx, ok = r.header["valid_time"]; ok && idx < rlen {
-			val = record[idx]
-
-			if val != "" {
-				t, err := ParseTime(val)
-
-				if err != nil {
-					logrus.Error(err)
-					return nil, err
-				}
-
-				f.Time = t
-			}
-		}
-
-		// Entity
-		idx, _ = r.header["entity"]
-		val = record[idx]
-
-		if idx, ok = r.header["entity_domain"]; ok && idx < rlen {
-			dom = record[idx]
-		} else {
-			dom = ""
-		}
-
-		f.Entity = r.idents.Add(dom, val)
-
-		// Attribute
-		idx, _ = r.header["attribute"]
-		val = record[idx]
-
-		if idx, ok = r.header["attribute_domain"]; ok && idx < rlen {
-			dom = record[idx]
-		} else {
-			dom = ""
-		}
-
-		f.Attribute = r.idents.Add(dom, val)
-
-		// Value
-		idx, _ = r.header["value"]
-		val = record[idx]
-
-		if idx, ok = r.header["value_domain"]; ok && idx < rlen {
-			dom = record[idx]
-		} else {
-			dom = ""
-		}
-
-		f.Value = r.idents.Add(dom, val)
-
-		logrus.Debugf("Processed fact %v", &f)
-
-		return &f, nil
+		return r.parse(record)
 	}
 }
 

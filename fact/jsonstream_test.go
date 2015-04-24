@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/chop-dbhi/origins/identity"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -97,4 +98,33 @@ func TestJSONStreamReader(t *testing.T) {
 	}
 
 	assert.Equal(t, len(facts), 4)
+}
+
+func BenchmarkJSONStreamParse(b *testing.B) {
+	reader := jsonStreamReader{
+		buf:    make([]byte, 200),
+		idents: &identity.Cache{},
+	}
+
+	v := map[string]interface{}{
+		"domain":    "test",
+		"operation": "assert",
+		"time":      "2013-02-03",
+		"entity": map[string]string{
+			"domain": "test",
+			"local":  "alice",
+		},
+		"attribute": map[string]string{
+			"domain": "",
+			"local":  "likes",
+		},
+		"value_domain": "test",
+		"value":        "bob",
+	}
+
+	doc, _ := json.Marshal(v)
+
+	for i := 0; i < b.N; i++ {
+		reader.parse(doc)
+	}
 }
