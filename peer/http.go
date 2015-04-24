@@ -59,8 +59,8 @@ func ServeHTTP() {
 	}
 
 	// Construct the address to bind to.
-	host := viper.GetString("http.host")
-	port := viper.GetInt("http.port")
+	host := viper.GetString("http_host")
+	port := viper.GetInt("http_port")
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 
