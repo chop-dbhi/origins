@@ -31,7 +31,15 @@ test:
 	go test -v -cover ./...
 
 build:
-	go build -o bin/origins ./cli
+	mkdir -p bin
+
+	gox -output="bin/origins-{{.OS}}.{{.Arch}}" \
+		-os="linux windows darwin" \
+		-arch="amd64" \
+		./cli > /dev/null
+
+	cp bin/origins-darwin.amd64 $(GOPATH)/bin
+
 
 bench:
 	go test -v -run=none -bench=. ./... | prettybench
