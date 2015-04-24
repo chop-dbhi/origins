@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/chop-dbhi/origins/fact"
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,14 +33,14 @@ var statsCmd = &cobra.Command{
 			smax = viper.GetString("stats_max")
 		)
 
-		min, err = fact.ParseTime(smin)
+		min, err = origins.ParseTime(smin)
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		max, err = fact.ParseTime(smax)
+		max, err = origins.ParseTime(smax)
 
 		if err != nil {
 			fmt.Println(err)

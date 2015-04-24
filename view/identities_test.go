@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/testutil"
@@ -20,11 +21,11 @@ var (
 
 func TestIdentities(t *testing.T) {
 	facts := fact.Facts{
-		fact.AssertTime(joe, livesIn, ny, fact.MustParseTime("September 20, 2009")),
-		fact.RetractTime(joe, livesIn, ny, fact.MustParseTime("June 19, 2012")),
-		fact.AssertTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.RetractTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.AssertTime(joe, livesIn, pa, fact.MustParseTime("March 6, 2013")),
+		fact.AssertTime(joe, livesIn, ny, origins.MustParseTime("September 20, 2009")),
+		fact.RetractTime(joe, livesIn, ny, origins.MustParseTime("June 19, 2012")),
+		fact.AssertTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.RetractTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.AssertTime(joe, livesIn, pa, origins.MustParseTime("March 6, 2013")),
 	}
 
 	var ids identity.Idents

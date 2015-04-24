@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/testutil"
 	"github.com/chop-dbhi/origins/transactor"
@@ -42,11 +43,11 @@ func testDomainGaps(t *testing.T, facts fact.Facts) {
 // Chronological order.
 func TestDomainGapsOrdered(t *testing.T) {
 	facts := fact.Facts{
-		fact.AssertTime(joe, livesIn, ny, fact.MustParseTime("September 20, 2009")),
-		fact.RetractTime(joe, livesIn, ny, fact.MustParseTime("June 19, 2012")),
-		fact.AssertTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.RetractTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.AssertTime(joe, livesIn, pa, fact.MustParseTime("March 6, 2013")),
+		fact.AssertTime(joe, livesIn, ny, origins.MustParseTime("September 20, 2009")),
+		fact.RetractTime(joe, livesIn, ny, origins.MustParseTime("June 19, 2012")),
+		fact.AssertTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.RetractTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.AssertTime(joe, livesIn, pa, origins.MustParseTime("March 6, 2013")),
 	}
 
 	testDomainGaps(t, facts)
@@ -56,11 +57,11 @@ func TestDomainGapsOrdered(t *testing.T) {
 // pair.
 func TestDomainGapsLateRetract(t *testing.T) {
 	facts := fact.Facts{
-		fact.AssertTime(joe, livesIn, ny, fact.MustParseTime("September 20, 2009")),
-		fact.AssertTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.RetractTime(joe, livesIn, ny, fact.MustParseTime("June 19, 2012")),
-		fact.RetractTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.AssertTime(joe, livesIn, pa, fact.MustParseTime("March 6, 2013")),
+		fact.AssertTime(joe, livesIn, ny, origins.MustParseTime("September 20, 2009")),
+		fact.AssertTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.RetractTime(joe, livesIn, ny, origins.MustParseTime("June 19, 2012")),
+		fact.RetractTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.AssertTime(joe, livesIn, pa, origins.MustParseTime("March 6, 2013")),
 	}
 
 	testDomainGaps(t, facts)
@@ -70,11 +71,11 @@ func TestDomainGapsLateRetract(t *testing.T) {
 // is known *not* to be true, but it is not known when it was began to be true.
 func TestDomainGapsEarlyRetract(t *testing.T) {
 	facts := fact.Facts{
-		fact.RetractTime(joe, livesIn, ny, fact.MustParseTime("June 19, 2012")),
-		fact.AssertTime(joe, livesIn, ny, fact.MustParseTime("September 20, 2009")),
-		fact.AssertTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.RetractTime(joe, livesIn, ca, fact.MustParseTime("March 3, 2013")),
-		fact.AssertTime(joe, livesIn, pa, fact.MustParseTime("March 6, 2013")),
+		fact.RetractTime(joe, livesIn, ny, origins.MustParseTime("June 19, 2012")),
+		fact.AssertTime(joe, livesIn, ny, origins.MustParseTime("September 20, 2009")),
+		fact.AssertTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.RetractTime(joe, livesIn, ca, origins.MustParseTime("March 3, 2013")),
+		fact.AssertTime(joe, livesIn, pa, origins.MustParseTime("March 6, 2013")),
 	}
 
 	testDomainGaps(t, facts)
