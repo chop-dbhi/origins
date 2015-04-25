@@ -29,7 +29,7 @@ dev-install: install test-install
 	go get github.com/mitchellh/gox
 
 test:
-	go test -v -cover ./...
+	go test -cover ./...
 
 build:
 	mkdir -p bin
@@ -43,7 +43,7 @@ build:
 
 
 bench:
-	go test -v -run=none -bench=. ./... | prettybench
+	go test -run=none -bench=. ./... | prettybench
 
 fmt:
 	go vet ./...
