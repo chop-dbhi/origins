@@ -43,5 +43,5 @@ func TestCSVReader(t *testing.T) {
 	ns := time.Date(2015, 3, 6, 0, 0, 0, 0, time.UTC).UnixNano()
 
 	assert.Equal(t, ns, bk.Time)
-	assert.Equal(t, "retract", facts[3].Operation)
+	assert.Equal(t, RetractOp, facts[3].Operation)
 }
