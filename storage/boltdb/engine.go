@@ -32,11 +32,13 @@ func (e *Engine) Get(k string) ([]byte, error) {
 
 	defer db.Close()
 
-	var v []byte
+	var s, v []byte
 
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(e.bucket)
-		v = b.Get([]byte(k))
+		s = b.Get([]byte(k))
+		v = make([]byte, len(s))
+		copy(v, s)
 		return nil
 	})
 
