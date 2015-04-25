@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
 )
@@ -98,6 +99,7 @@ func processGaps(threshold time.Duration, facts fact.Facts) *GapSet {
 	fact.TimsortBy(fact.TimeComparator, facts)
 
 	var (
+		diff time.Duration
 		r    *fact.Fact
 		gaps = make([]*Gap, 0)
 	)
@@ -111,12 +113,14 @@ func processGaps(threshold time.Duration, facts fact.Facts) *GapSet {
 			continue
 		}
 
+		diff = origins.DiffTime(f.Time, r.Time)
+
 		// Difference in times exceed the threshold
-		if f.Time-r.Time > int64(threshold) {
+		if diff > threshold {
 			gaps = append(gaps, &Gap{
 				Retracted: r.Value,
 				Asserted:  f.Value,
-				Duration:  time.Duration(f.Time - r.Time),
+				Duration:  diff,
 			})
 		}
 	}

@@ -32,6 +32,12 @@ var (
 	}
 )
 
+// DiffTime returns the difference between two timestamps in
+// as a time.Duration to interop with the time package.
+func DiffTime(t1, t2 int64) time.Duration {
+	return time.Duration((t1 - t2) * 1000)
+}
+
 // ToTime coverts a microsecond resolution timestamp into a time.Time value.
 func ToTime(ts int64) time.Time {
 	// Truncate the floating point which will be the nanosecond resolution.
