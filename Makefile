@@ -28,7 +28,7 @@ dev-install: install test-install
 	go get github.com/mitchellh/gox
 
 test:
-	go test -v -cover ./...
+	go test -cover ./...
 
 build:
 	go build -o $(GOPATH)/bin/origins ./cli
@@ -44,7 +44,7 @@ build-all: build
 
 
 bench:
-	go test -v -run=none -bench=. ./... | prettybench
+	go test -run=none -bench=. ./... | prettybench
 
 fmt:
 	go vet ./...
