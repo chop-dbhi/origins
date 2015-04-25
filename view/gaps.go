@@ -1,7 +1,6 @@
 package view
 
 import (
-	"sort"
 	"sync"
 	"time"
 
@@ -37,12 +36,12 @@ type GapSet struct {
 // time and evaluated for gaps in parallel.
 func Gaps(facts fact.Facts, threshold time.Duration) []*GapSet {
 	index := make(map[string]map[string]int)
-	batches := make([]fact.FactsByValidTime, 0)
+	batches := make([]fact.Facts, 0)
 
 	var (
 		ok    bool
 		pos   int
-		batch fact.FactsByValidTime
+		batch fact.Facts
 		attrs map[string]int
 	)
 
@@ -52,7 +51,7 @@ func Gaps(facts fact.Facts, threshold time.Duration) []*GapSet {
 			attrs = make(map[string]int)
 			attrs[f.Attribute.String()] = len(batches)
 
-			batches = append(batches, fact.FactsByValidTime{f})
+			batches = append(batches, fact.Facts{f})
 
 			index[f.Entity.String()] = attrs
 		} else {
@@ -72,7 +71,7 @@ func Gaps(facts fact.Facts, threshold time.Duration) []*GapSet {
 
 	// Process batches in parallel
 	for _, facts := range batches {
-		go func(facts fact.FactsByValidTime) {
+		go func(facts fact.Facts) {
 			gs := processGaps(threshold, facts)
 
 			if gs != nil {
@@ -94,9 +93,9 @@ func Gaps(facts fact.Facts, threshold time.Duration) []*GapSet {
 	return gapsets
 }
 
-func processGaps(threshold time.Duration, facts fact.FactsByValidTime) *GapSet {
+func processGaps(threshold time.Duration, facts fact.Facts) *GapSet {
 	// Sort by valid time.
-	sort.Sort(facts)
+	fact.TimsortBy(fact.TimeComparator, facts)
 
 	var (
 		r    *fact.Fact

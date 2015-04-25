@@ -19,6 +19,7 @@ install:
 	go get github.com/spf13/cobra
 	go get github.com/julienschmidt/httprouter
 	go get github.com/rs/cors
+	go get github.com/psilva261/timsort
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover
