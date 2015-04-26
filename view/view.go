@@ -3,6 +3,7 @@ package view
 import (
 	"time"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
 )
 
@@ -27,7 +28,7 @@ func (v *View) Domain(n string) *Domain {
 func Range(s *storage.Store, min, max int64) *View {
 	// Explicit upper bound if not set.
 	if max <= 0 {
-		max = time.Now().UnixNano()
+		max = origins.FromTime(time.Now())
 	}
 
 	return &View{

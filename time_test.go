@@ -43,20 +43,23 @@ func TestParseTime(t *testing.T) {
 		err  error
 	)
 
+	// Local time
 	now := time.Now()
 
 	times := map[string]time.Time{
-		"5m":                now.Add(time.Duration(time.Minute * 5)),
-		"-0h":               now.Add(-time.Duration(time.Hour * 0)),
-		"-48h5m":            now.Add(-time.Duration(time.Hour*48 + time.Minute*5)),
-		"2013-04-10":        time.Date(2013, 4, 10, 0, 0, 0, 0, time.UTC),
-		"April 4, 2013":     time.Date(2013, 4, 4, 0, 0, 0, 0, time.UTC),
-		"Apr 04, 2013":      time.Date(2013, 4, 4, 0, 0, 0, 0, time.UTC),
+		"5m":     now.Add(time.Duration(time.Minute * 5)),
+		"-0h":    now.Add(-time.Duration(time.Hour * 0)),
+		"-48h5m": now.Add(-time.Duration(time.Hour*48 + time.Minute*5)),
+
+		// UTC
+		"2013-04-10":        time.Date(2013, 4, 10, 0, 0, 0, 0, time.Local),
+		"April 4, 2013":     time.Date(2013, 4, 4, 0, 0, 0, 0, time.Local),
+		"Apr 04, 2013":      time.Date(2013, 4, 4, 0, 0, 0, 0, time.Local),
 		"47065363200000000": time.Date(1492, 6, 11, 0, 0, 0, 0, time.UTC),
 	}
 
 	// Duration to truncate for comparison.
-	td := time.Duration(time.Second)
+	td := time.Second
 
 	for s, x = range times {
 		i, err = ParseTime(s)

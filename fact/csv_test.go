@@ -41,7 +41,7 @@ func TestCSVReader(t *testing.T) {
 	assert.Equal(t, bk.Entity.Domain, "test")
 	assert.Equal(t, bk.Entity.Local, "bob")
 
-	ts := origins.FromTime(time.Date(2015, 3, 6, 0, 0, 0, 0, time.UTC))
+	ts := origins.FromTime(time.Date(2015, 3, 6, 0, 0, 0, 0, time.Local))
 
 	assert.Equal(t, ts, bk.Time)
 	assert.Equal(t, RetractOp, facts[3].Operation)
