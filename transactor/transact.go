@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/storage"
@@ -361,7 +362,7 @@ func (tx *Transaction) Test() Results {
 // New initializes a new transaction
 func New(store *storage.Store) *Transaction {
 	// Get the current time to isolate the view.
-	now := time.Now().UnixNano()
+	now := origins.FromTime(time.Now())
 
 	return &Transaction{
 		Store:   store,

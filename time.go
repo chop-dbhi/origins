@@ -55,6 +55,9 @@ func ToTime(ts int64) time.Time {
 
 // FromTime converts a time.Time value in a microsecond resolution timestamp.
 func FromTime(t time.Time) int64 {
+	// Ensure the time is in UTC
+	t = t.UTC()
+
 	yr := int64(t.Year() - 1)
 
 	// Elapsed taking in to account leap years.
@@ -79,20 +82,21 @@ func ParseTime(s string) (int64, error) {
 	d, err = time.ParseDuration(s)
 
 	if err == nil {
+		// Apply duration relative to local time.
 		t = time.Now().Add(d)
 		return FromTime(t), nil
 	}
 
-	// Absolute time
+	// Parse as local time.
 	for _, layout := range timeLayouts {
-		t, err = time.Parse(layout, s)
+		t, err = time.ParseInLocation(layout, s, time.Local)
 
 		if err == nil {
 			return FromTime(t), nil
 		}
 	}
 
-	// Timestamp
+	// Timestamp; assume this is UTC time.
 	i, err := strconv.ParseInt(s, 10, 64)
 
 	if err == nil {

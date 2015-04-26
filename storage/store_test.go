@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/sirupsen/logrus"
@@ -64,7 +65,7 @@ func TestStoreWriteSegment(t *testing.T) {
 		fact.Assert(e, a, v),
 	}
 
-	now := time.Now().UnixNano()
+	now := origins.FromTime(time.Now())
 
 	n, err := store.WriteSegment(domain, uint64(now), input, true)
 
@@ -114,7 +115,7 @@ func benchWriteSegment(b *testing.B, n int) {
 		input[i] = fact.Assert(e, a, v)
 	}
 
-	now := uint64(time.Now().UnixNano())
+	now := uint64(origins.FromTime(time.Now()))
 
 	for i := 0; i < b.N; i++ {
 		store.WriteSegment(domain, now+uint64(i), input, true)

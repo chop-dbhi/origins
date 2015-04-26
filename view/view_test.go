@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/testutil"
@@ -33,8 +34,9 @@ func TestViewMin(t *testing.T) {
 
 	store := testutil.Store()
 
-	// Before the store was populated.
-	t0 = time.Now().UnixNano()
+	// Before the store was populated. Offset by one microsecond to
+	// mimic pre-transaction.
+	t0 = origins.FromTime(time.Now()) - 1
 
 	facts = fact.NewReader(fact.Facts{
 		fact.Assert(joe, livesIn, ny),
