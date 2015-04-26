@@ -28,7 +28,10 @@ func TestTime(t *testing.T) {
 
 	for ts, tm := range times {
 		assert.Equal(t, ts, FromTime(tm))
-		assert.Equal(t, tm, ToTime(ts))
+
+		if !tm.Equal(ToTime(ts)) {
+			t.Errorf("time: expected %s, got %s", tm, ToTime(ts))
+		}
 	}
 }
 

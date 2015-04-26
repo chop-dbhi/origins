@@ -40,10 +40,17 @@ func DiffTime(t1, t2 int64) time.Duration {
 
 // ToTime coverts a microsecond resolution timestamp into a time.Time value.
 func ToTime(ts int64) time.Time {
-	// Truncate the floating point which will be the nanosecond resolution.
-	days := int(ts / usPerSecond / secondsPerDay)
+	// Integer division will truncate the floating point.
+	days := ts / secondsPerDay / usPerSecond
 
-	return zeroTime.AddDate(0, 0, days)
+	// Get the remaining microseconds
+	us := ts - days*secondsPerDay*usPerSecond
+
+	// Add the days
+	t := zeroTime.AddDate(0, 0, int(days))
+
+	// Add remaining microseconds. Convert to local time.
+	return t.Add(time.Duration(us) * time.Microsecond).Local()
 }
 
 // FromTime converts a time.Time value in a microsecond resolution timestamp.
