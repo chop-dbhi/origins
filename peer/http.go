@@ -14,6 +14,7 @@ import (
 	"github.com/chop-dbhi/origins/storage/memory"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -72,10 +73,20 @@ func ServeHTTP() {
 	router.GET("/domains/:domain/facts", httpDomainFacts)
 	router.GET("/domains/:domain/aggregate/*ident", httpAggregateEntity)
 
+	// Add CORS middleware
+	c := cors.New(cors.Options{
+		ExposedHeaders: []string{
+			"Link",
+			"Link-Template",
+		},
+	})
+
+	handler := c.Handler(router)
+
 	// Serve it up.
 	logrus.Infof("* Listening on %s...", addr)
 
-	logrus.Fatal(http.ListenAndServe(addr, router))
+	logrus.Fatal(http.ListenAndServe(addr, handler))
 }
 
 func jsonResponse(w http.ResponseWriter, v interface{}) {
