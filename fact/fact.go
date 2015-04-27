@@ -3,6 +3,7 @@ package fact
 import (
 	"fmt"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/golang/protobuf/proto"
 )
@@ -99,7 +100,7 @@ func (f *Fact) FromProto(m proto.Message) error {
 
 // String satisfies the Stringer interface.
 func (f *Fact) String() string {
-	return fmt.Sprintf("(%s %s %s %s)", f.Operation, f.Entity, f.Attribute, f.Value)
+	return fmt.Sprintf("(%s %s %s %s %s)", f.Operation, f.Entity, f.Attribute, f.Value, origins.ToTime(f.Time))
 }
 
 // Added returns true if the fact is asserted.

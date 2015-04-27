@@ -1,7 +1,19 @@
 package fact
 
+import "strings"
+
 // Facts is a slice of facts.
 type Facts []*Fact
+
+func (fs Facts) String() string {
+	toks := make([]string, len(fs))
+
+	for i, f := range fs {
+		toks[i] = f.String()
+	}
+
+	return strings.Join(toks, "\n")
+}
 
 // Concat takes multiple fact slices and concatenates them together.
 func Concat(fs ...Facts) Facts {
