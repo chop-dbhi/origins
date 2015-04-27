@@ -1,22 +1,31 @@
 package peer
 
 import (
+	"compress/bzip2"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/fact"
 	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/storage/boltdb"
 	"github.com/chop-dbhi/origins/storage/memory"
+	"github.com/chop-dbhi/origins/transactor"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+)
+
+const (
+	StatusUnprocessableEntity = 422
 )
 
 var store *storage.Store
@@ -64,8 +73,12 @@ func ServeHTTP() {
 
 	router.GET("/", httpRoot)
 	router.GET("/stats", httpStats)
+
 	router.GET("/domains", httpDomains)
+
 	router.GET("/domains/:domain", httpDomain)
+	router.POST("/domains/:domain", httpPostDomain)
+
 	router.GET("/domains/:domain/stats", httpDomainStats)
 	router.GET("/domains/:domain/entities", httpDomainEntities)
 	router.GET("/domains/:domain/attributes", httpDomainAttributes)
@@ -119,6 +132,100 @@ func httpDomains(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	v := view.Now(store).Domain("origins.domains")
 
 	jsonResponse(w, v.Entities())
+}
+
+func httpPostDomain(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	domain := p.ByName("domain")
+
+	var (
+		fake bool
+		ce   string
+		ct   string
+		err  error
+		fr   fact.Reader
+		rd   io.Reader = r.Body
+	)
+
+	// If the fake parameter is present, do not commit the transaction.
+	_, fake = r.URL.Query()["fake"]
+
+	ct = r.Header.Get("Content-Type")
+	ce = r.Header.Get("Content-Encoding")
+
+	// Apply decompression.
+	if ce != "" {
+		switch ce {
+		case "bzip2":
+			rd = bzip2.NewReader(rd)
+		case "gzip":
+			if rd, err = gzip.NewReader(rd); err != nil {
+				w.WriteHeader(StatusUnprocessableEntity)
+
+				jsonResponse(w, map[string]string{
+					"error": err.Error(),
+				})
+
+				return
+			}
+		default:
+			w.WriteHeader(StatusUnprocessableEntity)
+
+			jsonResponse(w, map[string]string{
+				"error": fmt.Sprintf("unsupported content-encoding %s", ce),
+			})
+
+			return
+		}
+	}
+
+	// Wrap in a reader to handle carriage returns before passing
+	// it into the reader.
+	rd = &origins.UniversalReader{rd}
+
+	if ct == "" {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+
+		jsonResponse(w, map[string]string{
+			"error": "content-type required",
+		})
+
+		return
+	}
+
+	switch ct {
+	case "text/csv":
+		fr = fact.CSVReader(rd)
+	case "application/json":
+		fr = fact.JSONStreamReader(rd)
+	default:
+		w.WriteHeader(StatusUnprocessableEntity)
+
+		jsonResponse(w, map[string]string{
+			"error": fmt.Sprintf("unsupported content-type %s", ct),
+		})
+
+		return
+	}
+
+	var results transactor.Results
+
+	if fake {
+		results, err = transactor.Test(store, fr, domain, false)
+	} else {
+		results, err = transactor.Commit(store, fr, domain, false)
+	}
+
+	if err != nil {
+		w.WriteHeader(StatusUnprocessableEntity)
+
+		jsonResponse(w, map[string]string{
+			"error": err.Error(),
+		})
+
+		return
+	}
+
+	jsonResponse(w, results)
 }
 
 func httpDomain(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
