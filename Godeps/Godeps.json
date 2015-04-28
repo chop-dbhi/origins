@@ -1,0 +1,123 @@
+{
+	"ImportPath": "github.com/chop-dbhi/origins",
+	"GoVersion": "go1.4.2",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/BurntSushi/toml",
+			"Comment": "v0.1.0-18-g443a628",
+			"Rev": "443a628bc233f634a75bcbdd71fe5350789f1afa"
+		},
+		{
+			"ImportPath": "github.com/armon/consul-api",
+			"Rev": "dcfedd50ed5334f96adee43fc88518a4f095e15c"
+		},
+		{
+			"ImportPath": "github.com/boltdb/bolt",
+			"Comment": "v1.0-43-gcf33c9e",
+			"Rev": "cf33c9e0ca0a23509b8bb8edfc63e4776bb1a330"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/etcdserver/etcdhttp/httptypes",
+			"Comment": "v2.0.3-42-g6648b7e",
+			"Rev": "6648b7e3021502d1b77248f72eb7322895df7e9f"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/types",
+			"Comment": "v2.0.3-42-g6648b7e",
+			"Rev": "6648b7e3021502d1b77248f72eb7322895df7e9f"
+		},
+		{
+			"ImportPath": "github.com/coreos/go-etcd/etcd",
+			"Comment": "v0.4.6-6-g4734e7a",
+			"Rev": "4734e7aca379f0d7fcdf04fbb2101696a4b45ce8"
+		},
+		{
+			"ImportPath": "github.com/golang/protobuf/proto",
+			"Rev": "c22ae3cf020a21ebb7ae566dccbe90fc8ea4f9ea"
+		},
+		{
+			"ImportPath": "github.com/julienschmidt/httprouter",
+			"Rev": "bde5c16eb82ff15a1734a3818d9b9547065f65b1"
+		},
+		{
+			"ImportPath": "github.com/kr/pretty",
+			"Comment": "go.weekly.2011-12-22-26-gcb0850c",
+			"Rev": "cb0850c1681cbca3233e84f7e6ec3e4c3f352085"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "6807e777504f54ad073ecef66747de158294b639"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "442e588f213303bec7936deba67901f8fc8f18b1"
+		},
+		{
+			"ImportPath": "github.com/psilva261/timsort",
+			"Rev": "4537dc9bd679bfb730b72f2e8c33b46676521337"
+		},
+		{
+			"ImportPath": "github.com/rs/cors",
+			"Rev": "d3da3650fa15dea375e518f6dba0e3ba1a284433"
+		},
+		{
+			"ImportPath": "github.com/sirupsen/logrus",
+			"Comment": "v0.6.5",
+			"Rev": "c0f7e35ed2e48f188c37581b4b743cf7383f85c6"
+		},
+		{
+			"ImportPath": "github.com/spf13/cast",
+			"Rev": "2318c5caf29c12b280396d29a9912a0a0d616171"
+		},
+		{
+			"ImportPath": "github.com/spf13/cobra",
+			"Rev": "f8e1ec56bdd7494d309c69681267859a6bfb7549"
+		},
+		{
+			"ImportPath": "github.com/spf13/jwalterweatherman",
+			"Rev": "3d60171a64319ef63c78bd45bd60e6eab1e75f8b"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "370c3171201099fa6b466db45c8a032cbce33d8d"
+		},
+		{
+			"ImportPath": "github.com/spf13/viper",
+			"Rev": "6c5a915341f6d411a84ac2ee5a99569c2bc4b7f4"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Rev": "e4ec8152c15fc46bd5056ce65997a07c7d415325"
+		},
+		{
+			"ImportPath": "github.com/xordataexchange/crypt/backend",
+			"Comment": "v0.0.2-11-g0499a3c",
+			"Rev": "0499a3c94698e44032bd5fab8ba6f45672406678"
+		},
+		{
+			"ImportPath": "github.com/xordataexchange/crypt/config",
+			"Comment": "v0.0.2-11-g0499a3c",
+			"Rev": "0499a3c94698e44032bd5fab8ba6f45672406678"
+		},
+		{
+			"ImportPath": "github.com/xordataexchange/crypt/encoding/secconf",
+			"Comment": "v0.0.2-11-g0499a3c",
+			"Rev": "0499a3c94698e44032bd5fab8ba6f45672406678"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/cast5",
+			"Rev": "1351f936d976c60a0a48d728281922cf63eafb8d"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/openpgp",
+			"Rev": "1351f936d976c60a0a48d728281922cf63eafb8d"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
+		}
+	]
+}
