@@ -19,15 +19,31 @@ var (
 	zeroTime = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	timeLayouts = []string{
+		"02-01-2006",
+		"02-01-2006 3:04 PM",
+		"02-01-2006 3:04 PM -0700",
+		"02-01-2006 3:04 PM -07:00",
+		"_2 January 2006",
+		"_2 January 2006 3:04 PM",
+		"_2 January 2006 3:04 PM -0700",
+		"_2 January 2006 3:04 PM -07:00",
 		"2006-01-02",
 		"2006-01-02 3:04 PM",
-		"Jan _2, 2006",
-		"January _2, 2006",
-		time.RFC3339,
+		"2006-01-02 3:04 PM -0700",
+		"2006-01-02 3:04 PM -07:00",
 		time.RFC1123,
 		time.RFC1123Z,
 		time.RFC822,
 		time.RFC822Z,
+		"January _2, 2006",
+		"January _2, 2006 3:04 PM",
+		"January _2, 2006 3:04 PM -0700",
+		"January _2, 2006 3:04 PM -07:00",
+		"Jan _2, 2006",
+		"Jan _2, 2006, 3:04 PM",
+		"Jan _2, 2006 3:04 PM -0700",
+		"Jan _2, 2006 3:04 PM -07:00",
+		time.RFC3339,
 		time.ANSIC,
 	}
 )
@@ -87,9 +103,9 @@ func ParseTime(s string) (int64, error) {
 		return FromTime(t), nil
 	}
 
-	// Parse as local time.
+	// Parse time.
 	for _, layout := range timeLayouts {
-		t, err = time.ParseInLocation(layout, s, time.Local)
+		t, err = time.Parse(layout, s)
 
 		if err == nil {
 			return FromTime(t), nil
