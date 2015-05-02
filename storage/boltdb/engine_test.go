@@ -1,24 +1,21 @@
 package boltdb
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/chop-dbhi/origins/fact"
-	"github.com/chop-dbhi/origins/identity"
 	"github.com/chop-dbhi/origins/storage"
 )
 
-func TestStore(t *testing.T) {
+func TestEngine(t *testing.T) {
 	f, _ := ioutil.TempFile("", "")
 
 	defer func() {
 		os.Remove(f.Name())
 	}()
 
-	store, err := Open(&storage.Options{
+	engine, err := Open(&storage.Options{
 		Path: f.Name(),
 	})
 
@@ -29,37 +26,63 @@ func TestStore(t *testing.T) {
 	// Close handle
 	f.Close()
 
-	k := "data"
+	k := "hello"
+	v := "world"
 
-	facts := fact.Facts{
-		fact.Assert(identity.MustParse("test:i1"), nil, nil),
-		fact.Assert(identity.MustParse("test:i2"), nil, nil),
-	}
-
-	b, _ := json.Marshal(&facts)
-
-	if err := store.Set(k, b); err != nil {
+	if err := engine.Set(k, []byte(v)); err != nil {
 		t.Fatal(err)
 	}
 
-	b, err = store.Get(k)
+	b, err := engine.Get(k)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := json.Unmarshal(b, &facts); err != nil {
-		t.Fatal(err)
+	if string(b) != v {
+		t.Errorf("boltdb: expected %s, got %s", v, string(b))
 	}
 
-	if len(facts) != 2 {
-		t.Fatalf("length is %d", len(facts))
+	id, err := engine.Incr("counter")
+
+	if err != nil {
+		t.Fatalf("boltdb: incr error %s", err)
 	}
 
-	f1 := facts[0]
-	f2 := facts[1]
+	if id != 1 {
+		t.Errorf("boltdb: expected 1, got %v", id)
+	}
 
-	if f1.Entity.Local == "i2" && f2.Entity.Local != "i2" {
-		t.Fatalf("bad data %v", facts)
+	id, err = engine.Incr("counter")
+
+	if err != nil {
+		t.Fatalf("boltdb: incr error %s", err)
+	}
+
+	if id != 2 {
+		t.Errorf("boltdb: expected 2, got %v", id)
+	}
+}
+
+func BenchmarkIncr(b *testing.B) {
+	f, _ := ioutil.TempFile("", "")
+
+	defer func() {
+		os.Remove(f.Name())
+	}()
+
+	engine, err := Open(&storage.Options{
+		Path: f.Name(),
+	})
+
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	// Close handle
+	f.Close()
+
+	for i := 0; i < b.N; i++ {
+		engine.Incr("counter")
 	}
 }

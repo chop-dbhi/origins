@@ -1,5 +1,10 @@
 package storage
 
+import (
+	"encoding/binary"
+	"errors"
+)
+
 // Options is a general map of storage options.
 type Options struct {
 	// Path is the path to the file or directory for a filesystem-based
@@ -17,6 +22,9 @@ type Engine interface {
 
 	// Set takes a key and bytes and writes it to the store.
 	Set(string, []byte) error
+
+	// Incr increments a stored number or sets it to one for new entries.
+	Incr(string) (uint64, error)
 
 	// SetMany takes a batch and writes it to the store. For
 	// storage engines that support atomic operations, this
@@ -41,6 +49,34 @@ func (e *testEngine) Get(k string) ([]byte, error) {
 func (e *testEngine) Set(k string, v []byte) error {
 	e.bins[k] = v
 	return nil
+}
+
+func (e *testEngine) Incr(k string) (uint64, error) {
+	var (
+		ok   bool
+		id   uint64
+		buf  []byte
+		erri int
+	)
+
+	if buf, ok = e.bins[k]; ok {
+		id, erri = binary.Uvarint(buf)
+
+		if erri == 0 {
+			return 0, errors.New("testengine: buffer too small for value")
+		} else if erri < 0 {
+			return 0, errors.New("testengine: value larger than 64 bits")
+		}
+	}
+
+	buf = make([]byte, 8)
+
+	id += 1
+
+	n := binary.PutUvarint(buf, id)
+	e.bins[k] = buf[:n]
+
+	return id, nil
 }
 
 func (e *testEngine) SetMany(b Batch) error {

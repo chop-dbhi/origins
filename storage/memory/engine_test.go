@@ -1,51 +1,52 @@
 package memory
 
-import (
-	"encoding/json"
-	"testing"
+import "testing"
 
-	"github.com/chop-dbhi/origins/fact"
-	"github.com/chop-dbhi/origins/identity"
-)
+func TestEngine(t *testing.T) {
+	engine, _ := Open(nil)
 
-func TestStore(t *testing.T) {
-	store, _ := Open(nil)
+	k := "hello"
+	v := "world"
 
-	k := "data"
-
-	facts := fact.Facts{
-		fact.Assert(identity.MustParse("test:i1"), nil, nil),
-		fact.Assert(identity.MustParse("test:i2"), nil, nil),
+	if err := engine.Set(k, []byte(v)); err != nil {
+		t.Fatal(err)
 	}
 
-	b, err := json.Marshal(&facts)
+	b, err := engine.Get(k)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := store.Set(k, b); err != nil {
-		t.Fatal(err)
+	if string(b) != v {
+		t.Errorf("memory: expected %s, got %s", v, string(b))
 	}
 
-	b, err = store.Get(k)
+	id, err := engine.Incr("counter")
 
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("memory: incr error %s", err)
 	}
 
-	if err := json.Unmarshal(b, &facts); err != nil {
-		t.Fatal(err)
+	if id != 1 {
+		t.Errorf("memory: expected 1, got %v", id)
 	}
 
-	if len(facts) != 2 {
-		t.Fatalf("length is %d", len(facts))
+	id, err = engine.Incr("counter")
+
+	if err != nil {
+		t.Fatalf("memory: incr error %s", err)
 	}
 
-	f1 := facts[0]
-	f2 := facts[1]
+	if id != 2 {
+		t.Errorf("memory: expected 2, got %v", id)
+	}
+}
 
-	if f1.Entity.Local == "i2" && f2.Entity.Local != "i2" {
-		t.Fatalf("bad data %v", facts)
+func BenchmarkIncr(b *testing.B) {
+	engine, _ := Open(nil)
+
+	for i := 0; i < b.N; i++ {
+		engine.Incr("counter")
 	}
 }

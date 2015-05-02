@@ -5,6 +5,7 @@ key/value store.
 package boltdb
 
 import (
+	"encoding/binary"
 	"errors"
 
 	"github.com/boltdb/bolt"
@@ -18,13 +19,12 @@ var (
 )
 
 type Engine struct {
-	Options storage.Options
-	path    *bolt.DB
-	bucket  []byte
+	Path   string
+	bucket []byte
 }
 
 func (e *Engine) Get(k string) ([]byte, error) {
-	db, err := bolt.Open(e.Options.Path, 0600, nil)
+	db, err := bolt.Open(e.Path, 0600, nil)
 
 	if err != nil {
 		return nil, err
@@ -49,8 +49,56 @@ func (e *Engine) Get(k string) ([]byte, error) {
 	return v, nil
 }
 
+func (e *Engine) Incr(k string) (uint64, error) {
+	db, err := bolt.Open(e.Path, 0600, nil)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer db.Close()
+
+	var (
+		id   uint64
+		buf  []byte
+		erri int
+	)
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(e.bucket)
+
+		key := []byte(k)
+
+		buf = b.Get(key)
+
+		if buf != nil {
+			id, erri = binary.Uvarint(buf)
+
+			if erri == 0 {
+				return errors.New("boltdb: buffer too small for value")
+			} else if erri < 0 {
+				return errors.New("boltdb: value larger than 64 bits")
+			}
+		}
+
+		buf = make([]byte, 8)
+
+		id += 1
+
+		n := binary.PutUvarint(buf, id)
+
+		return b.Put(key, buf[:n])
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
 func (e *Engine) Set(k string, v []byte) error {
-	db, err := bolt.Open(e.Options.Path, 0600, nil)
+	db, err := bolt.Open(e.Path, 0600, nil)
 
 	if err != nil {
 		return err
@@ -60,12 +108,13 @@ func (e *Engine) Set(k string, v []byte) error {
 
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(e.bucket)
+
 		return b.Put([]byte(k), v)
 	})
 }
 
 func (e *Engine) SetMany(b storage.Batch) error {
-	db, err := bolt.Open(e.Options.Path, 0600, nil)
+	db, err := bolt.Open(e.Path, 0600, nil)
 
 	if err != nil {
 		return err
@@ -121,8 +170,8 @@ func Open(opts *storage.Options) (*Engine, error) {
 	}
 
 	e := Engine{
-		Options: *opts,
-		bucket:  bucket,
+		Path:   opts.Path,
+		bucket: bucket,
 	}
 
 	return &e, nil
