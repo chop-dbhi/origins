@@ -1,0 +1,31 @@
+package transactor;
+
+message ProtoIndex {
+    message keyValue {
+        required string key = 1;
+        required int32 value = 2;
+    }
+
+    message keyValueTime {
+        required int64 key = 1;
+        required int32 value = 2;
+    }
+
+    repeated keyValue Domains = 1;
+    repeated keyValue Entities = 2;
+    repeated keyValue Attributes = 3;
+    repeated keyValue Values = 4;
+    required keyValueTime Times = 5;
+}
+
+message ProtoIndexedFact {
+    required int32 Domain = 1;
+    required int32 Time = 2;
+    required bool Operation = 3;
+    required int32 EntityDomain = 4;
+    required int32 Entity = 5;
+    required int32 AttributeDomain = 6;
+    required int32 Attribute = 7;
+    required int32 ValueDomain = 8;
+    required int32 Value = 9;
+}

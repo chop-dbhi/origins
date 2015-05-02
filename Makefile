@@ -9,6 +9,7 @@ doc:
 proto:
 	protoc --go_out=. fact/*.proto
 	protoc --go_out=. storage/*.proto
+	protoc --go_out=. transactor/*.proto
 
 install:
 	go get github.com/tools/godep
