@@ -10,12 +10,14 @@ import (
 
 // Random facts, reset after each iteration
 func benchTransactRandomReset(b *testing.B, n int) {
+	d := "test"
+
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
 		store := testutil.Store()
 
-		facts := testutil.RandFacts(n, "test")
+		facts := testutil.RandFacts(n, d, d, d, d)
 		r := fact.NewReader(facts)
 
 		b.StartTimer()
@@ -39,11 +41,12 @@ func BenchmarkTransactRandomReset__1000(b *testing.B) {
 // Random facts, persist across iterations. This tests the redundancy checker.
 func benchTransactRandomPersistent(b *testing.B, n int) {
 	store := testutil.Store()
+	d := "test"
 
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		facts := testutil.RandFacts(n, "test")
+		facts := testutil.RandFacts(n, d, d, d, d)
 		r := fact.NewReader(facts)
 
 		b.StartTimer()

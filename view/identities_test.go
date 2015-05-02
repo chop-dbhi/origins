@@ -84,7 +84,8 @@ func randomize(facts fact.Facts) fact.Facts {
 }
 
 func benchIdentities(b *testing.B, n int) {
-	facts := testutil.RandFactsWithTx(n, "")
+	d := ""
+	facts := testutil.RandFactsWithTx(n, d, d, d, d)
 
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
