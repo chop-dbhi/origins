@@ -22,7 +22,7 @@ import (
 const (
 	// Version of the store. This is checked against the store header to
 	// determine if a migration needs to occur.
-	Version = 0
+	Version = 1
 
 	// Takes the store name.
 	storeKeyFmt = "origins.%s"
@@ -92,24 +92,24 @@ func (s *Store) init() error {
 	}
 
 	// Record of store does not exist.
-	if b == nil {
+	if b == nil || len(b) == 0 {
 		s.Version = Version
 
 		if err = s.writeHeader(); err != nil {
 			return err
 		}
 
-		logrus.Debugf("Initialized new store named '%s'", s.Name)
+		logrus.Debugf("storage: initialized new store '%s'", s.Name)
 	} else {
 		if err := UnmarshalProto(b, s); err != nil {
 			return err
 		}
 
-		if Version != s.Version {
-			logrus.Fatalf("Store version is '%s', but using '%s' version of the client.", s.Version, Version)
+		if Version < s.Version {
+			logrus.Fatalf("storage: version is '%s', but using '%s' version of the client.", s.Version, Version)
 		}
 
-		logrus.Debugf("Initialized existing store named '%s'", s.Name)
+		logrus.Debugf("storage: initialized existing store '%s'", s.Name)
 	}
 
 	// Setup internal fields.
