@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/fact"
@@ -78,32 +77,6 @@ func loadFile(store *storage.Store, r io.Reader, format, compression string) {
 	}
 }
 
-// detectFormat detects the file format based on the filename.
-func detectFormat(n string) string {
-	var ok bool
-
-	if ok, _ = regexp.MatchString(`(?i)\.csv\b`, n); ok {
-		return "csv"
-	} else if ok, _ = regexp.MatchString(`(?i)\.jsonstream\b`, n); ok {
-		return "jsonstream"
-	}
-
-	return ""
-}
-
-// detectCompression detects the file compression type based on the filename.
-func detectCompression(n string) string {
-	var ok bool
-
-	if ok, _ = regexp.MatchString(`(?i)\.gz\b`, n); ok {
-		return "gzip"
-	} else if ok, _ = regexp.MatchString(`(?i)\.(bzip2|bz2)\b`, n); ok {
-		return "bzip2"
-	}
-
-	return ""
-}
-
 var loadCmd = &cobra.Command{
 	Use: "load [path, ...]",
 
@@ -129,11 +102,11 @@ var loadCmd = &cobra.Command{
 			compression = viper.GetString("load_compression")
 
 			if format == "" {
-				format = detectFormat(fn)
+				format = origins.DetectFormat(fn)
 			}
 
 			if compression == "" {
-				compression = detectCompression(fn)
+				compression = origins.DetectCompression(fn)
 			}
 
 			file, err := os.Open(fn)
