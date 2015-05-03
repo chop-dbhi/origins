@@ -1,7 +1,6 @@
 package transactor
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -31,15 +30,6 @@ const (
 	macrosDomain = "origins.macros"
 )
 
-func TransactionError(s string) error {
-	return errors.New(fmt.Sprintf("Transaction error: %s", s))
-}
-
-func TransactionErrorf(s string, v ...interface{}) error {
-	msg := fmt.Sprintf(s, v...)
-	return errors.New(fmt.Sprintf("Transaction error: %s", msg))
-}
-
 type Transaction struct {
 	// Time is the time the transaction started.
 	Time int64
@@ -55,51 +45,48 @@ type Transaction struct {
 	domains map[string]fact.Facts
 }
 
-// newDomainFacts creates a fact about a domain.
-func (tx *Transaction) newDomainFacts(d string) fact.Facts {
-	var (
-		e, a, v *identity.Ident
-		f       *fact.Fact
-		facts   = make(fact.Facts, 2)
-	)
+// DomainFacts creates a fact about a domain.
+func (tx *Transaction) DomainFacts(d string) fact.Facts {
+	var e, a, v *identity.Ident
 
 	// Assert the identity of the domain.
 	e = identity.New("", d)
 	a = identity.New("origins", "attr/ident")
 	v = identity.New("", d)
 
-	f = fact.Assert(e, a, v)
+	ident := fact.Assert(e, a, v)
 
-	f.Domain = domainsDomain
-
-	facts[0] = f
+	tx.EvaluateFact(ident, domainsDomain, false)
 
 	// Assert the URI of this domain is local.
 	a = identity.New("origins", "attr/uri")
 	v = identity.New("", ".")
 
-	f = fact.Assert(e, a, v)
+	uri := fact.Assert(e, a, v)
 
-	f.Domain = domainsDomain
+	tx.EvaluateFact(uri, domainsDomain, false)
 
-	facts[1] = f
-
-	return facts
+	return fact.Facts{
+		ident,
+		uri,
+	}
 }
 
-// newDomainTxFact creates a fact about the transaction for a domain.
-func (tx *Transaction) newDomainTxFact(d string) *fact.Fact {
+// TxFact creates a fact about the transaction for a domain.
+func (tx *Transaction) TxFact(d string) *fact.Fact {
+	var e, a, v *identity.Ident
+
 	domain := fmt.Sprintf("origins.tx.%s", d)
 
 	ident := strconv.FormatInt(tx.Time, 10)
 
-	e := identity.New("", ident)
-	a := identity.New("origins", "attr/ident")
-	v := identity.New("", ident)
+	e = identity.New("", ident)
+	a = identity.New("origins", "attr/ident")
+	v = identity.New("", ident)
 
 	f := fact.Assert(e, a, v)
 
-	f.Domain = domain
+	tx.EvaluateFact(f, domain, false)
 
 	return f
 }
@@ -115,9 +102,12 @@ func (tx *Transaction) applyMacros(f *fact.Fact) (*fact.Fact, error) {
 			f.Entity.Domain = domainsDomain
 			break
 		case "tx":
-			f.Entity.Local = f.Domain
+			f.Domain = fmt.Sprintf("origins.tx.%s", f.Domain)
+			f.Entity.Domain = ""
+			f.Entity.Local = strconv.FormatInt(tx.Time, 10)
+			break
 		default:
-			return nil, errors.New(fmt.Sprintf("Unknown entity macro: %s", f.Entity.Local))
+			return nil, fmt.Errorf("transactor: unknown entity macro: %s", f.Entity.Local)
 		}
 	}
 
@@ -128,7 +118,7 @@ func (tx *Transaction) applyMacros(f *fact.Fact) (*fact.Fact, error) {
 			f.Value.Local = strconv.FormatInt(tx.Time, 10)
 			break
 		default:
-			return nil, errors.New(fmt.Sprintf("Unknown value macro: %s", f.Value.Local))
+			return nil, fmt.Errorf("transactor: unknown value macro: %s", f.Value.Local)
 		}
 	}
 
@@ -181,56 +171,62 @@ func (tx *Transaction) write(commit bool) Results {
 
 // evaluate evaluates a fact. It is compared against the previous version of the
 // fact if available and the schema characteristics of the associated attribute.
-func (tx *Transaction) evaluate(f *fact.Fact, domain string, strict bool) (*fact.Fact, error) {
+func (tx *Transaction) EvaluateFact(f *fact.Fact, domain string, strict bool) (*fact.Fact, error) {
 	var err error
 
 	// TODO(bjr): protect reserved domains, e.g. origins*. This would require a flag
 	// or alternate method for installing the protected domains themselves.
+
 	// Set the default domain or assert the strict constraint.
 	if f.Domain == "" {
 		if domain == "" {
-			err = TransactionError("no fact domain specified")
+			err = fmt.Errorf("transactor: no fact domain specified")
 			logrus.Error(err)
 			return nil, err
 		}
 
 		f.Domain = domain
 	} else if strict && domain != "" && f.Domain != domain {
-		err = TransactionErrorf("fact domain %s is not %s", f.Domain, domain)
+		err = fmt.Errorf("transactor: fact domain %s does not match %s", f.Domain, domain)
 		logrus.Error(err)
 		return nil, err
-	}
-
-	if f.Operation == "" {
-		f.Operation = fact.AssertOp
 	}
 
 	// Apply macros
 	f, err = tx.applyMacros(f)
 
-	if err != nil {
-		return nil, err
+	// Default to assertion.
+	if f.Operation == "" {
+		f.Operation = fact.AssertOp
 	}
 
-	// Check for duplicate
-	dv := tx.view.Domain(f.Domain)
-	r := dv.Reader()
+	// Default to fact domain.
+	if f.Entity.Domain == "" {
+		f.Entity.Domain = f.Domain
+	}
 
-	exists, err := fact.Exists(r, f.Is)
+	if f.Attribute.Domain == "" {
+		f.Attribute.Domain = f.Domain
+	}
+
+	if f.Value.Domain == "" {
+		f.Value.Domain = f.Domain
+	}
+
+	// Set the valid time if empty.
+	if f.Time == 0 {
+		f.Time = tx.Time
+	}
 
 	if err != nil {
 		return nil, err
-	}
-
-	if exists {
-		return nil, nil
 	}
 
 	return f, nil
 }
 
-func (tx *Transaction) transact(f *fact.Fact, domain string, strict bool) (*fact.Fact, error) {
-	f, err := tx.evaluate(f, domain, strict)
+func (tx *Transaction) TransactFact(f *fact.Fact, domain string, strict bool) (*fact.Fact, error) {
+	f, err := tx.EvaluateFact(f, domain, strict)
 
 	if err != nil {
 		return nil, err
@@ -244,10 +240,10 @@ func (tx *Transaction) transact(f *fact.Fact, domain string, strict bool) (*fact
 	// Split facts by domain.
 	if facts, ok := tx.domains[f.Domain]; !ok {
 		// Assert transaction facts for the domain.
-		txf := tx.newDomainTxFact(f.Domain)
+		txf := tx.TxFact(f.Domain)
 		tx.txs[f.Domain] = txf
 
-		dfacts := tx.newDomainFacts(f.Domain)
+		dfacts := tx.DomainFacts(f.Domain)
 
 		tx.domains[dfacts[0].Domain] = dfacts
 		tx.domains[txf.Domain] = fact.Facts{txf}
@@ -286,7 +282,7 @@ func (tx *Transaction) Transact(reader fact.Reader, domain string, strict bool) 
 
 		// Iterate over the buffered facts and process them.
 		for _, f = range buf[:n] {
-			tx.transact(f, domain, strict)
+			tx.TransactFact(f, domain, strict)
 		}
 
 		// No more facts to read.
@@ -324,7 +320,7 @@ func (tx *Transaction) Evaluate(reader fact.Reader, domain string, strict bool) 
 
 		// Iterate over the buffered facts and process them.
 		for _, f = range buf[:n] {
-			f, err = tx.evaluate(f, domain, strict)
+			f, err = tx.EvaluateFact(f, domain, strict)
 
 			if err != nil {
 				return nil, err
