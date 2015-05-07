@@ -3,8 +3,17 @@
 // as a key-value interface.
 package engine
 
-// Batch is group of key-value pairs that will be atomically set together.
-type Batch map[[2]string][]byte
+// Tx represents pseudo-transaction for a storage engine.
+type Tx interface {
+	// Get takes a key and returns the associated bytes.
+	Get(part, key string) ([]byte, error)
+
+	// Set takes a key and bytes and writes it to the store.
+	Set(part, key string, value []byte) error
+
+	// Incr increments a stored number or sets it to one for new entries.
+	Incr(part, key string) (uint64, error)
+}
 
 // Engine is an interface for defining storage engines.
 type Engine interface {
@@ -14,11 +23,12 @@ type Engine interface {
 	// Set takes a key and bytes and writes it to the store.
 	Set(part, key string, value []byte) error
 
-	// SetMany takes a batch and writes it to the store.
-	SetMany(Batch) error
-
 	// Incr increments a stored number or sets it to one for new entries.
 	Incr(part, key string) (uint64, error)
+
+	// Multi takes a function that takes a transaction value. For engines
+	// that support batch writes, this should be used.
+	Multi(func(Tx) error) error
 }
 
 // Options is a general purpose map for accessing options for storage engines.

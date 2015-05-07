@@ -8,36 +8,27 @@ import (
 	"github.com/chop-dbhi/origins/engine"
 )
 
-// Engine is an in-memory store that keeps data in keyed parts.
-type Engine struct {
-	parts map[string]map[string][]byte
-
-	sync.Mutex
+type Tx struct {
+	e *Engine
 }
 
-func (e *Engine) Get(p, k string) ([]byte, error) {
-	e.Lock()
-	defer e.Unlock()
-
-	if b, ok := e.parts[p]; ok {
+func (t *Tx) Get(p, k string) ([]byte, error) {
+	if b, ok := t.e.parts[p]; ok {
 		return b[k], nil
 	}
 
 	return nil, nil
 }
 
-func (e *Engine) Set(p, k string, v []byte) error {
-	e.Lock()
-	defer e.Unlock()
-
+func (t *Tx) Set(p, k string, v []byte) error {
 	var (
 		ok bool
 		b  map[string][]byte
 	)
 
-	if b, ok = e.parts[p]; !ok {
+	if b, ok = t.e.parts[p]; !ok {
 		b = make(map[string][]byte)
-		e.parts[p] = b
+		t.e.parts[p] = b
 	}
 
 	b[k] = v
@@ -45,10 +36,7 @@ func (e *Engine) Set(p, k string, v []byte) error {
 	return nil
 }
 
-func (e *Engine) Incr(p, k string) (uint64, error) {
-	e.Lock()
-	defer e.Unlock()
-
+func (t *Tx) Incr(p, k string) (uint64, error) {
 	var (
 		ok bool
 		id uint64
@@ -56,9 +44,9 @@ func (e *Engine) Incr(p, k string) (uint64, error) {
 		b  map[string][]byte
 	)
 
-	if b, ok = e.parts[p]; !ok {
+	if b, ok = t.e.parts[p]; !ok {
 		b = make(map[string][]byte)
-		e.parts[p] = b
+		t.e.parts[p] = b
 	}
 
 	if v, ok = b[k]; ok {
@@ -72,25 +60,45 @@ func (e *Engine) Incr(p, k string) (uint64, error) {
 	return id, nil
 }
 
-func (e *Engine) SetMany(c engine.Batch) error {
+// Engine is an in-memory store that keeps data in keyed parts.
+type Engine struct {
+	parts map[string]map[string][]byte
+
+	sync.Mutex
+}
+
+func (e *Engine) Get(p, k string) ([]byte, error) {
 	e.Lock()
 	defer e.Unlock()
 
-	var (
-		ok bool
-		b  map[string][]byte
-	)
+	t := &Tx{e}
 
-	for k, v := range c {
-		if b, ok = e.parts[k[0]]; !ok {
-			b = make(map[string][]byte)
-			e.parts[k[0]] = b
-		}
+	return t.Get(p, k)
+}
 
-		b[k[1]] = v
-	}
+func (e *Engine) Set(p, k string, v []byte) error {
+	e.Lock()
+	defer e.Unlock()
 
-	return nil
+	t := &Tx{e}
+
+	return t.Set(p, k, v)
+}
+
+func (e *Engine) Incr(p, k string) (uint64, error) {
+	e.Lock()
+	defer e.Unlock()
+
+	t := &Tx{e}
+
+	return t.Incr(p, k)
+}
+
+func (e *Engine) Multi(f func(tx engine.Tx) error) error {
+	e.Lock()
+	defer e.Unlock()
+
+	return f(&Tx{e})
 }
 
 // Open initializes a new Engine and returns it.

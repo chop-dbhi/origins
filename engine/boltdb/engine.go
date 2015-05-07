@@ -12,6 +12,67 @@ var (
 	ErrPathRequired = errors.New("Path to the boltdb file required")
 )
 
+type Tx struct {
+	tx *bolt.Tx
+}
+
+func (t *Tx) Get(p, k string) ([]byte, error) {
+	b := t.tx.Bucket([]byte(p))
+
+	// No bucket.
+	if b == nil {
+		return nil, nil
+	}
+
+	v := b.Get([]byte(k))
+
+	if v == nil {
+		return nil, nil
+	}
+
+	// Copy bytes.
+	c := make([]byte, len(v))
+	copy(c, v)
+
+	return c, nil
+}
+
+func (t *Tx) Set(p, k string, v []byte) error {
+	b, err := t.tx.CreateBucketIfNotExists([]byte(p))
+
+	if err != nil {
+		return err
+	}
+
+	return b.Put([]byte(k), v)
+}
+
+func (t *Tx) Incr(p, k string) (uint64, error) {
+	b, err := t.tx.CreateBucketIfNotExists([]byte(p))
+
+	if err != nil {
+		return 0, err
+	}
+
+	key := []byte(k)
+
+	buf := b.Get(key)
+
+	var id uint64
+
+	if buf != nil {
+		id = engine.DecodeCounter(buf)
+	}
+
+	id++
+
+	if err = b.Put(key, engine.EncodeCounter(id)); err != nil {
+		return 0, err
+	}
+
+	return id, err
+}
+
 type Engine struct {
 	Path string
 }
@@ -25,79 +86,21 @@ func (e *Engine) Get(p, k string) ([]byte, error) {
 
 	defer db.Close()
 
-	var (
-		s, v   []byte
-		exists = true
-	)
+	var v []byte
 
 	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(p))
+		t := &Tx{tx}
 
-		// No bucket.
-		if b == nil {
-			exists = false
-			return nil
-		}
+		v, err = t.Get(p, k)
 
-		// Get the value and copy it into a new buffer.
-		s = b.Get([]byte(k))
-
-		v = make([]byte, len(s))
-		copy(v, s)
-
-		return nil
+		return err
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if exists {
-		return v, nil
-	}
-
-	return nil, nil
-}
-
-func (e *Engine) Incr(p, k string) (uint64, error) {
-	db, err := bolt.Open(e.Path, 0600, nil)
-
-	if err != nil {
-		return 0, err
-	}
-
-	defer db.Close()
-
-	var (
-		id  uint64
-		buf []byte
-	)
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(p))
-
-		if err != nil {
-			return err
-		}
-
-		key := []byte(k)
-
-		buf = b.Get(key)
-
-		if buf != nil {
-			id = engine.DecodeCounter(buf)
-		}
-
-		id++
-
-		return b.Put(key, engine.EncodeCounter(id))
-	})
-
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
+	return v, nil
 }
 
 func (e *Engine) Set(p, k string, v []byte) error {
@@ -110,17 +113,39 @@ func (e *Engine) Set(p, k string, v []byte) error {
 	defer db.Close()
 
 	return db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(p))
+		t := &Tx{tx}
 
-		if err != nil {
-			return err
-		}
-
-		return b.Put([]byte(k), v)
+		return t.Set(p, k, v)
 	})
 }
 
-func (e *Engine) SetMany(c engine.Batch) error {
+func (e *Engine) Incr(p, k string) (uint64, error) {
+	db, err := bolt.Open(e.Path, 0600, nil)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer db.Close()
+
+	var id uint64
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		t := &Tx{tx}
+
+		id, err = t.Incr(p, k)
+
+		return err
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (e *Engine) Multi(f func(tx engine.Tx) error) error {
 	db, err := bolt.Open(e.Path, 0600, nil)
 
 	if err != nil {
@@ -130,20 +155,7 @@ func (e *Engine) SetMany(c engine.Batch) error {
 	defer db.Close()
 
 	return db.Update(func(tx *bolt.Tx) error {
-		// Key is a 2L array
-		for k, v := range c {
-			b, err := tx.CreateBucketIfNotExists([]byte(k[0]))
-
-			if err != nil {
-				return err
-			}
-
-			if err = b.Put([]byte(k[1]), v); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return f(&Tx{tx})
 	})
 }
 
