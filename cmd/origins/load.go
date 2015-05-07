@@ -1,8 +1,6 @@
 package main
 
 import (
-	"compress/bzip2"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
@@ -29,16 +27,8 @@ func loadFile(store *storage.Store, r io.Reader, format, compression string) {
 	if compression != "" {
 		logrus.Debugf("Applying %s decompression", compression)
 
-		switch compression {
-		case "bzip2":
-			r = bzip2.NewReader(r)
-		case "gzip":
-			if r, err = gzip.NewReader(r); err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		default:
-			fmt.Printf("Unsupported compression format %s\n", compression)
+		if r, err = origins.Decompressor(r, compression); err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
