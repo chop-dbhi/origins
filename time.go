@@ -1,24 +1,27 @@
 // Time is interpreted and stored at a microsecond-level resolution. This
 // enables times ranging from January 1, 0001 (zero time) to January 10, 292278.
+// Time is parsed as UTC.
 package origins
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
 )
 
 const (
-	secondsPerDay = 86400
-	usPerSecond   = 1000000
-	usPerNano     = 1000
+	// Various constants for calculating time in microsecond resolution.
+	secondsPerDay   = 86400
+	microsPerSecond = 1000000
+	microsPerNano   = 1000
 )
 
 var (
 	zeroTime = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	timeLayouts = []string{
+	// TimeLayouts is a list of time layouts that are used when parsing
+	// a time string.
+	TimeLayouts = []string{
 		"02-01-2006",
 		"02-01-2006 3:04 PM",
 		"02-01-2006 3:04 PM -0700",
@@ -57,16 +60,16 @@ func DiffTime(t1, t2 int64) time.Duration {
 // ToTime coverts a microsecond resolution timestamp into a time.Time value.
 func ToTime(ts int64) time.Time {
 	// Integer division will truncate the floating point.
-	days := ts / secondsPerDay / usPerSecond
+	days := ts / secondsPerDay / microsPerSecond
 
 	// Get the remaining microseconds
-	us := ts - days*secondsPerDay*usPerSecond
+	micros := ts - days*secondsPerDay*microsPerSecond
 
 	// Add the days
 	t := zeroTime.AddDate(0, 0, int(days))
 
 	// Add remaining microseconds. Convert to local time.
-	return t.Add(time.Duration(us) * time.Microsecond).Local()
+	return t.Add(time.Duration(micros) * time.Microsecond).Local()
 }
 
 // FromTime converts a time.Time value in a microsecond resolution timestamp.
@@ -82,7 +85,7 @@ func FromTime(t time.Time) int64 {
 	// Remaining seconds.
 	elapsedSeconds := (elapsedDays*secondsPerDay + int64(t.Hour())*3600 + int64(t.Minute())*60 + int64(t.Second()))
 
-	return int64(elapsedSeconds*usPerSecond + int64(t.Nanosecond())/usPerNano)
+	return int64(elapsedSeconds*microsPerSecond + int64(t.Nanosecond())/microsPerNano)
 }
 
 // ParseTime parses a string into a timestamp. The string may represent an
@@ -104,7 +107,7 @@ func ParseTime(s string) (int64, error) {
 	}
 
 	// Parse time.
-	for _, layout := range timeLayouts {
+	for _, layout := range TimeLayouts {
 		t, err = time.Parse(layout, s)
 
 		if err == nil {
@@ -119,7 +122,7 @@ func ParseTime(s string) (int64, error) {
 		return i, nil
 	}
 
-	return 0, errors.New(fmt.Sprintf("time: could not parse %s", s))
+	return 0, fmt.Errorf("time: could not parse %s", s)
 }
 
 // MustParseTime parses the passed time string or panics.
