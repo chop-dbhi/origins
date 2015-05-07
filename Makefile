@@ -27,7 +27,7 @@ test:
 	go test -cover ./...
 
 build:
-	go build -o $(GOPATH)/bin/origins ./cli
+	go build -o $(GOPATH)/bin/origins ./cmd/origins
 
 # Build and tag binaries for each OS and architecture.
 build-all: build
@@ -36,7 +36,7 @@ build-all: build
 	gox -output="bin/origins-{{.OS}}.{{.Arch}}" \
 		-os="linux windows darwin" \
 		-arch="amd64" \
-		./cli > /dev/null
+		./cmd/origins > /dev/null
 
 
 bench:
