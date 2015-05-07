@@ -3,16 +3,17 @@ package memory
 import "testing"
 
 func TestEngine(t *testing.T) {
-	engine, _ := Open(nil)
+	engine, _ := Init(nil)
 
+	p := "test"
 	k := "hello"
 	v := "world"
 
-	if err := engine.Set(k, []byte(v)); err != nil {
+	if err := engine.Set(p, k, []byte(v)); err != nil {
 		t.Fatal(err)
 	}
 
-	b, err := engine.Get(k)
+	b, err := engine.Get(p, k)
 
 	if err != nil {
 		t.Fatal(err)
@@ -22,7 +23,7 @@ func TestEngine(t *testing.T) {
 		t.Errorf("memory: expected %s, got %s", v, string(b))
 	}
 
-	id, err := engine.Incr("counter")
+	id, err := engine.Incr(p, "counter")
 
 	if err != nil {
 		t.Fatalf("memory: incr error %s", err)
@@ -32,7 +33,7 @@ func TestEngine(t *testing.T) {
 		t.Errorf("memory: expected 1, got %v", id)
 	}
 
-	id, err = engine.Incr("counter")
+	id, err = engine.Incr(p, "counter")
 
 	if err != nil {
 		t.Fatalf("memory: incr error %s", err)
@@ -44,9 +45,12 @@ func TestEngine(t *testing.T) {
 }
 
 func BenchmarkIncr(b *testing.B) {
-	engine, _ := Open(nil)
+	engine, _ := Init(nil)
+
+	p := "test"
+	k := "counter"
 
 	for i := 0; i < b.N; i++ {
-		engine.Incr("counter")
+		engine.Incr(p, k)
 	}
 }

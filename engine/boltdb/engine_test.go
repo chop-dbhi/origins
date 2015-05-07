@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/chop-dbhi/origins/storage"
+	"github.com/chop-dbhi/origins/engine"
 )
 
 func TestEngine(t *testing.T) {
@@ -15,8 +15,8 @@ func TestEngine(t *testing.T) {
 		os.Remove(f.Name())
 	}()
 
-	engine, err := Open(&storage.Options{
-		Path: f.Name(),
+	engine, err := Init(engine.Options{
+		"path": f.Name(),
 	})
 
 	if err != nil {
@@ -26,14 +26,15 @@ func TestEngine(t *testing.T) {
 	// Close handle
 	f.Close()
 
+	p := "test"
 	k := "hello"
 	v := "world"
 
-	if err := engine.Set(k, []byte(v)); err != nil {
+	if err := engine.Set(p, k, []byte(v)); err != nil {
 		t.Fatal(err)
 	}
 
-	b, err := engine.Get(k)
+	b, err := engine.Get(p, k)
 
 	if err != nil {
 		t.Fatal(err)
@@ -43,7 +44,7 @@ func TestEngine(t *testing.T) {
 		t.Errorf("boltdb: expected %s, got %s", v, string(b))
 	}
 
-	id, err := engine.Incr("counter")
+	id, err := engine.Incr(p, "counter")
 
 	if err != nil {
 		t.Fatalf("boltdb: incr error %s", err)
@@ -53,7 +54,7 @@ func TestEngine(t *testing.T) {
 		t.Errorf("boltdb: expected 1, got %v", id)
 	}
 
-	id, err = engine.Incr("counter")
+	id, err = engine.Incr(p, "counter")
 
 	if err != nil {
 		t.Fatalf("boltdb: incr error %s", err)
@@ -71,18 +72,21 @@ func BenchmarkIncr(b *testing.B) {
 		os.Remove(f.Name())
 	}()
 
-	engine, err := Open(&storage.Options{
-		Path: f.Name(),
+	engine, err := Init(engine.Options{
+		"path": f.Name(),
 	})
 
 	if err != nil {
 		b.Fatal(err)
 	}
 
+	p := "test"
+	k := "counter"
+
 	// Close handle
 	f.Close()
 
 	for i := 0; i < b.N; i++ {
-		engine.Incr("counter")
+		engine.Incr(p, k)
 	}
 }
