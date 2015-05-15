@@ -61,7 +61,7 @@ func TestRouter(t *testing.T) {
 func TestRouteReader(t *testing.T) {
 	facts := Facts{&f0, &f1, &f2}
 
-	r := NewReader(facts)
+	r := NewBuffer(facts)
 
 	hd := Transaction{}
 	err := RouteReader(r, &hd)
