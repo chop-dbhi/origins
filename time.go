@@ -17,8 +17,6 @@ const (
 )
 
 var (
-	zeroTime = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
-
 	// TimeLayouts is a list of time layouts that are used when parsing
 	// a time string.
 	TimeLayouts = []string{
@@ -49,6 +47,12 @@ var (
 		time.RFC3339,
 		time.ANSIC,
 	}
+
+	MinTimestamp int64 = 0
+	MaxTimestamp int64 = 9223372022400000000
+
+	MaxTime = ToTime(MaxTimestamp)
+	MinTime = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
 )
 
 // DiffTime returns the difference between two timestamps in
@@ -66,7 +70,7 @@ func ToTime(ts int64) time.Time {
 	micros := ts - days*secondsPerDay*microsPerSecond
 
 	// Add the days
-	t := zeroTime.AddDate(0, 0, int(days))
+	t := MinTime.AddDate(0, 0, int(days))
 
 	// Add remaining microseconds. Convert to local time.
 	return t.Add(time.Duration(micros) * time.Microsecond).Local()
