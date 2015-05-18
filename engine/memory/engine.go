@@ -36,6 +36,14 @@ func (t *Tx) Set(p, k string, v []byte) error {
 	return nil
 }
 
+func (t *Tx) Delete(p, k string) error {
+	if m, ok := t.e.parts[p]; ok {
+		delete(m, k)
+	}
+
+	return nil
+}
+
 func (t *Tx) Incr(p, k string) (uint64, error) {
 	var (
 		ok bool
@@ -83,6 +91,15 @@ func (e *Engine) Set(p, k string, v []byte) error {
 	t := &Tx{e}
 
 	return t.Set(p, k, v)
+}
+
+func (e *Engine) Delete(p, k string) error {
+	e.Lock()
+	defer e.Unlock()
+
+	t := &Tx{e}
+
+	return t.Delete(p, k)
 }
 
 func (e *Engine) Incr(p, k string) (uint64, error) {

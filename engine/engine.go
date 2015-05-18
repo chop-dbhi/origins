@@ -11,6 +11,9 @@ type Tx interface {
 	// Set takes a key and bytes and writes it to the store.
 	Set(part, key string, value []byte) error
 
+	// Delete takes a key and deletes the entry from the store.
+	Delete(part, key string) error
+
 	// Incr increments a stored number or sets it to one for new entries.
 	Incr(part, key string) (uint64, error)
 }
@@ -22,6 +25,9 @@ type Engine interface {
 
 	// Set takes a key and bytes and writes it to the store.
 	Set(part, key string, value []byte) error
+
+	// Delete takes a key and deletes the entry from the store.
+	Delete(part, key string) error
 
 	// Incr increments a stored number or sets it to one for new entries.
 	Incr(part, key string) (uint64, error)

@@ -44,6 +44,16 @@ func TestEngine(t *testing.T, n string, e engine.Engine) {
 	if id != 2 {
 		t.Errorf("%s: expected 2, got %v", n, id)
 	}
+
+	if err = e.Delete(p, "counter"); err != nil {
+		t.Errorf("%s: %s", n, err)
+	}
+
+	if v, err := e.Get(p, "counter"); v != nil {
+		t.Errorf("%s: expected delete", n)
+	} else if err != nil {
+		t.Errorf("%s: %s", n, err)
+	}
 }
 
 func TestTx(t *testing.T, n string, e engine.Engine) {

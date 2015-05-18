@@ -47,6 +47,16 @@ func (t *Tx) Set(p, k string, v []byte) error {
 	return b.Put([]byte(k), v)
 }
 
+func (t *Tx) Delete(p, k string) error {
+	b := t.tx.Bucket([]byte(p))
+
+	if b == nil {
+		return nil
+	}
+
+	return b.Delete([]byte(k))
+}
+
 func (t *Tx) Incr(p, k string) (uint64, error) {
 	b, err := t.tx.CreateBucketIfNotExists([]byte(p))
 
@@ -116,6 +126,22 @@ func (e *Engine) Set(p, k string, v []byte) error {
 		t := &Tx{tx}
 
 		return t.Set(p, k, v)
+	})
+}
+
+func (e *Engine) Delete(p, k string) error {
+	db, err := bolt.Open(e.Path, 0600, nil)
+
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+
+	return db.Update(func(tx *bolt.Tx) error {
+		t := &Tx{tx}
+
+		return t.Delete(p, k)
 	})
 }
 
