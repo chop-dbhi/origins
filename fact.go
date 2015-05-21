@@ -3,6 +3,7 @@ package origins
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Operation denotes the validity of a fact. A fact can be asserted in which
@@ -64,7 +65,7 @@ type Fact struct {
 	// The time the fact is true in the world. Also known as the "valid time",
 	// this can be set if the fact is true at an earlier or later time than
 	// when it was added.
-	Time int64
+	Time time.Time
 
 	// Transaction that processed this fact. The transaction serves as the
 	// temporal component of the fact. Time-travel queries rely on the
@@ -89,7 +90,7 @@ func parseIdent(id interface{}) (*Ident, error) {
 	return nil, fmt.Errorf("ident: cannot parse %v", id)
 }
 
-func parseFact(op Operation, e, a, v interface{}, t int64) (*Fact, error) {
+func parseFact(op Operation, e, a, v interface{}, t time.Time) (*Fact, error) {
 	var (
 		err           error
 		eid, aid, vid *Ident
@@ -118,21 +119,21 @@ func parseFact(op Operation, e, a, v interface{}, t int64) (*Fact, error) {
 
 // Assert returns an asserted fact. The EAV values can be strings or Ident values.
 func Assert(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Assertion, e, a, v, 0)
+	return parseFact(Assertion, e, a, v, zeroTime)
 }
 
 // Retract returns a retracted fact. The EAV values can be strings or Ident values.
 func Retract(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Retraction, e, a, v, 0)
+	return parseFact(Retraction, e, a, v, zeroTime)
 }
 
 // AssertForTime returns an asserted fact at a specified time.
-func AssertForTime(e, a, v interface{}, t int64) (*Fact, error) {
+func AssertForTime(e, a, v interface{}, t time.Time) (*Fact, error) {
 	return parseFact(Assertion, e, a, v, t)
 }
 
 // RetractForTime returns a retracted fact at a specified time.
-func RetractForTime(e, a, v interface{}, t int64) (*Fact, error) {
+func RetractForTime(e, a, v interface{}, t time.Time) (*Fact, error) {
 	return parseFact(Retraction, e, a, v, t)
 }
 
