@@ -28,3 +28,36 @@ Otherwise follow [these instructions](http://golang.org/doc/install).
 ```
 make install
 ```
+### Testing
+
+Ensure the test dependencies are installed:
+
+```
+make test-install
+```
+
+Then run:
+
+```
+make test
+```
+
+### Building
+
+To the build the `origins` command in `./cmd/origins` locally, simply run:
+
+```
+make build
+```
+
+To build binaries for each platform, ensure the build dependencies are installed:
+
+```
+make build-install
+```
+
+Then run:
+
+```
+make build
+```
