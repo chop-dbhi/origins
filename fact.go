@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/chop-dbhi/origins/chrono"
 )
 
 // Operation denotes the validity of a fact. A fact can be asserted in which
@@ -25,8 +27,9 @@ func (o Operation) String() string {
 }
 
 const (
-	Assertion  Operation = 1
-	Retraction Operation = 2
+	Noop Operation = iota
+	Assertion
+	Retraction
 )
 
 // ParseOperation normalizes the string operation denoting an assertion
@@ -39,7 +42,7 @@ func ParseOperation(s string) (Operation, error) {
 		return Retraction, nil
 	}
 
-	return 0, fmt.Errorf("fact: invalid operation `%s`", s)
+	return Noop, fmt.Errorf("fact: invalid operation `%s`", s)
 }
 
 // Fact is the fundamental unit of the information model. It is an immutable
@@ -119,12 +122,12 @@ func parseFact(op Operation, e, a, v interface{}, t time.Time) (*Fact, error) {
 
 // Assert returns an asserted fact. The EAV values can be strings or Ident values.
 func Assert(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Assertion, e, a, v, zeroTime)
+	return parseFact(Assertion, e, a, v, chrono.Zero)
 }
 
 // Retract returns a retracted fact. The EAV values can be strings or Ident values.
 func Retract(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Retraction, e, a, v, zeroTime)
+	return parseFact(Retraction, e, a, v, chrono.Zero)
 }
 
 // AssertForTime returns an asserted fact at a specified time.

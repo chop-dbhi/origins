@@ -1,4 +1,4 @@
-package origins
+package chrono
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ const (
 // enables times ranging from January 1, 0001 (zero time) to January 10, 292278.
 // Time is parsed as UTC.
 var (
-	zeroTime = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+	Zero = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// TimeLayouts is a list of time layouts that are used when parsing
 	// a time string.
@@ -51,14 +51,8 @@ var (
 	}
 )
 
-// DiffTimestamps returns the difference between two timestamps in
-// as a time.Duration to interop with the time package.
-func diffTimestamps(t1, t2 int64) time.Duration {
-	return time.Duration((t1 - t2) * 1000)
-}
-
 // ToTime coverts a microsecond resolution timestamp into a time.Time value.
-func timestampToTime(ts int64) time.Time {
+func MicroTime(ts int64) time.Time {
 	// Integer division will truncate the floating point.
 	days := ts / secondsPerDay / microsPerSecond
 
@@ -66,14 +60,14 @@ func timestampToTime(ts int64) time.Time {
 	micros := ts - days*secondsPerDay*microsPerSecond
 
 	// Add the days
-	t := zeroTime.AddDate(0, 0, int(days))
+	t := Zero.AddDate(0, 0, int(days))
 
 	// Add remaining microseconds. Convert to local time.
 	return t.Add(time.Duration(micros) * time.Microsecond).Local()
 }
 
 // fromTime converts a time.Time value in a microsecond resolution timestamp.
-func timeToTimestamp(t time.Time) int64 {
+func TimeMicro(t time.Time) int64 {
 	// Ensure the time is in UTC
 	t = t.UTC()
 
@@ -88,10 +82,10 @@ func timeToTimestamp(t time.Time) int64 {
 	return int64(elapsedSeconds*microsPerSecond + int64(t.Nanosecond())/microsPerNano)
 }
 
-// ParseTime parses a string into a time value. The string may represent an
+// Parse parses a string into a time value. The string may represent an
 // absolute time, duration relative to the current time, or a microsecond-resolution
 // timestamp. All times are converted to UTC.
-func ParseTime(s string) (time.Time, error) {
+func Parse(s string) (time.Time, error) {
 	var (
 		t   time.Time
 		d   time.Duration
@@ -118,15 +112,15 @@ func ParseTime(s string) (time.Time, error) {
 	i, err := strconv.ParseInt(s, 10, 64)
 
 	if err == nil {
-		return timestampToTime(i), nil
+		return MicroTime(i), nil
 	}
 
-	return zeroTime, fmt.Errorf("time: could not parse %s", s)
+	return Zero, fmt.Errorf("time: could not parse %s", s)
 }
 
-// MustParseTime parses the passed time string or panics.
-func MustParseTime(s string) time.Time {
-	t, err := ParseTime(s)
+// MustParse parses the passed time string or panics.
+func MustParse(s string) time.Time {
+	t, err := Parse(s)
 
 	if err != nil {
 		panic(err)

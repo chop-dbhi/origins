@@ -6,11 +6,17 @@ clean:
 doc:
 	godoc -http=:6060
 
+proto:
+	protoc --go_out=. pb/*.proto
+
 install:
 	go get github.com/sirupsen/logrus
 	go get github.com/boltdb/bolt
+	go get github.com/golang/protobuf/proto
+	go get github.com/golang/protobuf/protoc-gen-go
 	go get github.com/spf13/viper
 	go get github.com/spf13/cobra
+	go get github.com/psilva261/timsort
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover
@@ -46,4 +52,4 @@ fmt:
 lint:
 	golint ./...
 
-.PHONY: test
+.PHONY: test proto

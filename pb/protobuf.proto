@@ -1,0 +1,33 @@
+package pb;
+
+message Transaction {
+    required uint64 ID = 1;
+	required int64 StartTime = 2;
+	required int64 EndTime = 3;
+}
+
+message Log {
+	optional uint64 Head = 1;
+}
+
+message Segment {
+	required uint64 ID = 1;
+	required int32 Blocks = 2;
+    required int32 Count = 3;
+    required int32 Bytes = 4;
+    optional uint64 Next = 5;
+    optional uint64 Base = 6;
+}
+
+message Ident {
+    required string Name = 1;
+    optional string Domain = 2;
+}
+
+message Fact {
+	required bool Added = 1;
+    required Ident Entity = 2;
+    required Ident Attribute = 3;
+    required Ident Value = 4;
+	optional int64 Time = 5;
+}

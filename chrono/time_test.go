@@ -1,4 +1,4 @@
-package origins
+package chrono
 
 import (
 	"testing"
@@ -27,15 +27,15 @@ func TestTime(t *testing.T) {
 	}
 
 	for ts, tm := range times {
-		assert.Equal(t, ts, timeToTimestamp(tm))
+		assert.Equal(t, ts, TimeMicro(tm))
 
-		if !tm.Equal(timestampToTime(ts)) {
-			t.Errorf("time: expected %s, got %s", tm, timestampToTime(ts))
+		if !tm.Equal(MicroTime(ts)) {
+			t.Errorf("time: expected %s, got %s", tm, MicroTime(ts))
 		}
 	}
 }
 
-func TestParseTime(t *testing.T) {
+func TestParse(t *testing.T) {
 	var (
 		s    string
 		p, x time.Time
@@ -81,7 +81,7 @@ func TestParseTime(t *testing.T) {
 	td := time.Second
 
 	for s, x = range times {
-		p, err = ParseTime(s)
+		p, err = Parse(s)
 
 		if err != nil {
 			t.Errorf("time: failed to parse %s as time", s)
@@ -96,42 +96,42 @@ func TestParseTime(t *testing.T) {
 	}
 }
 
-func BenchmarkTimestampToTime(b *testing.B) {
-	t := timeToTimestamp(time.Date(1492, 6, 11, 0, 0, 0, 0, time.UTC))
+func BenchmarkMicroTime(b *testing.B) {
+	t := TimeMicro(time.Date(1492, 6, 11, 0, 0, 0, 0, time.UTC))
 
 	for i := 0; i < b.N; i++ {
-		timestampToTime(t)
+		MicroTime(t)
 	}
 }
 
-func BenchmarktimeTimeToTimestamp(b *testing.B) {
+func BenchmarkTimeMicro(b *testing.B) {
 	t := time.Date(1492, 6, 11, 0, 0, 0, 0, time.UTC)
 
 	for i := 0; i < b.N; i++ {
-		timeToTimestamp(t)
+		TimeMicro(t)
 	}
 }
 
-func BenchmarkParseTime__Time(b *testing.B) {
+func BenchmarkParse__Time(b *testing.B) {
 	t := "April 4, 2013"
 
 	for i := 0; i < b.N; i++ {
-		ParseTime(t)
+		Parse(t)
 	}
 }
 
-func BenchmarkParseTime__Duration(b *testing.B) {
+func BenchmarkParse__Duration(b *testing.B) {
 	t := "-48h32m"
 
 	for i := 0; i < b.N; i++ {
-		ParseTime(t)
+		Parse(t)
 	}
 }
 
-func BenchmarkParseTime__Timestamp(b *testing.B) {
+func BenchmarkParse__Timestamp(b *testing.B) {
 	t := "63592300800000000"
 
 	for i := 0; i < b.N; i++ {
-		ParseTime(t)
+		Parse(t)
 	}
 }

@@ -3,6 +3,7 @@ package origins
 import (
 	"testing"
 
+	"github.com/chop-dbhi/origins/chrono"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,8 +24,8 @@ func init() {
 	v3 := &Ident{"", "red"}
 	v4 := &Ident{"", "blue"}
 
-	t0 := MustParseTime("2015-01-01")
-	t1 := MustParseTime("2015-01-02")
+	t0 := chrono.MustParse("2015-01-01")
+	t1 := chrono.MustParse("2015-01-02")
 
 	bobName, _ = AssertForTime(e1, a1, v1, t0)
 	bobColor, _ = AssertForTime(e1, a2, v3, t0)
