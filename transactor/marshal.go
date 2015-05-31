@@ -76,14 +76,6 @@ func marshalFacts(fs origins.Facts) ([]byte, error) {
 		buf []byte
 	)
 
-	// Prefix the whole thing with the length.
-	length := len(fs)
-
-	// Encode the size of the fact as the header to the fact.
-	binary.PutUvarint(header, uint64(length))
-
-	buf = append(buf, header...)
-
 	// Marshal each individual fact.
 	for _, f := range fs {
 		fb, err = marshalFact(f)
