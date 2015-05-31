@@ -84,6 +84,7 @@ func (s *Segment) Write(tx storage.Tx) error {
 	// Update stats.
 	s.Bytes += len(bb)
 	s.Count += s.index
+	s.Blocks++
 
 	if sb, err = marshalSegment(s); err != nil {
 		return err
@@ -100,7 +101,6 @@ func (s *Segment) Write(tx storage.Tx) error {
 	// Reset block index and increment the number of block written
 	// in the Segment.
 	s.index = 0
-	s.Blocks++
 
 	return nil
 }
