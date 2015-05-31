@@ -29,20 +29,14 @@ const (
 func marshalFact(f *origins.Fact) ([]byte, error) {
 	m := pb.Fact{}
 
-	m.Entity = &pb.Ident{
-		Domain: proto.String(f.Entity.Domain),
-		Name:   proto.String(f.Entity.Name),
-	}
+	m.EntityDomain = proto.String(f.Entity.Domain)
+	m.Entity = proto.String(f.Entity.Name)
 
-	m.Attribute = &pb.Ident{
-		Domain: proto.String(f.Entity.Domain),
-		Name:   proto.String(f.Entity.Name),
-	}
+	m.AttributeDomain = proto.String(f.Attribute.Domain)
+	m.Attribute = proto.String(f.Attribute.Name)
 
-	m.Value = &pb.Ident{
-		Domain: proto.String(f.Entity.Domain),
-		Name:   proto.String(f.Entity.Name),
-	}
+	m.ValueDomain = proto.String(f.Value.Domain)
+	m.Value = proto.String(f.Value.Name)
 
 	m.Time = proto.Int64(chrono.TimeMicro(f.Time))
 

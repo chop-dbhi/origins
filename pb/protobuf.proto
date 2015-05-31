@@ -19,15 +19,13 @@ message Segment {
     optional uint64 Base = 6;
 }
 
-message Ident {
-    required string Name = 1;
-    optional string Domain = 2;
-}
-
 message Fact {
 	required bool Added = 1;
-    required Ident Entity = 2;
-    required Ident Attribute = 3;
-    required Ident Value = 4;
-	optional int64 Time = 5;
+    required string EntityDomain = 2;
+    required string Entity = 3;
+    required string AttributeDomain = 4;
+    required string Attribute = 5;
+    optional string ValueDomain = 6;
+    required string Value = 7;
+	optional int64 Time = 8;
 }

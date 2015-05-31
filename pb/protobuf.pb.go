@@ -12,7 +12,6 @@ It has these top-level messages:
 	Transaction
 	Log
 	Segment
-	Ident
 	Fact
 */
 package pb
@@ -128,37 +127,16 @@ func (m *Segment) GetBase() uint64 {
 	return 0
 }
 
-type Ident struct {
-	Name             *string `protobuf:"bytes,1,req" json:"Name,omitempty"`
-	Domain           *string `protobuf:"bytes,2,opt" json:"Domain,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
-}
-
-func (m *Ident) Reset()         { *m = Ident{} }
-func (m *Ident) String() string { return proto.CompactTextString(m) }
-func (*Ident) ProtoMessage()    {}
-
-func (m *Ident) GetName() string {
-	if m != nil && m.Name != nil {
-		return *m.Name
-	}
-	return ""
-}
-
-func (m *Ident) GetDomain() string {
-	if m != nil && m.Domain != nil {
-		return *m.Domain
-	}
-	return ""
-}
-
 type Fact struct {
-	Added            *bool  `protobuf:"varint,1,req" json:"Added,omitempty"`
-	Entity           *Ident `protobuf:"bytes,2,req" json:"Entity,omitempty"`
-	Attribute        *Ident `protobuf:"bytes,3,req" json:"Attribute,omitempty"`
-	Value            *Ident `protobuf:"bytes,4,req" json:"Value,omitempty"`
-	Time             *int64 `protobuf:"varint,5,opt" json:"Time,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	Added            *bool   `protobuf:"varint,1,req" json:"Added,omitempty"`
+	EntityDomain     *string `protobuf:"bytes,2,req" json:"EntityDomain,omitempty"`
+	Entity           *string `protobuf:"bytes,3,req" json:"Entity,omitempty"`
+	AttributeDomain  *string `protobuf:"bytes,4,req" json:"AttributeDomain,omitempty"`
+	Attribute        *string `protobuf:"bytes,5,req" json:"Attribute,omitempty"`
+	ValueDomain      *string `protobuf:"bytes,6,opt" json:"ValueDomain,omitempty"`
+	Value            *string `protobuf:"bytes,7,req" json:"Value,omitempty"`
+	Time             *int64  `protobuf:"varint,8,opt" json:"Time,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *Fact) Reset()         { *m = Fact{} }
@@ -172,25 +150,46 @@ func (m *Fact) GetAdded() bool {
 	return false
 }
 
-func (m *Fact) GetEntity() *Ident {
-	if m != nil {
-		return m.Entity
+func (m *Fact) GetEntityDomain() string {
+	if m != nil && m.EntityDomain != nil {
+		return *m.EntityDomain
 	}
-	return nil
+	return ""
 }
 
-func (m *Fact) GetAttribute() *Ident {
-	if m != nil {
-		return m.Attribute
+func (m *Fact) GetEntity() string {
+	if m != nil && m.Entity != nil {
+		return *m.Entity
 	}
-	return nil
+	return ""
 }
 
-func (m *Fact) GetValue() *Ident {
-	if m != nil {
-		return m.Value
+func (m *Fact) GetAttributeDomain() string {
+	if m != nil && m.AttributeDomain != nil {
+		return *m.AttributeDomain
 	}
-	return nil
+	return ""
+}
+
+func (m *Fact) GetAttribute() string {
+	if m != nil && m.Attribute != nil {
+		return *m.Attribute
+	}
+	return ""
+}
+
+func (m *Fact) GetValueDomain() string {
+	if m != nil && m.ValueDomain != nil {
+		return *m.ValueDomain
+	}
+	return ""
+}
+
+func (m *Fact) GetValue() string {
+	if m != nil && m.Value != nil {
+		return *m.Value
+	}
+	return ""
 }
 
 func (m *Fact) GetTime() int64 {
