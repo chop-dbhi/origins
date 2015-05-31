@@ -7,6 +7,7 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/chop-dbhi/origins/testutil"
 )
 
 const testDBPath = "test.boltdb"
@@ -20,7 +21,7 @@ func TestSegment(t *testing.T) {
 
 	segment := NewSegment(engine, 1, "test")
 
-	gen := newRandGenerator("test", 1, 0)
+	gen := testutil.NewRandGenerator("test", 1, 0)
 
 	var (
 		f *origins.Fact
@@ -84,7 +85,7 @@ func benchSegmentBlockSize(b *testing.B, bs int) {
 
 	var f *origins.Fact
 
-	gen := newRandGenerator("test", 1, 0)
+	gen := testutil.NewRandGenerator("test", 1, 0)
 
 	segment := NewSegment(engine, 1, "test")
 
@@ -134,7 +135,7 @@ func benchSegmentSize(b *testing.B, n int) {
 	var f *origins.Fact
 
 	for i := 0; i < b.N; i++ {
-		gen := newRandGenerator("test", 1, n)
+		gen := testutil.NewRandGenerator("test", 1, n)
 		segment := NewSegment(engine, 1, "test")
 
 		for j := 0; j < n; j++ {

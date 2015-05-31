@@ -3,10 +3,14 @@
 // router can be implemented efficiently.
 package transactor
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/chop-dbhi/origins/testutil"
+)
 
 func BenchmarkLoopFacts(b *testing.B) {
-	gen := newRandGenerator("test", 1, 0)
+	gen := testutil.NewRandGenerator("test", 1, 0)
 
 	for i := 0; i < b.N; i++ {
 		gen.Next()
@@ -14,7 +18,7 @@ func BenchmarkLoopFacts(b *testing.B) {
 }
 
 func BenchmarkChanFacts(b *testing.B) {
-	gen := newRandGenerator("test", 1, 0)
+	gen := testutil.NewRandGenerator("test", 1, 0)
 
 	closer := make(chan struct{})
 	fch, _ := gen.Subscribe(closer)

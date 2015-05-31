@@ -8,6 +8,7 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/chop-dbhi/origins/testutil"
 )
 
 func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint64) {
@@ -55,7 +56,7 @@ func TestCommit(t *testing.T) {
 
 	tx, _ := New(engine, DefaultOptions)
 
-	gen := newRandGenerator(domain, tx.ID, 500)
+	gen := testutil.NewRandGenerator(domain, tx.ID, 500)
 
 	tx.AppendIter(gen)
 	tx.Commit()
@@ -74,7 +75,7 @@ func TestCancel(t *testing.T) {
 
 	tx, _ := New(engine, DefaultOptions)
 
-	gen := newRandGenerator("test", tx.ID, 2000)
+	gen := testutil.NewRandGenerator("test", tx.ID, 2000)
 
 	tx.AppendIter(gen)
 	tx.Cancel()
@@ -94,7 +95,7 @@ func TestMultiple(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		tx, _ := New(engine, DefaultOptions)
 
-		gen := newRandGenerator(domain, tx.ID, 5000)
+		gen := testutil.NewRandGenerator(domain, tx.ID, 5000)
 
 		tx.AppendIter(gen)
 		tx.Commit()
@@ -118,7 +119,7 @@ func TestMultipleDomains(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func(i int) {
 			domain := fmt.Sprintf("test.%d", i)
-			gen := newRandGenerator(domain, tx.ID, 10000)
+			gen := testutil.NewRandGenerator(domain, tx.ID, 10000)
 			tx.AppendIter(gen)
 			wg.Done()
 		}(i)
@@ -161,7 +162,7 @@ func benchTransaction(b *testing.B, n int, m int) {
 		for j := 0; j < m; j++ {
 			go func(j int) {
 				domain := fmt.Sprintf("test.%d", j)
-				gen := newRandGenerator(domain, tx.ID, n)
+				gen := testutil.NewRandGenerator(domain, tx.ID, n)
 				tx.AppendIter(gen)
 				wg.Done()
 			}(j)

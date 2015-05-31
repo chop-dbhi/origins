@@ -1,4 +1,4 @@
-package transactor
+package testutil
 
 import (
 	"io"
@@ -20,17 +20,17 @@ func randomString(n int) string {
 	return string(b)
 }
 
-type generatorFunc func(domain string, tx uint64) *origins.Fact
+type GeneratorFunc func(domain string, tx uint64) *origins.Fact
 
-type factGen struct {
-	generator generatorFunc
+type FactGen struct {
+	generator GeneratorFunc
 	domain    string
 	tx        uint64
 	count     int
 	size      int
 }
 
-func (r *factGen) generate() *origins.Fact {
+func (r *FactGen) generate() *origins.Fact {
 	if r.size > 0 && r.count == r.size {
 		return nil
 	}
@@ -40,7 +40,7 @@ func (r *factGen) generate() *origins.Fact {
 	return r.generator(r.domain, r.tx)
 }
 
-func (r *factGen) Read(buf origins.Facts) (int, error) {
+func (r *FactGen) Read(buf origins.Facts) (int, error) {
 	var (
 		f *origins.Fact
 		c = cap(buf)
@@ -57,12 +57,12 @@ func (r *factGen) Read(buf origins.Facts) (int, error) {
 	return c, nil
 }
 
-func (r *factGen) Next() (*origins.Fact, error) {
+func (r *FactGen) Next() (*origins.Fact, error) {
 	return r.generate(), nil
 }
 
 // Subscribe implements the Stream interface.
-func (r *factGen) Subscribe(closer chan struct{}) (chan *origins.Fact, chan error) {
+func (r *FactGen) Subscribe(closer chan struct{}) (chan *origins.Fact, chan error) {
 	var f *origins.Fact
 
 	fch := make(chan *origins.Fact, 1000)
@@ -89,8 +89,8 @@ func (r *factGen) Subscribe(closer chan struct{}) (chan *origins.Fact, chan erro
 	return fch, errch
 }
 
-func newGenerator(domain string, tx uint64, size int, gen generatorFunc) *factGen {
-	return &factGen{
+func NewGenerator(domain string, tx uint64, size int, gen GeneratorFunc) *FactGen {
+	return &FactGen{
 		generator: gen,
 		domain:    domain,
 		tx:        tx,
@@ -98,8 +98,8 @@ func newGenerator(domain string, tx uint64, size int, gen generatorFunc) *factGe
 	}
 }
 
-// randFact generates a fact with a random entity, attribute, and value.
-func randFact(domain string, tx uint64) *origins.Fact {
+// RandFact generates a fact with a random entity, attribute, and value.
+func RandFact(domain string, tx uint64) *origins.Fact {
 	e := &origins.Ident{domain, randomString(16)}
 	a := &origins.Ident{domain, randomString(16)}
 	v := &origins.Ident{domain, randomString(32)}
@@ -114,9 +114,9 @@ func randFact(domain string, tx uint64) *origins.Fact {
 	}
 }
 
-// NewRandGenerator returns a fact generator using the default randFact
+// NewRandGenerator returns a fact generator using the default RandFact
 // generator function.
-func newRandGenerator(domain string, tx uint64, size int) *factGen {
+func NewRandGenerator(domain string, tx uint64, size int) *FactGen {
 	rand.Seed(time.Now().UnixNano())
-	return newGenerator(domain, tx, size, randFact)
+	return NewGenerator(domain, tx, size, RandFact)
 }
