@@ -48,6 +48,7 @@ func (p *DomainPipeline) Init(tx *Transaction) error {
 	// Initialize new segment pointing to the head of the log.
 	p.Segment = NewSegment(tx.Storage, tx.ID, p.Domain)
 	p.Segment.Base = log.Head
+	p.Segment.Next = log.Head
 
 	return nil
 }
