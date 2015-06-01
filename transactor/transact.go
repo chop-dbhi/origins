@@ -198,12 +198,15 @@ func (tx *Transaction) receive() {
 		fact *origins.Fact
 	)
 
+	logrus.Debugf("transactor (%d): receiving facts", tx.ID)
+
 loop:
 	for {
 		select {
 
 		// An error occurred in a pipeline.
 		case err = <-tx.errch:
+			logrus.Debugf("transactor (%d): pipeline error", tx.ID)
 			close(tx.stream)
 			break loop
 
@@ -211,31 +214,36 @@ loop:
 		// If an error occurs while routing, stop processing.
 		case fact = <-tx.stream:
 			if fact == nil {
+				logrus.Debugf("transactor (%d): end of stream", tx.ID)
 				break loop
 			}
 
 			if err = tx.route(fact); err != nil {
+				logrus.Debugf("transactor (%d): error routing fact", tx.ID)
 				break loop
 			}
 
 		// Transaction timeout.
 		case <-time.After(tx.options.ReceiveWait):
+			logrus.Debugf("transactor (%d): timeout", tx.ID)
 			err = ErrReceiveTimeout
 			break loop
 		}
 	}
+
+	logrus.Debugf("transactor (%d): closing pipeline channels", tx.ID)
 
 	// Close pipes.
 	for _, ch := range tx.pipes {
 		close(ch)
 	}
 
-	logrus.Debugf("transactor: closed pipeline channels")
+	logrus.Debugf("transactor (%d): closed pipeline channels", tx.ID)
 
 	// Wait for the pipelines to finish there work.
 	tx.pipewg.Wait()
 
-	logrus.Debugf("transactor: pipelines finished")
+	logrus.Debugf("transactor (%d): pipelines finished", tx.ID)
 
 	// Set the error in case one occurred.
 	tx.Error = err
@@ -246,13 +254,13 @@ loop:
 		// Close the pipeline channels.
 		for pipe, _ := range tx.pipes {
 			if tx.Error == nil {
-				logrus.Debugf("transactor: committing pipeline %v", pipe)
+				logrus.Debugf("transactor (%d): committing pipeline %v", tx.ID, pipe)
 
 				if err = pipe.Commit(etx); err != nil {
 					return err
 				}
 			} else {
-				logrus.Debugf("transactor: aborting pipeline %v", pipe)
+				logrus.Debugf("transactor (%d): aborting pipeline %v", tx.ID, pipe)
 
 				if err = pipe.Abort(etx); err != nil {
 					return err
@@ -261,9 +269,9 @@ loop:
 		}
 
 		if err != nil {
-			logrus.Debugf("transactor: aborted %d", tx.ID)
+			logrus.Debugf("transactor (%d): aborted", tx.ID)
 		} else {
-			logrus.Debugf("transactor: committed %d", tx.ID)
+			logrus.Debugf("transactor (%d): committed", tx.ID)
 		}
 
 		return err
@@ -286,7 +294,7 @@ func (tx *Transaction) spawn(pipe Pipeline) chan *origins.Fact {
 	// Start a goroutine for this pipeline. The channel will receive
 	go func() {
 		defer func() {
-			logrus.Debugf("transactor: closing pipeline %v", pipe)
+			logrus.Debugf("transactor (%d): closing pipeline %v", tx.ID, pipe)
 			tx.pipewg.Done()
 		}()
 
@@ -301,7 +309,7 @@ func (tx *Transaction) spawn(pipe Pipeline) chan *origins.Fact {
 			return
 		}
 
-		logrus.Debugf("transactor: initialized pipeline %v", pipe)
+		logrus.Debugf("transactor (%d): initialized pipeline %v", tx.ID, pipe)
 
 		for {
 			fact = <-pipech
@@ -368,7 +376,7 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 	id, err := txid(engine)
 
 	if err != nil {
-		logrus.Errorf("transactor: could not generate tx id: %s", err)
+		logrus.Errorf("transactor: could not generate ID: %s", err)
 		return nil, ErrNoID
 	}
 
