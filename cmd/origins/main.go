@@ -43,12 +43,12 @@ func main() {
 
 	flags := mainCmd.PersistentFlags()
 
-	flags.String("loglevel", "info", "Level of log messages to emit. Choices are: debug, info, warn, error, fatal, panic.")
+	flags.String("log", "info", "Level of log messages to emit. Choices are: debug, info, warn, error, fatal, panic.")
 	flags.String("storage", "", "Storage backend. Choices are: boltdb and memory.")
 	flags.String("path", "", "Path to a file or directory filesystem-based storage backends.")
 	flags.String("config", "", "Path to config file. Defaults to a origins.{json,yml,yaml} in the current working directory.")
 
-	viper.BindPFlag("loglevel", flags.Lookup("loglevel"))
+	viper.BindPFlag("log", flags.Lookup("log"))
 	viper.BindPFlag("storage", flags.Lookup("storage"))
 	viper.BindPFlag("path", flags.Lookup("path"))
 	viper.BindPFlag("config", flags.Lookup("config"))
@@ -56,10 +56,10 @@ func main() {
 	// Turn on debugging for all commands.
 	mainCmd.ParseFlags(os.Args)
 
-	level, err := logrus.ParseLevel(viper.GetString("loglevel"))
+	level, err := logrus.ParseLevel(viper.GetString("log"))
 
 	if err != nil {
-		fmt.Println("Invalid loglevel choice.")
+		fmt.Println("Invalid log level choice.")
 		mainCmd.Help()
 	}
 
