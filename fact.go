@@ -36,7 +36,7 @@ const (
 // or retraction of a fact.
 func ParseOperation(s string) (Operation, error) {
 	switch strings.ToLower(s) {
-	case "assert", "asserted", "a":
+	case "", "assert", "asserted", "a":
 		return Assertion, nil
 	case "retract", "retracted", "r":
 		return Retraction, nil
