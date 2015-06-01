@@ -26,6 +26,7 @@ var mainCmd = &cobra.Command{
 
 func main() {
 	mainCmd.AddCommand(versionCmd)
+	mainCmd.AddCommand(transactCmd)
 
 	viper.SetEnvPrefix("ORIGINS")
 	viper.AutomaticEnv()
@@ -43,8 +44,14 @@ func main() {
 	flags := mainCmd.PersistentFlags()
 
 	flags.String("loglevel", "info", "Level of log messages to emit. Choices are: debug, info, warn, error, fatal, panic.")
+	flags.String("storage", "", "Storage backend. Choices are: boltdb and memory.")
+	flags.String("path", "", "Path to a file or directory filesystem-based storage backends.")
+	flags.String("config", "", "Path to config file. Defaults to a origins.{json,yml,yaml} in the current working directory.")
 
 	viper.BindPFlag("loglevel", flags.Lookup("loglevel"))
+	viper.BindPFlag("storage", flags.Lookup("storage"))
+	viper.BindPFlag("path", flags.Lookup("path"))
+	viper.BindPFlag("config", flags.Lookup("config"))
 
 	// Turn on debugging for all commands.
 	mainCmd.ParseFlags(os.Args)
