@@ -2,7 +2,6 @@ package transactor
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/chop-dbhi/origins"
@@ -10,14 +9,8 @@ import (
 	"github.com/chop-dbhi/origins/testutil"
 )
 
-const testDBPath = "test.boltdb"
-
 func TestSegment(t *testing.T) {
-	os.Remove(testDBPath)
-
-	engine, err := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, err := origins.Open("mem", nil)
 
 	segment := NewSegment(engine, 1, "test")
 
@@ -75,11 +68,7 @@ func TestSegment(t *testing.T) {
 }
 
 func benchSegmentBlockSize(b *testing.B, bs int) {
-	os.Remove(testDBPath)
-
-	engine, _ := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, _ := origins.Open("mem", nil)
 
 	blockSize = bs
 
@@ -126,11 +115,7 @@ func BenchmarkSegmentBlockSize__10000(b *testing.B) {
 }
 
 func benchSegmentSize(b *testing.B, n int) {
-	os.Remove(testDBPath)
-
-	engine, _ := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, _ := origins.Open("mem", nil)
 
 	var f *origins.Fact
 

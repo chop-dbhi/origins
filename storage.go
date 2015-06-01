@@ -18,7 +18,7 @@ var StorageEngines = map[string]storage.Initializer{
 }
 
 // Open initializes a store with the specified storage and options.
-func Open(name string, opts storage.Options) (storage.Engine, error) {
+func Open(name string, opts *storage.Options) (storage.Engine, error) {
 	var (
 		ok     bool
 		err    error
@@ -30,7 +30,12 @@ func Open(name string, opts storage.Options) (storage.Engine, error) {
 		return nil, fmt.Errorf("storage: unknown storage storage %s", name)
 	}
 
-	if engine, err = init(opts); err != nil {
+	if opts == nil {
+		opts = &storage.Options{}
+	}
+
+	// Copy the storage options.
+	if engine, err = init(*opts); err != nil {
 		return nil, fmt.Errorf("storage: %s: %s", name, err)
 	}
 

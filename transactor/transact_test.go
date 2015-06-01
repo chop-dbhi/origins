@@ -2,7 +2,6 @@ package transactor
 
 import (
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 
@@ -46,11 +45,7 @@ func checkCanceled(t *testing.T, engine storage.Engine, domain string, id uint64
 }
 
 func TestCommit(t *testing.T) {
-	os.Remove(testDBPath)
-
-	engine, _ := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, _ := origins.Open("mem", nil)
 
 	domain := "test"
 
@@ -65,11 +60,7 @@ func TestCommit(t *testing.T) {
 }
 
 func TestCancel(t *testing.T) {
-	os.Remove(testDBPath)
-
-	engine, _ := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, _ := origins.Open("mem", nil)
 
 	domain := "test"
 
@@ -84,11 +75,7 @@ func TestCancel(t *testing.T) {
 }
 
 func TestMultiple(t *testing.T) {
-	os.Remove(testDBPath)
-
-	engine, _ := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, _ := origins.Open("mem", nil)
 
 	domain := "test"
 
@@ -105,11 +92,7 @@ func TestMultiple(t *testing.T) {
 }
 
 func TestMultipleDomains(t *testing.T) {
-	os.Remove(testDBPath)
-
-	engine, _ := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, _ := origins.Open("mem", nil)
 
 	tx, _ := New(engine, DefaultOptions)
 
@@ -136,13 +119,9 @@ func TestMultipleDomains(t *testing.T) {
 }
 
 func benchTransaction(b *testing.B, n int, m int) {
-	os.Remove(testDBPath)
-
 	b.StopTimer()
 
-	engine, _ := origins.Open("boltdb", storage.Options{
-		"path": testDBPath,
-	})
+	engine, _ := origins.Open("mem", nil)
 
 	var (
 		wg sync.WaitGroup
