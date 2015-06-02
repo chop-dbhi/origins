@@ -266,6 +266,50 @@ func (r *csvReader) Next() (*Fact, error) {
 	return r.read()
 }
 
+// Subscribe satisfies the Publisher interface. It returns a channel of facts that
+// can be consumed by downstream consumers.
+func (r *csvReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error) {
+	ch := make(chan *Fact)
+	errch := make(chan error)
+
+	go func() {
+		defer func() {
+			close(ch)
+			close(errch)
+		}()
+
+		var (
+			f   *Fact
+			err error
+		)
+
+		for {
+			select {
+			// Upstream consumer is done.
+			case <-done:
+				return
+
+			default:
+				f, err = r.read()
+
+				if err != nil {
+					errch <- err
+					return
+				}
+
+				// No more or an error.
+				if f == nil {
+					return
+				}
+
+				ch <- f
+			}
+		}
+	}()
+
+	return ch, errch
+}
+
 // Read satisfies the Reader interface.
 func (r *csvReader) Read(facts Facts) (int, error) {
 	var (
