@@ -224,7 +224,7 @@ func (tx *Transaction) receive() {
 		fact *origins.Fact
 	)
 
-	logrus.Debugf("transactor (%d): receiving facts", tx.ID)
+	logrus.Debugf("transactor(%d): begin receiving facts", tx.ID)
 
 loop:
 	for {
@@ -232,7 +232,7 @@ loop:
 
 		// An error occurred in a pipeline.
 		case err = <-tx.errch:
-			logrus.Debugf("transactor (%d): pipeline error", tx.ID)
+			logrus.Debugf("transactor(%d): pipeline error", tx.ID)
 			close(tx.stream)
 			break loop
 
@@ -240,18 +240,18 @@ loop:
 		// If an error occurs while routing, stop processing.
 		case fact = <-tx.stream:
 			if fact == nil {
-				logrus.Debugf("transactor (%d): end of stream", tx.ID)
+				logrus.Debugf("transactor(%d): end of stream", tx.ID)
 				break loop
 			}
 
 			if err = tx.route(fact); err != nil {
-				logrus.Debugf("transactor (%d): error routing fact", tx.ID)
+				logrus.Debugf("transactor(%d): error routing fact", tx.ID)
 				break loop
 			}
 
 		// Transaction timeout.
 		case <-time.After(tx.options.ReceiveWait):
-			logrus.Debugf("transactor (%d): timeout", tx.ID)
+			logrus.Debugf("transactor(%d): receive timeout", tx.ID)
 			err = ErrReceiveTimeout
 			break loop
 		}
@@ -269,7 +269,7 @@ loop:
 	// Wait for the pipelines to finish there work.
 	tx.pipewg.Wait()
 
-	logrus.Debugf("transactor (%d): pipelines finished", tx.ID)
+	logrus.Debugf("transactor(%d): pipelines finished", tx.ID)
 
 	// Set the error in case one occurred.
 	tx.Error = err
@@ -280,13 +280,13 @@ loop:
 		// Close the pipeline channels.
 		for pipe, _ := range tx.pipes {
 			if tx.Error == nil {
-				logrus.Debugf("transactor (%d): committing pipeline %v", tx.ID, pipe)
+				logrus.Debugf("transactor(%d): committing pipeline %v", tx.ID, pipe)
 
 				if err = pipe.Commit(etx); err != nil {
 					return err
 				}
 			} else {
-				logrus.Debugf("transactor (%d): aborting pipeline %v", tx.ID, pipe)
+				logrus.Debugf("transactor(%d): aborting pipeline %v", tx.ID, pipe)
 
 				if err = pipe.Abort(etx); err != nil {
 					return err
@@ -295,9 +295,9 @@ loop:
 		}
 
 		if err != nil {
-			logrus.Debugf("transactor (%d): aborted", tx.ID)
+			logrus.Debugf("transactor(%d): aborted", tx.ID)
 		} else {
-			logrus.Debugf("transactor (%d): committed", tx.ID)
+			logrus.Debugf("transactor(%d): committed", tx.ID)
 		}
 
 		return err
