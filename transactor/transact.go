@@ -385,6 +385,10 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		options.Router = NewDomainRouter()
 	}
 
+	if options.ReceiveWait == 0 {
+		options.ReceiveWait = DefaultOptions.ReceiveWait
+	}
+
 	tx := Transaction{
 		ID:        id,
 		StartTime: time.Now().UTC(),
