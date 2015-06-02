@@ -83,6 +83,10 @@ type Transaction struct {
 	// Main channel received facts are received by.
 	stream chan *origins.Fact
 
+	// Channel that can be passed around for signaling the
+	// transaction stream has been closed.
+	done chan struct{}
+
 	// Shared error channel for all goroutines to communicate when an
 	// error occurs.
 	errch chan error
@@ -92,7 +96,7 @@ type Transaction struct {
 	pipewg *sync.WaitGroup
 
 	// Pipelines and channels.
-	pipes map[Pipeline]chan *origins.Fact
+	pipes map[Pipeline]chan<- *origins.Fact
 }
 
 // Stats returns the stats of the transaction which aggregates
@@ -187,7 +191,7 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 		ok   bool
 		err  error
 		pipe Pipeline
-		ch   chan *origins.Fact
+		ch   chan<- *origins.Fact
 	)
 
 	// Evaluate.
@@ -209,6 +213,7 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 	// Get or spawn a pipeline.
 	if ch, ok = tx.pipes[pipe]; !ok {
 		ch = tx.spawn(pipe)
+		tx.pipes[pipe] = ch
 	}
 
 	// Send fact to the pipeline.
@@ -229,10 +234,9 @@ func (tx *Transaction) receive() {
 loop:
 	for {
 		select {
-
 		// An error occurred in a pipeline.
 		case err = <-tx.errch:
-			logrus.Debugf("transactor(%d): pipeline error", tx.ID)
+			logrus.Debugf("transactor(%d): %s", tx.ID, err)
 			close(tx.stream)
 			break loop
 
@@ -257,71 +261,89 @@ loop:
 		}
 	}
 
-	logrus.Debugf("transactor (%d): closing pipeline channels", tx.ID)
+	// Set the error if one occurred.
+	tx.Error = err
 
-	// Close pipes.
-	for _, ch := range tx.pipes {
-		close(ch)
-	}
-
-	logrus.Debugf("transactor (%d): closed pipeline channels", tx.ID)
+	// Signal the transaction is closed.
+	close(tx.done)
 
 	// Wait for the pipelines to finish there work.
 	tx.pipewg.Wait()
 
-	logrus.Debugf("transactor(%d): pipelines finished", tx.ID)
-
-	// Set the error in case one occurred.
-	tx.Error = err
-
-	err = tx.Storage.Multi(func(etx storage.Tx) error {
-		var err error
-
-		// Close the pipeline channels.
-		for pipe, _ := range tx.pipes {
-			if tx.Error == nil {
-				logrus.Debugf("transactor(%d): committing pipeline %v", tx.ID, pipe)
-
-				if err = pipe.Commit(etx); err != nil {
-					return err
-				}
-			} else {
-				logrus.Debugf("transactor(%d): aborting pipeline %v", tx.ID, pipe)
-
-				if err = pipe.Abort(etx); err != nil {
-					return err
-				}
-			}
-		}
-
-		if err != nil {
-			logrus.Debugf("transactor(%d): aborted", tx.ID)
-		} else {
-			logrus.Debugf("transactor(%d): committed", tx.ID)
-		}
-
-		return err
-	})
-
-	// All transaction related errors should be handled.
-	if err != nil {
-		panic(err)
-	}
-
+	// Mark the end time of processing.
 	tx.EndTime = time.Now().UTC()
+
+	// Complete the transaction by committing or aborting.
+	tx.complete()
+
 	tx.mainwg.Done()
 }
 
-func (tx *Transaction) spawn(pipe Pipeline) chan *origins.Fact {
-	pipech := make(chan *origins.Fact, tx.options.BufferSize)
+// complete commits or aborts the transaction depending if an error occurred
+// during processing.
+func (tx *Transaction) complete() {
+	var err error
 
-	tx.pipes[pipe] = pipech
+	// No error in the transaction, commit the transaction.
+	if tx.Error == nil {
+		if err = tx.commit(); err != nil {
+			logrus.Errorf("transactor(%d): commit failed: %s", tx.ID, err)
+		} else {
+			logrus.Debugf("transactor(%d): commit succeeded", tx.ID)
+		}
+	}
+
+	// Error occurred in the transaction or during the commit. Attempt to abort.
+	// TODO: if the abort fails, how can the storage garbage be reclaimed?
+	if tx.Error != nil || err != nil {
+		if err = tx.abort(); err != nil {
+			logrus.Errorf("transactor(%d): abort failed: %s", tx.ID, err)
+		} else {
+			logrus.Debugf("transactor(%d): abort succeeded", tx.ID)
+		}
+	}
+}
+
+// commit commits all the pipelines in a transaction.
+func (tx *Transaction) commit() error {
+	return tx.Storage.Multi(func(etx storage.Tx) error {
+		for pipe, _ := range tx.pipes {
+			if err := pipe.Commit(etx); err != nil {
+				return err
+			}
+
+			logrus.Debugf("transactor(%d): committed pipeline %v", tx.ID, pipe)
+		}
+
+		return nil
+	})
+}
+
+// abort aborts all of the pipelines in a transaction.
+func (tx *Transaction) abort() error {
+	return tx.Storage.Multi(func(etx storage.Tx) error {
+		for pipe, _ := range tx.pipes {
+			if err := pipe.Abort(etx); err != nil {
+				return err
+			}
+
+			logrus.Debugf("transactor(%d): aborted pipeline %v", tx.ID, pipe)
+		}
+
+		return nil
+	})
+}
+
+// spawn all values on the channel on the pipeline.
+func (tx *Transaction) spawn(pipe Pipeline) chan<- *origins.Fact {
+	ch := make(chan *origins.Fact)
+
+	tx.pipes[pipe] = ch
 	tx.pipewg.Add(1)
 
-	// Start a goroutine for this pipeline. The channel will receive
 	go func() {
 		defer func() {
-			logrus.Debugf("transactor (%d): closing pipeline %v", tx.ID, pipe)
+			close(ch)
 			tx.pipewg.Done()
 		}()
 
@@ -330,30 +352,32 @@ func (tx *Transaction) spawn(pipe Pipeline) chan *origins.Fact {
 			fact *origins.Fact
 		)
 
-		// Initialize the pipeline.
+		// Initialize the pipeline. If an error occurs, send it to the transaction's error channel
+		// which will trigger the cancellation procedure.
 		if err = pipe.Init(tx); err != nil {
 			tx.errch <- err
 			return
 		}
 
-		logrus.Debugf("transactor (%d): initialized pipeline %v", tx.ID, pipe)
+		logrus.Debugf("transactor(%d): initialized pipeline %T(%s)", tx.ID, pipe, pipe)
 
+		// Reads facts from the channel until there are no more or break
+		// if an error occurs from the pipeline.
 		for {
-			fact = <-pipech
-
-			if fact == nil {
-				break
-			}
-
-			// Receive takes the fact and the stream.
-			if err = pipe.Receive(fact); err != nil {
-				tx.errch <- err
+			select {
+			case <-tx.done:
 				return
+
+			case fact = <-ch:
+				if err = pipe.Receive(fact); err != nil {
+					tx.errch <- err
+					return
+				}
 			}
 		}
 	}()
 
-	return pipech
+	return ch
 }
 
 func (tx *Transaction) Cancel() error {
@@ -370,6 +394,37 @@ func (tx *Transaction) Commit() error {
 
 func (tx *Transaction) Append(fact *origins.Fact) error {
 	tx.stream <- fact
+	return nil
+}
+
+func (tx *Transaction) Consume(pub origins.Publisher) error {
+	var (
+		ok   bool
+		err  error
+		fact *origins.Fact
+	)
+
+	// Subscribe to the publisher. It takes a channel to signal when
+	// this consumer is done and returns a channel that produces facts.
+	ch, errch := pub.Subscribe(tx.done)
+
+	// Consume facts until the producer is closed. This may occur upstream
+	// by the producer itself or the transaction is closed prematurely.
+	for {
+		select {
+		case err = <-errch:
+			return err
+
+		case fact, ok = <-ch:
+			// Publisher closed the channel.
+			if !ok {
+				return nil
+			}
+
+			tx.stream <- fact
+		}
+	}
+
 	return nil
 }
 
@@ -424,9 +479,10 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		StartTime: time.Now().UTC(),
 		Storage:   engine,
 		options:   options,
-		pipes:     make(map[Pipeline]chan *origins.Fact),
+		pipes:     make(map[Pipeline]chan<- *origins.Fact),
 		router:    options.Router,
 		stream:    make(chan *origins.Fact, options.BufferSize),
+		done:      make(chan struct{}),
 		errch:     make(chan error),
 		pipewg:    &sync.WaitGroup{},
 		mainwg:    &sync.WaitGroup{},

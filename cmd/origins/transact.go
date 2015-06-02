@@ -35,11 +35,11 @@ func transactFile(engine storage.Engine, r io.Reader, format, compression string
 	// it into the format reader.
 	r = origins.NewUniversalReader(r)
 
-	var iter origins.Iterator
+	var pub origins.Publisher
 
 	switch format {
 	case "csv":
-		iter = origins.CSVReader(r)
+		pub = origins.CSVReader(r)
 	default:
 		logrus.Fatal("transact: unsupported file format", format)
 	}
@@ -52,7 +52,7 @@ func transactFile(engine storage.Engine, r io.Reader, format, compression string
 		logrus.Fatal("transact: error starting transaction:", err)
 	}
 
-	if err = tx.AppendIter(iter); err != nil {
+	if err = tx.Consume(pub); err != nil {
 		logrus.Fatal("transact:", err)
 	}
 
