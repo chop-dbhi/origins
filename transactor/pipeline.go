@@ -21,11 +21,28 @@ type Pipeline interface {
 
 	// Abort aborts the pipeline and deletes any data written to storage.
 	Abort(storage.Tx) error
+
+	// Segments returns a slice of segments that were written to storage.
+	Stats() *Stats
 }
 
 type DomainPipeline struct {
 	Domain  string
-	Segment *Segment
+	segment *Segment
+}
+
+func (p *DomainPipeline) String() string {
+	return p.Domain
+}
+
+// Stats returns the the stats for the pipeline.
+func (p *DomainPipeline) Stats() *Stats {
+	return &Stats{
+		Segments: 1,
+		Blocks:   p.segment.Blocks,
+		Bytes:    p.segment.Bytes,
+		Count:    p.segment.Count,
+	}
 }
 
 func (p *DomainPipeline) Init(tx *Transaction) error {
@@ -46,19 +63,19 @@ func (p *DomainPipeline) Init(tx *Transaction) error {
 	}
 
 	// Initialize new segment pointing to the head of the log.
-	p.Segment = NewSegment(tx.Storage, tx.ID, p.Domain)
-	p.Segment.Base = log.Head
-	p.Segment.Next = log.Head
+	p.segment = NewSegment(tx.Storage, tx.ID, p.Domain)
+	p.segment.Base = log.Head
+	p.segment.Next = log.Head
 
 	return nil
 }
 
 func (p *DomainPipeline) Receive(fact *origins.Fact) error {
-	return p.Segment.Append(fact)
+	return p.segment.Append(fact)
 }
 
 func (p *DomainPipeline) Abort(tx storage.Tx) error {
-	return p.Segment.Abort(tx)
+	return p.segment.Abort(tx)
 }
 
 func (p *DomainPipeline) Commit(tx storage.Tx) error {
@@ -68,7 +85,7 @@ func (p *DomainPipeline) Commit(tx storage.Tx) error {
 	)
 
 	// Write the remaining block of the segment.
-	if err = p.Segment.Write(tx); err != nil {
+	if err = p.segment.Write(tx); err != nil {
 		return err
 	}
 
@@ -86,12 +103,12 @@ func (p *DomainPipeline) Commit(tx storage.Tx) error {
 		}
 
 		// TODO: determine path to handle conflicts.
-		if log.Head > 0 && log.Head != p.Segment.Base {
+		if log.Head > 0 && log.Head != p.segment.Base {
 			return ErrCommitConflict
 		}
 	}
 
-	log.Head = p.Segment.ID
+	log.Head = p.segment.ID
 
 	if b, err = marshalLog(&log); err != nil {
 		return err
