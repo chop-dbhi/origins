@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -56,12 +57,19 @@ func transactFile(engine storage.Engine, r io.Reader, format, compression string
 	}
 
 	if fake {
-		tx.Cancel()
+		err = tx.Cancel()
 	} else {
-		tx.Commit()
+		err = tx.Commit()
 	}
 
-	logrus.Info("transact: took %s", tx.EndTime.Sub(tx.StartTime))
+	if err != nil {
+		logrus.Error("transact:", err)
+	} else {
+		stats, _ := json.Marshal(tx.Stats())
+		logrus.Info("transact:", string(stats))
+	}
+
+	logrus.Infof("transact: took %s", tx.EndTime.Sub(tx.StartTime))
 }
 
 var transactCmd = &cobra.Command{
