@@ -415,6 +415,10 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		options.ReceiveWait = DefaultOptions.ReceiveWait
 	}
 
+	if options.BufferSize == 0 {
+		options.BufferSize = DefaultOptions.BufferSize
+	}
+
 	tx := Transaction{
 		ID:        id,
 		StartTime: time.Now().UTC(),
