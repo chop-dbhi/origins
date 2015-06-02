@@ -282,6 +282,7 @@ loop:
 		panic(err)
 	}
 
+	tx.EndTime = time.Now().UTC()
 	tx.mainwg.Done()
 }
 
