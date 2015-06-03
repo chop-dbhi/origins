@@ -69,3 +69,34 @@ func TestLogIter(t *testing.T) {
 		t.Errorf("expected %d facts, got %d", n, n*m)
 	}
 }
+
+func TestLogReader(t *testing.T) {
+	domain := "test"
+
+	// Transactions
+	n := 100
+
+	// Size of write
+	m := 100
+
+	engine := randStorage(domain, n, m)
+
+	// Open the commit log.
+	log, err := OpenLog(engine, domain, "log.commit")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	iter := log.Iter()
+
+	facts, err := origins.ReadAll(iter)
+
+	if err != nil && err != io.EOF {
+		t.Fatal(err)
+	}
+
+	if len(facts) != n*m {
+		t.Errorf("expected %d facts, got %d", n, n*m)
+	}
+}

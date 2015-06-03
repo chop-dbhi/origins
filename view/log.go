@@ -182,6 +182,29 @@ func (li *logIter) Next() (*origins.Fact, error) {
 	return fact, nil
 }
 
+// Read satisfies the Reader interface.
+func (li *logIter) Read(facts origins.Facts) (int, error) {
+	var (
+		f   *origins.Fact
+		err error
+		l   = len(facts)
+	)
+
+	for i := 0; i < l; i++ {
+		f, err = li.Next()
+
+		// EOF or error
+		if err != nil {
+			return i, err
+		}
+
+		// Add fact.
+		facts[i] = f
+	}
+
+	return l, nil
+}
+
 // A Log is an ordered sequence of facts within a domain.
 type Log struct {
 	Name   string

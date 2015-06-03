@@ -352,3 +352,64 @@ func CSVReader(reader io.Reader) *csvReader {
 
 	return &r
 }
+
+type csvWriter struct {
+	writer  *csv.Writer
+	started bool
+	buf     [][]string
+	idx     int
+}
+
+func (w *csvWriter) Write(f *Fact) error {
+	if !w.started {
+		w.buf[w.idx] = csvHeader
+		w.idx++
+		w.started = true
+	}
+
+	w.buf[w.idx] = []string{
+		f.Domain,
+		f.Operation.String(),
+		f.Time.String(),
+		f.Entity.Domain,
+		f.Entity.Name,
+		f.Attribute.Domain,
+		f.Attribute.Name,
+		f.Value.Domain,
+		f.Value.Name,
+	}
+
+	w.idx++
+
+	if w.idx == cap(w.buf) {
+		w.idx = 0
+		return w.writer.WriteAll(w.buf)
+	}
+
+	return nil
+}
+
+func (w *csvWriter) Flush() error {
+	if w.idx > 0 {
+		if err := w.writer.WriteAll(w.buf[:w.idx]); err != nil {
+			return err
+		}
+
+		w.idx = 0
+	}
+
+	w.writer.Flush()
+
+	return w.writer.Error()
+}
+
+func CSVWriter(writer io.Writer) *csvWriter {
+	cw := csv.NewWriter(writer)
+
+	w := csvWriter{
+		writer: cw,
+		buf:    make([][]string, 500, 500),
+	}
+
+	return &w
+}
