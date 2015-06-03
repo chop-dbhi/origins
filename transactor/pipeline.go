@@ -5,6 +5,24 @@ import (
 	"github.com/chop-dbhi/origins/storage"
 )
 
+// Stats contains information about a pipeline.
+type Stats struct {
+	// List of domains that were affected.
+	Domains []string
+
+	// Number of segments.
+	Segments int
+
+	// Total number of blocks.
+	Blocks int
+
+	// Total of number bytes.
+	Bytes int
+
+	// Total number of facts.
+	Count int
+}
+
 // A Pipeline does the actual work of processing and writing facts to storage.
 type Pipeline interface {
 	// Init initializes the pipeline for the transaction.
@@ -38,6 +56,7 @@ func (p *DomainPipeline) String() string {
 // Stats returns the the stats for the pipeline.
 func (p *DomainPipeline) Stats() *Stats {
 	return &Stats{
+		Domains:  []string{p.segment.Domain},
 		Segments: 1,
 		Blocks:   p.segment.Blocks,
 		Bytes:    p.segment.Bytes,

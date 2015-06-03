@@ -54,13 +54,6 @@ var DefaultOptions = Options{
 	BufferSize:  1000,
 }
 
-type Stats struct {
-	Segments int
-	Blocks   int
-	Bytes    int
-	Count    int
-}
-
 // Transaction is the entrypoint for transacting facts.
 type Transaction struct {
 	// Unique ID for the transaction.
@@ -101,21 +94,17 @@ type Transaction struct {
 
 // Stats returns the stats of the transaction which aggregates
 // them from the pipelines.
-func (tx *Transaction) Stats() *Stats {
-	stats := Stats{}
+func (tx *Transaction) Stats() []*Stats {
+	stats := make([]*Stats, len(tx.pipes))
 
-	var s *Stats
+	var i int
 
 	for pipe := range tx.pipes {
-		s = pipe.Stats()
-
-		stats.Segments += s.Segments
-		stats.Count += s.Count
-		stats.Bytes += s.Bytes
-		stats.Blocks += s.Blocks
+		stats[i] = pipe.Stats()
+		i++
 	}
 
-	return &stats
+	return stats
 }
 
 // evaluate evaluates a fact against the log.
