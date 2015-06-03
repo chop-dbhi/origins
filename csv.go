@@ -1,36 +1,34 @@
-/*
-This module implements a CSV reader for reading facts from CSV-like formatted data.
-
-The following fields are supported:
-
-- Domain - The domain the fact will be asserted in. This is only required for bulk-formatted data, otherwise it is ignored.
-- Operation - The operation to apply to this fact. Optional, defaults to "assert".
-- Valid Time - The time this fact should be considered valid. This is separate from the "database time" which denotes when the fact was physically added. Optional, defaults to "now".
-- Entity Domain - The domain of the entity. Optional, defaults to the fact domain.
-- Entity - The local name of the attribute.
-- Attribute Domain - The domain of the attribute. Optional, defaults to the fact domain.
-- Attribute - The local name of the attribute.
-- Value Domain - The domain of the value. Optional, defaults to the fact domain.
-- Value - The local name of the value.
-
-As noted, most of these fields are optional so they do not need to be included in the file. To do this, a header must be present using the above names to denote the field a column corresponds to. For example, this is a valid file:
-
-	entity,attribute,value
-	bill,likes,soccer
-	bill,likes,fútbol
-	soccer,is,fútbol
-
-Applying this to the domain "sports", this will expand out to:
-
-	domain,operation,valid time,entity domain,entity,attribute domain,attribute,value domain,value
-	sports,assert,now,sports,bill,sports,likes,sports,soccer
-	sports,assert,now,sports,bill,sports,likes,sports,fútbol
-	sports,assert,now,sports,soccer,sports,is,sports,fútbol
-
-The time "now" will be transaction time when it is committed to the database.
-
-At a minimum, the entity, attribute, and value fields must be present.
-*/
+// This module implements a CSV reader for reading facts from CSV-like formatted data.
+//
+// The following fields are supported:
+//
+// - Domain - The domain the fact will be asserted in. This is only required for bulk-formatted data, otherwise it is ignored.
+// - Operation - The operation to apply to this fact. Optional, defaults to "assert".
+// - Valid Time - The time this fact should be considered valid. This is separate from the "database time" which denotes when the fact was physically added. Optional, defaults to "now".
+// - Entity Domain - The domain of the entity. Optional, defaults to the fact domain.
+// - Entity - The local name of the attribute.
+// - Attribute Domain - The domain of the attribute. Optional, defaults to the fact domain.
+// - Attribute - The local name of the attribute.
+// - Value Domain - The domain of the value. Optional, defaults to the fact domain.
+// - Value - The local name of the value.
+//
+// As noted, most of these fields are optional so they do not need to be included in the file. To do this, a header must be present using the above names to denote the field a column corresponds to. For example, this is a valid file:
+//
+// 	entity,attribute,value
+// 	bill,likes,soccer
+// 	bill,likes,fútbol
+// 	soccer,is,fútbol
+//
+// Applying this to the domain "sports", this will expand out to:
+//
+// 	domain,operation,time,entity domain,entity,attribute domain,attribute,value domain,value
+// 	sports,assert,now,sports,bill,sports,likes,sports,soccer
+// 	sports,assert,now,sports,bill,sports,likes,sports,fútbol
+// 	sports,assert,now,sports,soccer,sports,is,sports,fútbol
+//
+// The time "now" will be transaction time when it is committed to the database.
+//
+// At a minimum, the entity, attribute, and value fields must be present.
 
 package origins
 
@@ -52,7 +50,7 @@ var (
 var csvHeader = []string{
 	"domain",
 	"operation",
-	"valid_time",
+	"time",
 	"entity_domain",
 	"entity",
 	"attribute_domain",
@@ -79,13 +77,15 @@ func parseHeader(r []string) (map[string]int, error) {
 		switch f {
 		case "entity":
 			e = true
-			break
 		case "attribute":
 			a = true
-			break
 		case "value":
 			v = true
-			break
+		}
+
+		// Alias
+		if f == "valid_time" {
+			f = "time"
 		}
 
 		h[f] = i
@@ -144,7 +144,7 @@ func (r *csvReader) parse(record []string) (*Fact, error) {
 	}
 
 	// Valid time
-	if idx, ok = r.header["valid_time"]; ok && idx < rlen {
+	if idx, ok = r.header["time"]; ok && idx < rlen {
 		val = record[idx]
 
 		if val != "" {
