@@ -1,6 +1,7 @@
 package view
 
 import (
+	"io"
 	"testing"
 
 	"github.com/chop-dbhi/origins"
@@ -51,15 +52,17 @@ func TestLogIter(t *testing.T) {
 	for {
 		f, err := iter.Next()
 
+		if f != nil {
+			i++
+		}
+
 		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
 			t.Fatal(err)
 		}
-
-		if f == nil {
-			break
-		}
-
-		i++
 	}
 
 	if i != n*m {

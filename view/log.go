@@ -1,12 +1,16 @@
 package view
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
 )
+
+var ErrDoesNotExist = errors.New("log: does not exist")
 
 type segment struct {
 	// ID of the segment. This is also the ID of the transaction that
@@ -102,7 +106,6 @@ type logIter struct {
 	block   origins.Facts
 	bindex  int
 	bpos    int
-	done    bool
 }
 
 // nextSegment
@@ -128,8 +131,7 @@ func (li *logIter) nextSegment() error {
 	li.bpos = 0
 
 	if segment == nil {
-		li.done = true
-		return nil
+		return io.EOF
 	}
 
 	return nil
@@ -138,10 +140,6 @@ func (li *logIter) nextSegment() error {
 // nextBlock returns the block that has the next fact or nil or no
 // more blocks exist.
 func (li *logIter) nextBlock() error {
-	if li.done {
-		return nil
-	}
-
 	// Existing block and still has facts.
 	if li.block != nil && li.bpos < len(li.block) {
 		return nil
@@ -151,10 +149,6 @@ func (li *logIter) nextBlock() error {
 	if li.segment == nil || li.bindex == li.segment.Blocks {
 		if err := li.nextSegment(); err != nil {
 			return err
-		}
-
-		if li.done {
-			return nil
 		}
 	}
 
@@ -167,8 +161,7 @@ func (li *logIter) nextBlock() error {
 
 	// Block does not exist.
 	if block == nil {
-		li.done = true
-		return nil
+		return io.EOF
 	}
 
 	li.block = block
@@ -181,10 +174,6 @@ func (li *logIter) nextBlock() error {
 func (li *logIter) Next() (*origins.Fact, error) {
 	if err := li.nextBlock(); err != nil {
 		return nil, err
-	}
-
-	if li.done {
-		return nil, nil
 	}
 
 	fact := li.block[li.bpos]
@@ -204,7 +193,7 @@ type Log struct {
 
 // Iter returns a value that implements the Iterator interface. This can be
 // called multiple times for independent consumers.
-func (l *Log) Iter() origins.Iterator {
+func (l *Log) Iter() *logIter {
 	return &logIter{
 		domain: l.Domain,
 		engine: l.engine,
@@ -225,7 +214,7 @@ func OpenLog(e storage.Engine, d, n string) (*Log, error) {
 
 	// Does not exist.
 	if b == nil {
-		return nil, nil
+		return nil, ErrDoesNotExist
 	}
 
 	l := Log{

@@ -2,7 +2,7 @@ package origins
 
 import "io"
 
-// Reader is an interface that defines the Read method. It takes a buffer
+// Reader is an interface that defines the Read method. It takes a slice
 // of facts and returns the number of facts read and an error. When the
 // reader is exhausted the number of facts read will be zero.
 type Reader interface {
