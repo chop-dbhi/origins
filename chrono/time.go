@@ -62,8 +62,8 @@ func MicroTime(ts int64) time.Time {
 	// Add the days
 	t := zero.AddDate(0, 0, int(days))
 
-	// Add remaining microseconds. Convert to local time.
-	return t.Add(time.Duration(micros) * time.Microsecond).Local()
+	// Add remaining microseconds.
+	return t.Add(time.Duration(micros) * time.Microsecond)
 }
 
 // fromTime converts a time.Time value in a microsecond resolution timestamp.
