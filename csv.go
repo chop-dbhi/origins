@@ -370,7 +370,7 @@ func (w *csvWriter) Write(f *Fact) error {
 	w.buf[w.idx] = []string{
 		f.Domain,
 		f.Operation.String(),
-		f.Time.String(),
+		chrono.Format(f.Time),
 		f.Entity.Domain,
 		f.Entity.Name,
 		f.Attribute.Domain,

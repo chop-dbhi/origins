@@ -82,6 +82,11 @@ func TimeMicro(t time.Time) int64 {
 	return int64(elapsedSeconds*microsPerSecond + int64(t.Nanosecond())/microsPerNano)
 }
 
+// Format returns a string representation of the time.
+func Format(t time.Time) string {
+	return t.Format(time.RFC3339)
+}
+
 // Parse parses a string into a time value. The string may represent an
 // absolute time, duration relative to the current time, or a microsecond-resolution
 // timestamp. All times are converted to UTC.
