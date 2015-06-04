@@ -292,7 +292,7 @@ func (r *csvReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error)
 			default:
 				f, err = r.read()
 
-				if err != nil {
+				if err != nil && err != io.EOF {
 					errch <- err
 					return
 				}
