@@ -87,6 +87,9 @@ func unmarshalFact(b []byte, d string, t uint64, f *origins.Fact) error {
 		f.Operation = origins.Retraction
 	}
 
+	// Set the transaction ID.
+	f.Transaction = t
+
 	return nil
 }
 

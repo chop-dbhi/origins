@@ -35,6 +35,7 @@ package origins
 import (
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -50,6 +51,7 @@ var (
 var csvHeader = []string{
 	"domain",
 	"operation",
+	"transaction",
 	"time",
 	"entity_domain",
 	"entity",
@@ -370,6 +372,7 @@ func (w *csvWriter) Write(f *Fact) error {
 	w.buf[w.idx] = []string{
 		f.Domain,
 		f.Operation.String(),
+		fmt.Sprint(f.Transaction),
 		chrono.Format(f.Time),
 		f.Entity.Domain,
 		f.Entity.Name,
