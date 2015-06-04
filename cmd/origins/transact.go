@@ -63,13 +63,12 @@ func transactFile(engine storage.Engine, r io.Reader, format, compression string
 	}
 
 	if err != nil {
-		logrus.Error("transact:", err)
-	} else {
-		stats, _ := json.Marshal(tx.Stats())
-		logrus.Info("transact:", string(stats))
+		logrus.Fatalf("transact:", err)
 	}
 
-	logrus.Infof("transact: took %s", tx.EndTime.Sub(tx.StartTime))
+	info, _ := json.MarshalIndent(tx.Info(), "", "\t")
+
+	fmt.Println(string(info))
 }
 
 var transactCmd = &cobra.Command{

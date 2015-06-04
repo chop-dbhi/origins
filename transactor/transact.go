@@ -91,19 +91,45 @@ type Transaction struct {
 	pipes map[Pipeline]chan<- *origins.Fact
 }
 
+// Info holds information about a transaction.
+type Info struct {
+	ID        uint64
+	StartTime time.Time
+	EndTime   time.Time
+	Duration  time.Duration
+	Pipelines int
+	Domains   []string
+	Bytes     int
+	Count     int
+}
+
 // Stats returns the stats of the transaction which aggregates
 // them from the pipelines.
-func (tx *Transaction) Stats() []*Stats {
-	stats := make([]*Stats, len(tx.pipes))
+func (tx *Transaction) Info() *Info {
+	var (
+		domains      []string
+		bytes, count int
 
-	var i int
+		stats *Stats
+	)
 
 	for pipe := range tx.pipes {
-		stats[i] = pipe.Stats()
-		i++
+		stats = pipe.Stats()
+		domains = append(domains, stats.Domains...)
+		bytes += stats.Bytes
+		count += stats.Count
 	}
 
-	return stats
+	return &Info{
+		ID:        tx.ID,
+		StartTime: tx.StartTime,
+		EndTime:   tx.EndTime,
+		Duration:  tx.EndTime.Sub(tx.StartTime),
+		Pipelines: len(tx.pipes),
+		Domains:   domains,
+		Bytes:     bytes,
+		Count:     count,
+	}
 }
 
 // evaluate evaluates a fact against the log.
