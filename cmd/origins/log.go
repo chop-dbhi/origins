@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -24,15 +26,12 @@ var logCmd = &cobra.Command{
 		}
 
 		var (
-			w  io.Writer
-			fw origins.Writer
-			//min, max int64
-			err error
+			w           io.Writer
+			err         error
+			fw          origins.Writer
+			asof, since time.Time
 
 			domain = args[0]
-
-			//smin   = viper.GetString("log_min")
-			//smax   = viper.GetString("log_max")
 			file   = viper.GetString("log_file")
 			format = viper.GetString("log_format")
 		)
@@ -45,7 +44,10 @@ var logCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 
-		iter := log.Iter()
+		since, _ = chrono.Parse(viper.GetString("log_since"))
+		asof, _ = chrono.Parse(viper.GetString("log_asof"))
+
+		iter := log.Iter(since, asof)
 
 		if file == "" {
 			w = os.Stdout
@@ -83,13 +85,13 @@ var logCmd = &cobra.Command{
 func init() {
 	flags := logCmd.Flags()
 
-	flags.String("min", "", "The min tranaction time of log to read.")
-	flags.String("max", "", "The max tranaction time of log to read.")
+	flags.String("asof", "", "Defines the upper time boundary of facts to be read.")
+	flags.String("since", "", "Defines the lower time boundary of facts to be read. ")
 	flags.String("file", "", "Path to a file to write the log to.")
 	flags.String("format", "csv", "The output format of the log.")
 
-	viper.BindPFlag("log_min", flags.Lookup("min"))
-	viper.BindPFlag("log_max", flags.Lookup("max"))
+	viper.BindPFlag("log_asof", flags.Lookup("asof"))
+	viper.BindPFlag("log_since", flags.Lookup("since"))
 	viper.BindPFlag("log_file", flags.Lookup("file"))
 	viper.BindPFlag("log_format", flags.Lookup("format"))
 }

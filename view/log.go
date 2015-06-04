@@ -98,40 +98,68 @@ func loadBlock(e storage.Engine, d string, s uint64, i int) (origins.Facts, erro
 
 // logIter maintains state of a log that is being read.
 type logIter struct {
-	name    string
-	domain  string
-	head    uint64
+	name   string
+	domain string
+	head   uint64
+
+	asof  time.Time
+	since time.Time
+
 	engine  storage.Engine
 	segment *segment
-	block   origins.Facts
-	bindex  int
-	bpos    int
+
+	block  origins.Facts
+	bindex int
+	bpos   int
 }
 
 // nextSegment
 func (li *logIter) nextSegment() error {
-	var id uint64
 
-	if li.segment == nil {
-		id = li.head
-	} else {
-		id = li.segment.Next
-	}
+	var (
+		id  uint64
+		seg *segment
+		err error
+	)
 
-	segment, err := loadSegment(li.engine, li.domain, id)
-
-	if err != nil {
-		return err
-	}
-
-	// Update state.
-	li.segment = segment
+	// Reset segment block state.
 	li.bindex = 0
 	li.block = nil
 	li.bpos = 0
 
-	if segment == nil {
-		return io.EOF
+	// Loop until a valid segment is found.
+	for {
+		if li.segment == nil {
+			id = li.head
+		} else {
+			id = li.segment.Next
+		}
+
+		if id == 0 {
+			return io.EOF
+		}
+
+		seg, err = loadSegment(li.engine, li.domain, id)
+
+		if err != nil {
+			return err
+		}
+
+		// Update state.
+		li.segment = seg
+
+		// Too late
+		if !li.asof.IsZero() && seg.Time.After(li.asof) {
+			continue
+		}
+
+		// Too early
+		if !li.since.IsZero() && seg.Time.Before(li.since) {
+			continue
+		}
+
+		// Segment is within range.
+		break
 	}
 
 	return nil
@@ -216,12 +244,30 @@ type Log struct {
 
 // Iter returns a value that implements the Iterator interface. This can be
 // called multiple times for independent consumers.
-func (l *Log) Iter() *logIter {
+func (l *Log) Iter(since, asof time.Time) *logIter {
 	return &logIter{
 		domain: l.Domain,
 		engine: l.engine,
 		head:   l.head,
+		since:  since,
+		asof:   asof,
 	}
+}
+
+// Now returns a view of the log with a time boundary set to the current time.
+// This is equivalent to: Asof(time.Now().UTC())
+func (l *Log) Now() *logIter {
+	return l.Asof(time.Now())
+}
+
+// Asof returns a view of the log with an explicit upper time boundary.
+func (l *Log) Asof(t time.Time) *logIter {
+	return l.Iter(time.Time{}, t.UTC())
+}
+
+// Since returns a view of the log with an explicit lower time boundary.
+func (l *Log) Since(t time.Time) *logIter {
+	return l.Iter(t.UTC(), time.Time{})
 }
 
 // OpenLog opens a log for reading.
