@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/chop-dbhi/origins"
-	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/sirupsen/logrus"
 )
@@ -132,7 +131,7 @@ func (tx *Transaction) evaluate(f *origins.Fact) error {
 	}
 
 	// Set the valid time if empty.
-	if f.Time == chrono.Zero {
+	if f.Time.IsZero() {
 		f.Time = tx.StartTime
 	}
 
