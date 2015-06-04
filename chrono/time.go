@@ -17,7 +17,7 @@ const (
 // enables times ranging from January 1, 0001 (zero time) to January 10, 292278.
 // Time is parsed as UTC.
 var (
-	Zero = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+	zero = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// TimeLayouts is a list of time layouts that are used when parsing
 	// a time string.
@@ -60,7 +60,7 @@ func MicroTime(ts int64) time.Time {
 	micros := ts - days*secondsPerDay*microsPerSecond
 
 	// Add the days
-	t := Zero.AddDate(0, 0, int(days))
+	t := zero.AddDate(0, 0, int(days))
 
 	// Add remaining microseconds. Convert to local time.
 	return t.Add(time.Duration(micros) * time.Microsecond).Local()
@@ -115,7 +115,7 @@ func Parse(s string) (time.Time, error) {
 		return MicroTime(i), nil
 	}
 
-	return Zero, fmt.Errorf("time: could not parse %s", s)
+	return zero, fmt.Errorf("time: could not parse %s", s)
 }
 
 // MustParse parses the passed time string or panics.

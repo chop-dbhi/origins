@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/chop-dbhi/origins/chrono"
 )
 
 // Operation denotes the validity of a fact. A fact can be asserted in which
@@ -122,12 +120,12 @@ func parseFact(op Operation, e, a, v interface{}, t time.Time) (*Fact, error) {
 
 // Assert returns an asserted fact. The EAV values can be strings or Ident values.
 func Assert(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Assertion, e, a, v, chrono.Zero)
+	return parseFact(Assertion, e, a, v, time.Time{})
 }
 
 // Retract returns a retracted fact. The EAV values can be strings or Ident values.
 func Retract(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Retraction, e, a, v, chrono.Zero)
+	return parseFact(Retraction, e, a, v, time.Time{})
 }
 
 // AssertForTime returns an asserted fact at a specified time.
