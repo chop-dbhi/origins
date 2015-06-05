@@ -26,6 +26,11 @@ type Ident struct {
 	Name   string
 }
 
+// Is returns true if the passed ident is the same as the current one.
+func (id *Ident) Is(b *Ident) bool {
+	return id.Domain == b.Domain && id.Name == b.Name
+}
+
 // String returns the fully qualified identity string.
 func (id *Ident) String() string {
 	if id.Domain == "" {
