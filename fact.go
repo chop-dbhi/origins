@@ -1,6 +1,7 @@
 package origins
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -22,6 +23,10 @@ func (o Operation) String() string {
 	default:
 		return ""
 	}
+}
+
+func (o Operation) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.String())
 }
 
 const (
