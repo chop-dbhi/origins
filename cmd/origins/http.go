@@ -109,6 +109,7 @@ func serveHTTP(engine storage.Engine, host string, port int) {
 
 	router.GET("/", httpRoot)
 	router.GET("/log/:domain", httpLogView)
+	router.GET("/timeline/:domain", httpTimeline)
 
 	// Add CORS middleware
 	c := cors.New(cors.Options{
@@ -220,6 +221,68 @@ func httpLogView(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	if _, err := origins.ReadWriter(v, fw); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+}
+
+func httpTimeline(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	domain := p.ByName("domain")
+
+	var (
+		err         error
+		since, asof time.Time
+	)
+
+	q := r.URL.Query()
+
+	// Parse query parameters
+	if q.Get("since") != "" {
+		since, err = chrono.Parse(q.Get("since"))
+
+		if err != nil {
+			w.WriteHeader(StatusUnprocessableEntity)
+			w.Write([]byte(fmt.Sprint(err)))
+			return
+		}
+	}
+
+	if q.Get("asof") != "" {
+		asof, err = chrono.Parse(q.Get("asof"))
+
+		if err != nil {
+			w.WriteHeader(StatusUnprocessableEntity)
+			w.Write([]byte(fmt.Sprint(err)))
+			return
+		}
+	}
+
+	// Open the log.
+	engine := initStorage()
+
+	log, err := view.OpenLog(engine, domain, "commit")
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	// Construct a view of the log for the specified window of time.
+	v := log.View(since, asof)
+
+	events, err := view.Timeline(v, view.Descending)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+
+	if err = encoder.Encode(events); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprint(err)))
 		return
