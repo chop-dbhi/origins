@@ -1,31 +1,48 @@
 package pb;
 
+// A transaction contains information about the state of the system when
+// facts are being transacted.
 message Transaction {
     required uint64 ID = 1;
-	required int64 StartTime = 2;
-	required int64 EndTime = 3;
+    required int64 StartTime = 2;
+    required int64 EndTime = 3;
 }
 
+// A log is the header of a linked list of segments. It is one of the few
+// mutable values since it holds the pointer to the head of the linked list.
+// Upon a successful transaction, the head is updated to point to the most
+// segment.
 message Log {
-	optional uint64 Head = 1;
+    optional uint64 Head = 1;
 }
 
+// A segment behaves as a node in a linked list in the scope of a domain. It
+// corresponds to a transaction and maintains stats about contained facts.
+// To access the facts, the segment key is combined with a block index, e.g
+// segment.1.0 which translates to "segment 1 block 0".
 message Segment {
-	required uint64 ID = 1;
-	required int32 Blocks = 2;
-    required int32 Count = 3;
-    required int32 Bytes = 4;
-    optional uint64 Next = 5;
-    optional uint64 Base = 6;
+    required uint64 ID = 1;
+    required int64 Time = 2;
+    required int32 Blocks = 3;
+    required int32 Count = 4;
+    required int32 Bytes = 5;
+    optional uint64 Next = 6;
+    optional uint64 Base = 7;
 }
 
+// Facts do not contain omit the domain and transaction ID since this info
+// is contained in the tiers accessed above the fact. Specifically, the domain
+// is required to access the fact, so it is attached to the fact when decoded.
+// Likewise, the the transaction ID is referenced by the segment that is accessed
+// prior to decoding facts. The fact operation is currently encoded as a boolean
+// where true denotes "assert" and false denotes "retract".
 message Fact {
-	required bool Added = 1;
+    required bool Added = 1;
     required string EntityDomain = 2;
     required string Entity = 3;
     required string AttributeDomain = 4;
     required string Attribute = 5;
     optional string ValueDomain = 6;
     required string Value = 7;
-	optional int64 Time = 8;
+    optional int64 Time = 8;
 }

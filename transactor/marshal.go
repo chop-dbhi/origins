@@ -100,6 +100,7 @@ func marshalFacts(fs origins.Facts) ([]byte, error) {
 func marshalSegment(s *Segment) ([]byte, error) {
 	m := pb.Segment{
 		ID:     proto.Uint64(s.ID),
+		Time:   proto.Int64(chrono.TimeMicro(s.Time)),
 		Blocks: proto.Int32(int32(s.Blocks)),
 		Count:  proto.Int32(int32(s.Count)),
 		Bytes:  proto.Int32(int32(s.Bytes)),
@@ -118,6 +119,7 @@ func unmarshalSegment(b []byte, s *Segment) error {
 	}
 
 	s.ID = m.GetID()
+	s.Time = chrono.MicroTime(m.GetTime())
 	s.Blocks = int(m.GetBlocks())
 	s.Count = int(m.GetCount())
 	s.Bytes = int(m.GetBytes())

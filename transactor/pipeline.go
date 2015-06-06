@@ -85,6 +85,7 @@ func (p *DomainPipeline) Init(tx *Transaction) error {
 	p.segment = NewSegment(tx.Storage, tx.ID, p.Domain)
 	p.segment.Base = log.Head
 	p.segment.Next = log.Head
+	p.segment.Time = tx.StartTime
 
 	return nil
 }

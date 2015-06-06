@@ -30,6 +30,7 @@ func unmarshalSegment(b []byte, s *segment) error {
 	}
 
 	s.ID = m.GetID()
+	s.Time = chrono.MicroTime(m.GetTime())
 	s.Blocks = int(m.GetBlocks())
 	s.Count = int(m.GetCount())
 	s.Bytes = int(m.GetBytes())

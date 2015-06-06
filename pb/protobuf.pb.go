@@ -23,6 +23,8 @@ import math "math"
 var _ = proto.Marshal
 var _ = math.Inf
 
+// A transaction contains information about the state of the system when
+// facts are being transacted.
 type Transaction struct {
 	ID               *uint64 `protobuf:"varint,1,req" json:"ID,omitempty"`
 	StartTime        *int64  `protobuf:"varint,2,req" json:"StartTime,omitempty"`
@@ -55,6 +57,10 @@ func (m *Transaction) GetEndTime() int64 {
 	return 0
 }
 
+// A log is the header of a linked list of segments. It is one of the few
+// mutable values since it holds the pointer to the head of the linked list.
+// Upon a successful transaction, the head is updated to point to the most
+// segment.
 type Log struct {
 	Head             *uint64 `protobuf:"varint,1,opt" json:"Head,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -71,13 +77,18 @@ func (m *Log) GetHead() uint64 {
 	return 0
 }
 
+// A segment behaves as a node in a linked list in the scope of a domain. It
+// corresponds to a transaction and maintains stats about contained facts.
+// To access the facts, the segment key is combined with a block index, e.g
+// segment.1.0 which translates to "segment 1 block 0".
 type Segment struct {
 	ID               *uint64 `protobuf:"varint,1,req" json:"ID,omitempty"`
-	Blocks           *int32  `protobuf:"varint,2,req" json:"Blocks,omitempty"`
-	Count            *int32  `protobuf:"varint,3,req" json:"Count,omitempty"`
-	Bytes            *int32  `protobuf:"varint,4,req" json:"Bytes,omitempty"`
-	Next             *uint64 `protobuf:"varint,5,opt" json:"Next,omitempty"`
-	Base             *uint64 `protobuf:"varint,6,opt" json:"Base,omitempty"`
+	Time             *int64  `protobuf:"varint,2,req" json:"Time,omitempty"`
+	Blocks           *int32  `protobuf:"varint,3,req" json:"Blocks,omitempty"`
+	Count            *int32  `protobuf:"varint,4,req" json:"Count,omitempty"`
+	Bytes            *int32  `protobuf:"varint,5,req" json:"Bytes,omitempty"`
+	Next             *uint64 `protobuf:"varint,6,opt" json:"Next,omitempty"`
+	Base             *uint64 `protobuf:"varint,7,opt" json:"Base,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -88,6 +99,13 @@ func (*Segment) ProtoMessage()    {}
 func (m *Segment) GetID() uint64 {
 	if m != nil && m.ID != nil {
 		return *m.ID
+	}
+	return 0
+}
+
+func (m *Segment) GetTime() int64 {
+	if m != nil && m.Time != nil {
+		return *m.Time
 	}
 	return 0
 }
@@ -127,6 +145,12 @@ func (m *Segment) GetBase() uint64 {
 	return 0
 }
 
+// Facts do not contain omit the domain and transaction ID since this info
+// is contained in the tiers accessed above the fact. Specifically, the domain
+// is required to access the fact, so it is attached to the fact when decoded.
+// Likewise, the the transaction ID is referenced by the segment that is accessed
+// prior to decoding facts. The fact operation is currently encoded as a boolean
+// where true denotes "assert" and false denotes "retract".
 type Fact struct {
 	Added            *bool   `protobuf:"varint,1,req" json:"Added,omitempty"`
 	EntityDomain     *string `protobuf:"bytes,2,req" json:"EntityDomain,omitempty"`
