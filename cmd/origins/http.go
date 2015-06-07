@@ -1,0 +1,140 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"mime"
+	"net/http"
+	"strings"
+
+	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/storage"
+	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+var httpCmd = &cobra.Command{
+	Use: "http",
+
+	Short: "Starts an HTTP peer.",
+
+	Long: "Runs a process exposing an HTTP interface.",
+
+	Run: func(cmd *cobra.Command, args []string) {
+		var (
+			host = viper.GetString("http_host")
+			port = viper.GetInt("http_port")
+		)
+
+		engine := initStorage()
+
+		serveHTTP(engine, host, port)
+	},
+}
+
+func init() {
+	flags := httpCmd.Flags()
+
+	flags.String("host", "", "The host the HTTP service will listen on.")
+	flags.Int("port", 49110, "The port the HTTP will bind to.")
+
+	viper.BindPFlag("http_host", flags.Lookup("host"))
+	viper.BindPFlag("http_port", flags.Lookup("port"))
+}
+
+const (
+	defaultFormat = "text"
+
+	StatusUnprocessableEntity = 422
+)
+
+var (
+	mimetypes = map[string]string{
+		"application/json": "json",
+		"text/csv":         "csv",
+		"text/plain":       "text",
+	}
+
+	formatMimetypes = map[string]string{
+		"csv":  "text/csv",
+		"json": "application/json",
+		"text": "text/plain",
+	}
+
+	queryFormats = map[string]string{
+		"json": "json",
+		"csv":  "csv",
+		"text": "text",
+	}
+)
+
+// detectFormat applies content negotiation logic to determine the
+// appropriate response representation.
+func detectFormat(w http.ResponseWriter, r *http.Request) string {
+	var (
+		ok     bool
+		format string
+	)
+
+	format = queryFormats[strings.ToLower(r.URL.Query().Get("format"))]
+
+	// Query parameter
+	if format == "" {
+		// Accept header
+		acceptType := r.Header.Get("Accept")
+		acceptType, _, _ = mime.ParseMediaType(acceptType)
+
+		// Fallback to default
+		if format, ok = mimetypes[acceptType]; !ok {
+			format = defaultFormat
+		}
+	}
+
+	w.Header().Set("content-type", formatMimetypes[format])
+
+	return format
+}
+
+func serveHTTP(engine storage.Engine, host string, port int) {
+	addr := fmt.Sprintf("%s:%d", host, port)
+
+	// Bind the routes.
+	router := httprouter.New()
+
+	router.GET("/", httpRoot)
+
+	// Add CORS middleware
+	c := cors.New(cors.Options{
+		ExposedHeaders: []string{
+			"Link",
+			"Link-Template",
+		},
+	})
+
+	handler := c.Handler(router)
+
+	// Serve it up.
+	logrus.Infof("* Listening on %s...", addr)
+
+	logrus.Fatal(http.ListenAndServe(addr, handler))
+}
+
+// jsonResponse attempts to encode the passed value as JSON.
+func jsonResponse(w http.ResponseWriter, v interface{}) {
+	e := json.NewEncoder(w)
+
+	if err := e.Encode(v); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+	}
+}
+
+func httpRoot(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	jsonResponse(w, map[string]interface{}{
+		"Title":   "Origins HTTP Service",
+		"Version": origins.Version,
+	})
+}
