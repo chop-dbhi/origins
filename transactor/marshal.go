@@ -9,6 +9,7 @@ import (
 	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/pb"
 	"github.com/golang/protobuf/proto"
+	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,6 +26,28 @@ const (
 	// for length-prefix framing.
 	maxFactSize = 1 << 16
 )
+
+func encodeUUID(u *uuid.UUID) []byte {
+	if u == nil {
+		return nil
+	}
+
+	return u.Bytes()
+}
+
+func decodeUUID(b []byte) *uuid.UUID {
+	if b == nil {
+		return nil
+	}
+
+	u, err := uuid.FromBytes(b)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return &u
+}
 
 func marshalFact(f *origins.Fact) ([]byte, error) {
 	m := pb.Fact{}
@@ -99,13 +122,14 @@ func marshalFacts(fs origins.Facts) ([]byte, error) {
 
 func marshalSegment(s *Segment) ([]byte, error) {
 	m := pb.Segment{
-		ID:     proto.Uint64(s.ID),
-		Time:   proto.Int64(chrono.TimeMicro(s.Time)),
-		Blocks: proto.Int32(int32(s.Blocks)),
-		Count:  proto.Int32(int32(s.Count)),
-		Bytes:  proto.Int32(int32(s.Bytes)),
-		Next:   proto.Uint64(s.Next),
-		Base:   proto.Uint64(s.Base),
+		UUID:        encodeUUID(s.UUID),
+		Transaction: proto.Uint64(s.Transaction),
+		Time:        proto.Int64(chrono.TimeMicro(s.Time)),
+		Blocks:      proto.Int32(int32(s.Blocks)),
+		Count:       proto.Int32(int32(s.Count)),
+		Bytes:       proto.Int32(int32(s.Bytes)),
+		Next:        encodeUUID(s.Next),
+		Base:        encodeUUID(s.Base),
 	}
 
 	return proto.Marshal(&m)
@@ -118,20 +142,21 @@ func unmarshalSegment(b []byte, s *Segment) error {
 		return err
 	}
 
-	s.ID = m.GetID()
+	s.UUID = decodeUUID(m.GetUUID())
+	s.Transaction = m.GetTransaction()
 	s.Time = chrono.MicroTime(m.GetTime())
 	s.Blocks = int(m.GetBlocks())
 	s.Count = int(m.GetCount())
 	s.Bytes = int(m.GetBytes())
-	s.Next = m.GetNext()
-	s.Base = m.GetBase()
+	s.Next = decodeUUID(m.GetNext())
+	s.Base = decodeUUID(m.GetBase())
 
 	return nil
 }
 
 func marshalLog(l *Log) ([]byte, error) {
 	m := pb.Log{
-		Head: proto.Uint64(l.Head),
+		Head: encodeUUID(l.Head),
 	}
 
 	return proto.Marshal(&m)
@@ -144,7 +169,7 @@ func unmarshalLog(b []byte, l *Log) error {
 		return err
 	}
 
-	l.Head = m.GetHead()
+	l.Head = decodeUUID(m.GetHead())
 
 	return nil
 }

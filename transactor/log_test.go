@@ -44,7 +44,7 @@ func TestSegment(t *testing.T) {
 
 	// Confirm bolt is doing its job..
 	for i := 0; i < segment.Blocks; i++ {
-		k = fmt.Sprintf(BlockKey, segment.ID, i)
+		k = fmt.Sprintf(BlockKey, segment.UUID, i)
 		b, err = engine.Get("test", k)
 
 		if b == nil {
@@ -58,7 +58,7 @@ func TestSegment(t *testing.T) {
 
 	// Confirm aborted entries have been deleted
 	for i := 0; i < segment.Blocks; i++ {
-		k = fmt.Sprintf(BlockKey, segment.ID, i)
+		k = fmt.Sprintf(BlockKey, segment.UUID, i)
 		b, err = engine.Get("test", k)
 
 		if b != nil {

@@ -8,14 +8,17 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/satori/go.uuid"
 )
 
 var ErrDoesNotExist = errors.New("log: does not exist")
 
 type segment struct {
-	// ID of the segment. This is also the ID of the transaction that
-	// resulted in this segment.
-	ID uint64
+	// Unique identifier of the segment.
+	UUID *uuid.UUID
+
+	// ID of the transaction this segment was created in.
+	Transaction uint64
 
 	// The domain this segment corresponds to.
 	Domain string
@@ -32,17 +35,18 @@ type segment struct {
 	// Total number of bytes of the segment take up.
 	Bytes int
 
-	// ID of the segment that acted as the basis for this one.
-	Base uint64
+	// ID of the segment that acted as the basis for this one. This
+	// is defined as the time the transaction starts.
+	Base *uuid.UUID
 
-	// ID of the segment that follows this one. Typically this is
+	// ID of the segment that this segment succeeds. Typically this is
 	// the same value as Base, except when a conflict is resolved and
 	// the segment position is changed.
-	Next uint64
+	Next *uuid.UUID
 }
 
 // loadSegment loads a segment header from storage.
-func loadSegment(e storage.Engine, d string, s uint64) (*segment, error) {
+func loadSegment(e storage.Engine, d string, u *uuid.UUID) (*segment, error) {
 	var (
 		b   []byte
 		err error
@@ -50,12 +54,12 @@ func loadSegment(e storage.Engine, d string, s uint64) (*segment, error) {
 	)
 
 	seg := segment{
-		ID:     s,
+		UUID:   u,
 		Domain: d,
 	}
 
 	// Get segment header.
-	key = fmt.Sprintf("segment.%d", s)
+	key = fmt.Sprintf("segment.%s", u)
 
 	if b, err = e.Get(d, key); err != nil {
 		return nil, err
@@ -74,7 +78,7 @@ func loadSegment(e storage.Engine, d string, s uint64) (*segment, error) {
 }
 
 // loadBlock loads a block of facts from storage.
-func loadBlock(e storage.Engine, d string, s uint64, i int) (origins.Facts, error) {
+func loadBlock(e storage.Engine, d string, t uint64, u *uuid.UUID, i int) (origins.Facts, error) {
 	var (
 		b   []byte
 		err error
@@ -82,7 +86,7 @@ func loadBlock(e storage.Engine, d string, s uint64, i int) (origins.Facts, erro
 	)
 
 	// Get block.
-	key = fmt.Sprintf("segment.%d.%d", s, i)
+	key = fmt.Sprintf("block.%s.%d", u, i)
 
 	if b, err = e.Get(d, key); err != nil {
 		return nil, err
@@ -93,14 +97,14 @@ func loadBlock(e storage.Engine, d string, s uint64, i int) (origins.Facts, erro
 		return nil, nil
 	}
 
-	return unmarshalFacts(b, d, s)
+	return unmarshalFacts(b, d, t)
 }
 
 // logIter maintains state of a log that is being read.
 type logIter struct {
 	name   string
 	domain string
-	head   uint64
+	head   *uuid.UUID
 
 	asof  time.Time
 	since time.Time
@@ -117,7 +121,7 @@ type logIter struct {
 func (li *logIter) nextSegment() error {
 
 	var (
-		id  uint64
+		id  *uuid.UUID
 		seg *segment
 		err error
 	)
@@ -135,7 +139,7 @@ func (li *logIter) nextSegment() error {
 			id = li.segment.Next
 		}
 
-		if id == 0 {
+		if id == nil {
 			return io.EOF
 		}
 
@@ -181,7 +185,7 @@ func (li *logIter) nextBlock() error {
 	}
 
 	// Error loading block
-	block, err := loadBlock(li.engine, li.segment.Domain, li.segment.ID, li.bindex)
+	block, err := loadBlock(li.engine, li.segment.Domain, li.segment.Transaction, li.segment.UUID, li.bindex)
 
 	if err != nil {
 		return err
@@ -238,7 +242,7 @@ type Log struct {
 	Name   string
 	Domain string
 
-	head   uint64
+	head   *uuid.UUID
 	engine storage.Engine
 }
 

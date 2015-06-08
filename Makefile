@@ -17,6 +17,7 @@ install:
 	go get github.com/spf13/viper
 	go get github.com/spf13/cobra
 	go get github.com/psilva261/timsort
+	go get github.com/satori/go.uuid
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover

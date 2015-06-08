@@ -1,9 +1,14 @@
 package transactor
 
 import (
+	"fmt"
+
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/satori/go.uuid"
 )
+
+const commitLogName = "commit"
 
 // Stats contains information about a pipeline.
 type Stats struct {
@@ -73,7 +78,7 @@ func (p *DomainPipeline) Init(tx *Transaction) error {
 	// Get the commit log for this domain.
 	log := Log{}
 
-	if b, err = tx.Storage.Get(p.Domain, LogKey); err != nil {
+	if b, err = tx.Storage.Get(p.Domain, fmt.Sprintf(LogKey, commitLogName)); err != nil {
 		return err
 	}
 
@@ -112,7 +117,7 @@ func (p *DomainPipeline) Commit(tx storage.Tx) error {
 	log := Log{}
 
 	// Compare and swap ID on domain's commit log.
-	if b, err = tx.Get(p.Domain, LogKey); err != nil {
+	if b, err = tx.Get(p.Domain, fmt.Sprintf(LogKey, commitLogName)); err != nil {
 		return err
 	}
 
@@ -123,18 +128,18 @@ func (p *DomainPipeline) Commit(tx storage.Tx) error {
 		}
 
 		// TODO: determine path to handle conflicts.
-		if log.Head > 0 && log.Head != p.segment.Base {
+		if log.Head != nil && !uuid.Equal(*log.Head, *p.segment.Base) {
 			return ErrCommitConflict
 		}
 	}
 
-	log.Head = p.segment.ID
+	log.Head = p.segment.UUID
 
 	if b, err = marshalLog(&log); err != nil {
 		return err
 	}
 
-	tx.Set(p.Domain, LogKey, b)
+	tx.Set(p.Domain, fmt.Sprintf(LogKey, commitLogName), b)
 
 	return nil
 }

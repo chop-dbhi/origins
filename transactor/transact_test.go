@@ -11,13 +11,7 @@ import (
 )
 
 func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint64) {
-	if b, err := engine.Get(domain, fmt.Sprintf(SegmentKey, id)); err != nil {
-		t.Errorf("transact: %s", err)
-	} else if b == nil {
-		t.Errorf("transact: expected segment %d to exist", id)
-	}
-
-	b, err := engine.Get(domain, LogKey)
+	b, err := engine.Get(domain, fmt.Sprintf(LogKey, commitLogName))
 
 	log := Log{}
 
@@ -25,8 +19,16 @@ func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint6
 		t.Fatal(err)
 	}
 
-	if log.Head != id {
-		t.Errorf("expected %d, got %d", id, log.Head)
+	b, err = engine.Get(domain, fmt.Sprintf(SegmentKey, log.Head))
+
+	seg := Segment{}
+
+	if err = unmarshalSegment(b, &seg); err != nil {
+		t.Fatal(err)
+	}
+
+	if seg.Transaction != id {
+		t.Errorf("expected %d, got %d", id, seg.Transaction)
 	}
 }
 

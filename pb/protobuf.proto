@@ -13,7 +13,7 @@ message Transaction {
 // Upon a successful transaction, the head is updated to point to the most
 // segment.
 message Log {
-    optional uint64 Head = 1;
+    optional bytes Head = 1;
 }
 
 // A segment behaves as a node in a linked list in the scope of a domain. It
@@ -21,13 +21,14 @@ message Log {
 // To access the facts, the segment key is combined with a block index, e.g
 // segment.1.0 which translates to "segment 1 block 0".
 message Segment {
-    required uint64 ID = 1;
-    required int64 Time = 2;
-    required int32 Blocks = 3;
-    required int32 Count = 4;
-    required int32 Bytes = 5;
-    optional uint64 Next = 6;
-    optional uint64 Base = 7;
+    required bytes UUID = 1;
+    required uint64 Transaction = 2;
+    required int64 Time = 3;
+    required int32 Blocks = 4;
+    required int32 Count = 5;
+    required int32 Bytes = 6;
+    optional bytes Next = 7;
+    optional bytes Base = 8;
 }
 
 // Facts do not contain omit the domain and transaction ID since this info
