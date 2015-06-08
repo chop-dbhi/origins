@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/chop-dbhi/origins"
-	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/dal"
+	"github.com/chop-dbhi/origins/storage"
 	"github.com/satori/go.uuid"
 )
 
 var ErrDoesNotExist = errors.New("log: does not exist")
 
-// logIter maintains state of a log that is being read.
-type logIter struct {
+// logView maintains state of a log that is being read.
+type logView struct {
 	name   string
 	domain string
 	head   *uuid.UUID
@@ -31,7 +31,7 @@ type logIter struct {
 }
 
 // nextSegment
-func (li *logIter) nextSegment() error {
+func (li *logView) nextSegment() error {
 
 	var (
 		id  *uuid.UUID
@@ -84,7 +84,7 @@ func (li *logIter) nextSegment() error {
 
 // nextBlock returns the block that has the next fact or nil or no
 // more blocks exist.
-func (li *logIter) nextBlock() error {
+func (li *logView) nextBlock() error {
 	// Existing block and still has facts.
 	if li.block != nil && li.bpos < len(li.block) {
 		return nil
@@ -115,7 +115,7 @@ func (li *logIter) nextBlock() error {
 	return nil
 }
 
-func (li *logIter) Next() (*origins.Fact, error) {
+func (li *logView) Next() (*origins.Fact, error) {
 	if err := li.nextBlock(); err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (li *logIter) Next() (*origins.Fact, error) {
 }
 
 // Read satisfies the Reader interface.
-func (li *logIter) Read(facts origins.Facts) (int, error) {
+func (li *logView) Read(facts origins.Facts) (int, error) {
 	var (
 		f   *origins.Fact
 		err error
@@ -156,10 +156,10 @@ type Log struct {
 	engine storage.Engine
 }
 
-// Iter returns a value that implements the Iterator interface. This can be
-// called multiple times for independent consumers.
-func (l *Log) Iter(since, asof time.Time) *logIter {
-	return &logIter{
+// View returns a view of the log for the specified time period. It is safe for
+// multiple consumers to create views of a log.
+func (l *Log) View(since, asof time.Time) *logView {
+	return &logView{
 		domain: l.log.Domain,
 		head:   l.log.Head,
 		engine: l.engine,
@@ -170,18 +170,18 @@ func (l *Log) Iter(since, asof time.Time) *logIter {
 
 // Now returns a view of the log with a time boundary set to the current time.
 // This is equivalent to: Asof(time.Now().UTC())
-func (l *Log) Now() *logIter {
+func (l *Log) Now() *logView {
 	return l.Asof(time.Now())
 }
 
 // Asof returns a view of the log with an explicit upper time boundary.
-func (l *Log) Asof(t time.Time) *logIter {
-	return l.Iter(time.Time{}, t.UTC())
+func (l *Log) Asof(t time.Time) *logView {
+	return l.View(time.Time{}, t.UTC())
 }
 
 // Since returns a view of the log with an explicit lower time boundary.
-func (l *Log) Since(t time.Time) *logIter {
-	return l.Iter(t.UTC(), time.Time{})
+func (l *Log) Since(t time.Time) *logView {
+	return l.View(t.UTC(), time.Time{})
 }
 
 // OpenLog opens a log for reading.

@@ -47,7 +47,7 @@ var logCmd = &cobra.Command{
 		since, _ = chrono.Parse(viper.GetString("log_since"))
 		asof, _ = chrono.Parse(viper.GetString("log_asof"))
 
-		iter := log.Iter(since, asof)
+		v := log.View(since, asof)
 
 		if file == "" {
 			w = os.Stdout
@@ -72,7 +72,7 @@ var logCmd = &cobra.Command{
 			logrus.Fatal("unknown format", format)
 		}
 
-		n, err := origins.ReadWriter(iter, fw)
+		n, err := origins.ReadWriter(v, fw)
 
 		if err != nil {
 			logrus.Fatal(err)
