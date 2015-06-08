@@ -57,15 +57,6 @@ func main() {
 	// Turn on debugging for all commands.
 	mainCmd.ParseFlags(os.Args)
 
-	level, err := logrus.ParseLevel(viper.GetString("log"))
-
-	if err != nil {
-		fmt.Println("Invalid log level choice.")
-		mainCmd.Help()
-	}
-
-	logrus.SetLevel(level)
-
 	config := viper.GetString("config")
 
 	if config != "" {
@@ -74,6 +65,15 @@ func main() {
 
 	// Read configuration file if present.
 	viper.ReadInConfig()
+
+	level, err := logrus.ParseLevel(viper.GetString("log"))
+
+	if err != nil {
+		fmt.Println("Invalid log level choice.")
+		mainCmd.Help()
+	}
+
+	logrus.SetLevel(level)
 
 	mainCmd.Execute()
 }
