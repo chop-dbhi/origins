@@ -45,6 +45,10 @@ type Options struct {
 	// Defines the buffer size of the channel that receives facts for processing.
 	// Increasing this may increase throughput at the expense of memory.
 	BufferSize int
+
+	// If true, a zeroed fact time will be set to the transaction start time. This
+	// is useful for facts that are considered "new in the world".
+	SetDefaultTime bool
 }
 
 // DefaultOptions hold the default options for a transaction.
@@ -156,8 +160,8 @@ func (tx *Transaction) evaluate(f *origins.Fact) error {
 		f.Attribute.Domain = f.Domain
 	}
 
-	// Set the valid time if empty.
-	if f.Time.IsZero() {
+	// Set fact time to the transaction time if flagged to do so.
+	if f.Time.IsZero() && tx.options.SetDefaultTime {
 		f.Time = tx.StartTime
 	}
 
