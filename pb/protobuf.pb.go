@@ -62,19 +62,19 @@ func (m *Transaction) GetEndTime() int64 {
 // Upon a successful transaction, the head is updated to point to the most
 // segment.
 type Log struct {
-	Head             *uint64 `protobuf:"varint,1,opt" json:"Head,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Head             []byte `protobuf:"bytes,1,opt" json:"Head,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *Log) Reset()         { *m = Log{} }
 func (m *Log) String() string { return proto.CompactTextString(m) }
 func (*Log) ProtoMessage()    {}
 
-func (m *Log) GetHead() uint64 {
-	if m != nil && m.Head != nil {
-		return *m.Head
+func (m *Log) GetHead() []byte {
+	if m != nil {
+		return m.Head
 	}
-	return 0
+	return nil
 }
 
 // A segment behaves as a node in a linked list in the scope of a domain. It
@@ -82,13 +82,14 @@ func (m *Log) GetHead() uint64 {
 // To access the facts, the segment key is combined with a block index, e.g
 // segment.1.0 which translates to "segment 1 block 0".
 type Segment struct {
-	ID               *uint64 `protobuf:"varint,1,req" json:"ID,omitempty"`
-	Time             *int64  `protobuf:"varint,2,req" json:"Time,omitempty"`
-	Blocks           *int32  `protobuf:"varint,3,req" json:"Blocks,omitempty"`
-	Count            *int32  `protobuf:"varint,4,req" json:"Count,omitempty"`
-	Bytes            *int32  `protobuf:"varint,5,req" json:"Bytes,omitempty"`
-	Next             *uint64 `protobuf:"varint,6,opt" json:"Next,omitempty"`
-	Base             *uint64 `protobuf:"varint,7,opt" json:"Base,omitempty"`
+	UUID             []byte  `protobuf:"bytes,1,req" json:"UUID,omitempty"`
+	Transaction      *uint64 `protobuf:"varint,2,req" json:"Transaction,omitempty"`
+	Time             *int64  `protobuf:"varint,3,req" json:"Time,omitempty"`
+	Blocks           *int32  `protobuf:"varint,4,req" json:"Blocks,omitempty"`
+	Count            *int32  `protobuf:"varint,5,req" json:"Count,omitempty"`
+	Bytes            *int32  `protobuf:"varint,6,req" json:"Bytes,omitempty"`
+	Next             []byte  `protobuf:"bytes,7,opt" json:"Next,omitempty"`
+	Base             []byte  `protobuf:"bytes,8,opt" json:"Base,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -96,9 +97,16 @@ func (m *Segment) Reset()         { *m = Segment{} }
 func (m *Segment) String() string { return proto.CompactTextString(m) }
 func (*Segment) ProtoMessage()    {}
 
-func (m *Segment) GetID() uint64 {
-	if m != nil && m.ID != nil {
-		return *m.ID
+func (m *Segment) GetUUID() []byte {
+	if m != nil {
+		return m.UUID
+	}
+	return nil
+}
+
+func (m *Segment) GetTransaction() uint64 {
+	if m != nil && m.Transaction != nil {
+		return *m.Transaction
 	}
 	return 0
 }
@@ -131,18 +139,18 @@ func (m *Segment) GetBytes() int32 {
 	return 0
 }
 
-func (m *Segment) GetNext() uint64 {
-	if m != nil && m.Next != nil {
-		return *m.Next
+func (m *Segment) GetNext() []byte {
+	if m != nil {
+		return m.Next
 	}
-	return 0
+	return nil
 }
 
-func (m *Segment) GetBase() uint64 {
-	if m != nil && m.Base != nil {
-		return *m.Base
+func (m *Segment) GetBase() []byte {
+	if m != nil {
+		return m.Base
 	}
-	return 0
+	return nil
 }
 
 // Facts do not contain omit the domain and transaction ID since this info

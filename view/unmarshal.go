@@ -8,6 +8,7 @@ import (
 	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/pb"
 	"github.com/golang/protobuf/proto"
+	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,6 +23,20 @@ const (
 	factPrefixSize = 2
 )
 
+func decodeUUID(b []byte) *uuid.UUID {
+	if b == nil {
+		return nil
+	}
+
+	u, err := uuid.FromBytes(b)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return &u
+}
+
 func unmarshalSegment(b []byte, s *segment) error {
 	m := pb.Segment{}
 
@@ -29,13 +44,14 @@ func unmarshalSegment(b []byte, s *segment) error {
 		return err
 	}
 
-	s.ID = m.GetID()
+	s.UUID = decodeUUID(m.GetUUID())
+	s.Transaction = m.GetTransaction()
 	s.Time = chrono.MicroTime(m.GetTime())
 	s.Blocks = int(m.GetBlocks())
 	s.Count = int(m.GetCount())
 	s.Bytes = int(m.GetBytes())
-	s.Next = m.GetNext()
-	s.Base = m.GetBase()
+	s.Next = decodeUUID(m.GetNext())
+	s.Base = decodeUUID(m.GetBase())
 
 	return nil
 }
@@ -47,7 +63,7 @@ func unmarshalLog(b []byte, l *Log) error {
 		return err
 	}
 
-	l.head = m.GetHead()
+	l.head = decodeUUID(m.GetHead())
 
 	return nil
 }

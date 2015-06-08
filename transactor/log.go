@@ -6,13 +6,14 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/satori/go.uuid"
 )
 
 const (
 	// Templates for various keys.
-	LogKey     = "log.commit"
-	SegmentKey = "segment.%d"
-	BlockKey   = "segment.%d.%d"
+	LogKey     = "log.%s"
+	SegmentKey = "segment.%s"
+	BlockKey   = "block.%s.%d"
 )
 
 // Number of facts written to a block.
@@ -21,16 +22,18 @@ var blockSize = 1000
 // A Log represents a chain of segments with the log maintaining a pointer to
 // the most recent segment in the chain.
 type Log struct {
-	Head uint64
+	Head *uuid.UUID
 }
 
 // Segment represents a transacted set of facts. Segments are broken up into
 // fixed-sized blocks to facilitate flushing the data to disk during a
 // long-running transaction. Each segment maintains the basis
 type Segment struct {
-	// ID of the segment. This is also the ID of the transaction that
-	// resulted in this segment.
-	ID uint64
+	// Unique identifier of the segment.
+	UUID *uuid.UUID
+
+	// ID of the transaction this segment was created in.
+	Transaction uint64
 
 	// The domain this segment corresponds to.
 	Domain string
@@ -47,13 +50,14 @@ type Segment struct {
 	// Total number of bytes of the segment take up.
 	Bytes int
 
-	// ID of the segment that acted as the basis for this one.
-	Base uint64
+	// ID of the segment that acted as the basis for this one. This
+	// is defined as the time the transaction starts.
+	Base *uuid.UUID
 
-	// ID of the segment that follows this one. Typically this is
+	// ID of the segment that this segment succeeds. Typically this is
 	// the same value as Base, except when a conflict is resolved and
 	// the segment position is changed.
-	Next uint64
+	Next *uuid.UUID
 
 	Storage storage.Engine
 
@@ -68,8 +72,8 @@ func (s *Segment) Write(tx storage.Tx) error {
 		return nil
 	}
 
-	SegmentKey := fmt.Sprintf(SegmentKey, s.ID)
-	blockKey := fmt.Sprintf(BlockKey, s.ID, s.Blocks)
+	SegmentKey := fmt.Sprintf(SegmentKey, s.UUID)
+	blockKey := fmt.Sprintf(BlockKey, s.UUID, s.Blocks)
 
 	var (
 		err    error
@@ -130,24 +134,27 @@ func (s *Segment) Abort(tx storage.Tx) error {
 	)
 
 	for i := 0; i < s.Blocks; i++ {
-		key = fmt.Sprintf(BlockKey, s.ID, i)
+		key = fmt.Sprintf(BlockKey, s.UUID, i)
 
 		if xrr = tx.Delete(s.Domain, key); xrr != nil {
 			err = xrr
 		}
 	}
 
-	key = fmt.Sprintf(SegmentKey, s.ID)
+	key = fmt.Sprintf(SegmentKey, s.UUID)
 	err = tx.Delete(s.Domain, key)
 
 	return err
 }
 
 func NewSegment(s storage.Engine, id uint64, domain string) *Segment {
+	u := uuid.NewV4()
+
 	return &Segment{
-		ID:      id,
-		Domain:  domain,
-		Storage: s,
-		block:   make(origins.Facts, blockSize),
+		UUID:        &u,
+		Transaction: id,
+		Domain:      domain,
+		Storage:     s,
+		block:       make(origins.Facts, blockSize),
 	}
 }
