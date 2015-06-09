@@ -47,7 +47,7 @@ func checkCanceled(t *testing.T, engine storage.Engine, domain string, id uint64
 }
 
 func TestCommit(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	domain := "test"
 
@@ -62,7 +62,7 @@ func TestCommit(t *testing.T) {
 }
 
 func TestCancel(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	domain := "test"
 
@@ -77,7 +77,7 @@ func TestCancel(t *testing.T) {
 }
 
 func TestMultiple(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	domain := "test"
 
@@ -94,7 +94,7 @@ func TestMultiple(t *testing.T) {
 }
 
 func TestMultipleDomains(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	tx, _ := New(engine, DefaultOptions)
 
@@ -123,7 +123,7 @@ func TestMultipleDomains(t *testing.T) {
 func benchTransaction(b *testing.B, n int, m int) {
 	b.StopTimer()
 
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	var (
 		wg sync.WaitGroup

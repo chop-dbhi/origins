@@ -10,7 +10,7 @@ import (
 )
 
 func TestSegment(t *testing.T) {
-	engine, err := origins.Open("mem", nil)
+	engine, err := origins.Init("mem", nil)
 
 	segment := NewSegment(engine, 1, "test")
 
@@ -68,7 +68,7 @@ func TestSegment(t *testing.T) {
 }
 
 func benchSegmentBlockSize(b *testing.B, bs int) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	blockSize = bs
 
@@ -115,7 +115,7 @@ func BenchmarkSegmentBlockSize__10000(b *testing.B) {
 }
 
 func benchSegmentSize(b *testing.B, n int) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	var f *origins.Fact
 

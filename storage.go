@@ -17,8 +17,8 @@ var StorageEngines = map[string]storage.Initializer{
 	"memory": memory.Init,
 }
 
-// Open initializes a store with the specified storage and options.
-func Open(name string, opts *storage.Options) (storage.Engine, error) {
+// Init initializes a store with the specified storage and options.
+func Init(name string, opts *storage.Options) (storage.Engine, error) {
 	var (
 		ok     bool
 		err    error

@@ -14,7 +14,7 @@ import (
 // Initializes an in-memory store and generates n transactions each with m
 // randomly generated facts.
 func randStorage(domain string, n, m int) storage.Engine {
-	engine, _ := origins.Open("memory", nil)
+	engine, _ := origins.Init("memory", nil)
 
 	for i := 0; i < m; i++ {
 		tx, _ := transactor.New(engine, transactor.DefaultOptions)

@@ -27,8 +27,8 @@ func initStorage() storage.Engine {
 		"path": path,
 	}
 
-	// Open the storage engine.
-	engine, err := origins.Open(name, &opts)
+	// Initialize the storage engine.
+	engine, err := origins.Init(name, &opts)
 
 	if err != nil {
 		logrus.Fatal("storage:", err)
