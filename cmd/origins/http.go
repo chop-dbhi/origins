@@ -177,7 +177,7 @@ func httpLogView(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Open the log.
 	engine := initStorage()
 
-	log, err := view.OpenLog(engine, domain, "log.commit")
+	log, err := view.OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
