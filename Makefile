@@ -18,6 +18,7 @@ install:
 	go get github.com/spf13/cobra
 	go get github.com/psilva261/timsort
 	go get github.com/satori/go.uuid
+	go get github.com/julienschmidt/httprouter
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover
