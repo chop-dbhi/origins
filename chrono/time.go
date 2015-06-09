@@ -133,3 +133,14 @@ func MustParse(s string) time.Time {
 
 	return t
 }
+
+// JSON returns an interface value for a time value intended to be used
+// when preparing a custom value for JSON encoding. It uses nil for zero
+// time values.
+func JSON(t time.Time) interface{} {
+	if t.IsZero() {
+		return nil
+	}
+
+	return t
+}

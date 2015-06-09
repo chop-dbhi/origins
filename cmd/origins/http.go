@@ -49,7 +49,7 @@ func init() {
 }
 
 const (
-	defaultFormat = "text"
+	defaultFormat = "json"
 
 	StatusUnprocessableEntity = 422
 )
@@ -195,6 +195,25 @@ func httpLogView(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	switch format {
 	case "text", "csv":
 		fw = origins.CSVWriter(w)
+
+	case "json":
+		encoder := json.NewEncoder(w)
+
+		facts, err := origins.ReadIterAll(v)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprint(err)))
+			return
+		}
+
+		if err = encoder.Encode(facts); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprint(err)))
+		}
+
+		return
+
 	default:
 		w.WriteHeader(http.StatusNotAcceptable)
 		return

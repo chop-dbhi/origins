@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/chop-dbhi/origins/chrono"
 )
 
 // Operation denotes the validity of a fact. A fact can be asserted in which
@@ -83,6 +85,18 @@ type Fact struct {
 // String returns a string representation of the fact.
 func (f *Fact) String() string {
 	return fmt.Sprintf("(%s %s %s %s)", f.Operation, f.Entity, f.Attribute, f.Value)
+}
+
+func (f *Fact) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"Operation":   f.Operation,
+		"Domain":      f.Domain,
+		"Entity":      f.Entity,
+		"Attribute":   f.Attribute,
+		"Value":       f.Value,
+		"Time":        chrono.JSON(f.Time),
+		"Transaction": f.Transaction,
+	})
 }
 
 func parseIdent(id interface{}) (*Ident, error) {
