@@ -7,7 +7,7 @@ doc:
 	godoc -http=:6060
 
 proto:
-	protoc --go_out=. pb/*.proto
+	protoc --go_out=. dal/*.proto
 
 install:
 	go get github.com/sirupsen/logrus

@@ -38,7 +38,7 @@ var logCmd = &cobra.Command{
 
 		engine := initStorage()
 
-		log, err := view.OpenLog(engine, domain, "log.commit")
+		log, err := view.OpenLog(engine, domain, "commit")
 
 		if err != nil {
 			logrus.Fatal(err)

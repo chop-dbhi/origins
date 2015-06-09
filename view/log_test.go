@@ -40,7 +40,7 @@ func TestLogIter(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		t.Fatal(err)
@@ -83,7 +83,7 @@ func TestLogReader(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +114,7 @@ func TestLogAsof(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	// 1 minute before
 	max := time.Now().Add(-time.Minute)
@@ -159,7 +159,7 @@ func TestLogSince(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	// 1 minute before
 	min := time.Now().Add(-time.Minute)

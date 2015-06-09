@@ -2,103 +2,16 @@ package view
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/chop-dbhi/origins/dal"
 	"github.com/satori/go.uuid"
 )
 
 var ErrDoesNotExist = errors.New("log: does not exist")
-
-type segment struct {
-	// Unique identifier of the segment.
-	UUID *uuid.UUID
-
-	// ID of the transaction this segment was created in.
-	Transaction uint64
-
-	// The domain this segment corresponds to.
-	Domain string
-
-	// Time the segment was committed.
-	Time time.Time
-
-	// Number of blocks in this segment.
-	Blocks int
-
-	// Total number of facts in the segment.
-	Count int
-
-	// Total number of bytes of the segment take up.
-	Bytes int
-
-	// ID of the segment that acted as the basis for this one. This
-	// is defined as the time the transaction starts.
-	Base *uuid.UUID
-
-	// ID of the segment that this segment succeeds. Typically this is
-	// the same value as Base, except when a conflict is resolved and
-	// the segment position is changed.
-	Next *uuid.UUID
-}
-
-// loadSegment loads a segment header from storage.
-func loadSegment(e storage.Engine, d string, u *uuid.UUID) (*segment, error) {
-	var (
-		b   []byte
-		err error
-		key string
-	)
-
-	seg := segment{
-		UUID:   u,
-		Domain: d,
-	}
-
-	// Get segment header.
-	key = fmt.Sprintf("segment.%s", u)
-
-	if b, err = e.Get(d, key); err != nil {
-		return nil, err
-	}
-
-	// Does not exist.
-	if b == nil {
-		return nil, nil
-	}
-
-	if err = unmarshalSegment(b, &seg); err != nil {
-		return nil, err
-	}
-
-	return &seg, nil
-}
-
-// loadBlock loads a block of facts from storage.
-func loadBlock(e storage.Engine, d string, t uint64, u *uuid.UUID, i int) (origins.Facts, error) {
-	var (
-		b   []byte
-		err error
-		key string
-	)
-
-	// Get block.
-	key = fmt.Sprintf("block.%s.%d", u, i)
-
-	if b, err = e.Get(d, key); err != nil {
-		return nil, err
-	}
-
-	// Does not exist.
-	if b == nil {
-		return nil, nil
-	}
-
-	return unmarshalFacts(b, d, t)
-}
 
 // logIter maintains state of a log that is being read.
 type logIter struct {
@@ -110,7 +23,7 @@ type logIter struct {
 	since time.Time
 
 	engine  storage.Engine
-	segment *segment
+	segment *dal.Segment
 
 	block  origins.Facts
 	bindex int
@@ -122,7 +35,7 @@ func (li *logIter) nextSegment() error {
 
 	var (
 		id  *uuid.UUID
-		seg *segment
+		seg *dal.Segment
 		err error
 	)
 
@@ -143,7 +56,7 @@ func (li *logIter) nextSegment() error {
 			return io.EOF
 		}
 
-		seg, err = loadSegment(li.engine, li.domain, id)
+		seg, err = dal.GetSegment(li.engine, li.domain, id)
 
 		if err != nil {
 			return err
@@ -184,8 +97,7 @@ func (li *logIter) nextBlock() error {
 		}
 	}
 
-	// Error loading block
-	block, err := loadBlock(li.engine, li.segment.Domain, li.segment.Transaction, li.segment.UUID, li.bindex)
+	block, err := dal.GetBlock(li.engine, li.segment.Domain, li.segment.UUID, li.bindex, li.segment.Transaction)
 
 	if err != nil {
 		return err
@@ -239,10 +151,8 @@ func (li *logIter) Read(facts origins.Facts) (int, error) {
 
 // A Log is an ordered sequence of facts within a domain.
 type Log struct {
-	Name   string
-	Domain string
+	log *dal.Log
 
-	head   *uuid.UUID
 	engine storage.Engine
 }
 
@@ -250,9 +160,9 @@ type Log struct {
 // called multiple times for independent consumers.
 func (l *Log) Iter(since, asof time.Time) *logIter {
 	return &logIter{
-		domain: l.Domain,
+		domain: l.log.Domain,
+		head:   l.log.Head,
 		engine: l.engine,
-		head:   l.head,
 		since:  since,
 		asof:   asof,
 	}
@@ -275,29 +185,20 @@ func (l *Log) Since(t time.Time) *logIter {
 }
 
 // OpenLog opens a log for reading.
-func OpenLog(e storage.Engine, d, n string) (*Log, error) {
-	var (
-		b   []byte
-		err error
-	)
+func OpenLog(engine storage.Engine, domain, name string) (*Log, error) {
+	log, err := dal.GetLog(engine, domain, name)
 
-	if b, err = e.Get(d, n); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	// Does not exist.
-	if b == nil {
+	if log == nil {
 		return nil, ErrDoesNotExist
 	}
 
 	l := Log{
-		Name:   n,
-		Domain: d,
-		engine: e,
-	}
-
-	if err = unmarshalLog(b, &l); err != nil {
-		return nil, err
+		log:    log,
+		engine: engine,
 	}
 
 	return &l, nil
