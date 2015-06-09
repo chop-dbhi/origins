@@ -6,9 +6,12 @@ import (
 	"mime"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/chop-dbhi/origins/view"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
@@ -105,6 +108,7 @@ func serveHTTP(engine storage.Engine, host string, port int) {
 	router := httprouter.New()
 
 	router.GET("/", httpRoot)
+	router.GET("/log/:domain", httpLogView)
 
 	// Add CORS middleware
 	c := cors.New(cors.Options{
@@ -137,4 +141,68 @@ func httpRoot(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		"Title":   "Origins HTTP Service",
 		"Version": origins.Version,
 	})
+}
+
+func httpLogView(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	domain := p.ByName("domain")
+
+	var (
+		err         error
+		since, asof time.Time
+	)
+
+	q := r.URL.Query()
+
+	// Parse query parameters
+	if q.Get("since") != "" {
+		since, err = chrono.Parse(q.Get("since"))
+
+		if err != nil {
+			w.WriteHeader(StatusUnprocessableEntity)
+			w.Write([]byte(fmt.Sprint(err)))
+			return
+		}
+	}
+
+	if q.Get("asof") != "" {
+		asof, err = chrono.Parse(q.Get("asof"))
+
+		if err != nil {
+			w.WriteHeader(StatusUnprocessableEntity)
+			w.Write([]byte(fmt.Sprint(err)))
+			return
+		}
+	}
+
+	// Open the log.
+	engine := initStorage()
+
+	log, err := view.OpenLog(engine, domain, "log.commit")
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	// Construct a view of the log for the specified window of time.
+	v := log.View(since, asof)
+
+	var fw origins.Writer
+
+	format := detectFormat(w, r)
+
+	switch format {
+	case "text", "csv":
+		fw = origins.CSVWriter(w)
+	default:
+		w.WriteHeader(http.StatusNotAcceptable)
+		return
+	}
+
+	if _, err := origins.ReadWriter(v, fw); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
 }
