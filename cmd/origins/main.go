@@ -46,7 +46,7 @@ func main() {
 	flags := mainCmd.PersistentFlags()
 
 	flags.String("log", "info", "Level of log messages to emit. Choices are: debug, info, warn, error, fatal, panic.")
-	flags.String("storage", "", "Storage backend. Choices are: boltdb and memory.")
+	flags.String("storage", "memory", "Storage backend. Choices are: boltdb and memory.")
 	flags.String("path", "", "Path to a file or directory filesystem-based storage backends.")
 	flags.String("config", "", "Path to config file. Defaults to a origins.{json,yml,yaml} in the current working directory.")
 
