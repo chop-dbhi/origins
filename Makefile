@@ -19,6 +19,7 @@ install:
 	go get github.com/psilva261/timsort
 	go get github.com/satori/go.uuid
 	go get github.com/julienschmidt/httprouter
+	go get github.com/rs/cors
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover
