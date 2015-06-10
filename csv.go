@@ -100,12 +100,8 @@ func parseHeader(r []string) (map[string]int, error) {
 	return h, nil
 }
 
-type csvReader struct {
-	reader *csv.Reader
-	header map[string]int
-}
-
-func isEmpty(r []string) bool {
+// isEmptyRecord returns true if all of the values are empty strings.
+func isEmptyRecord(r []string) bool {
 	for _, v := range r {
 		if v != "" {
 			return false
@@ -115,7 +111,14 @@ func isEmpty(r []string) bool {
 	return true
 }
 
-func (r *csvReader) parse(record []string) (*Fact, error) {
+type CSVReader struct {
+	reader *csv.Reader
+	header map[string]int
+	fact   *Fact
+	err    error
+}
+
+func (r *CSVReader) parse(record []string) (*Fact, error) {
 	// Map row values to fact fields.
 	var (
 		ok        bool
@@ -214,7 +217,8 @@ func (r *csvReader) parse(record []string) (*Fact, error) {
 	return &f, nil
 }
 
-func (r *csvReader) read() (*Fact, error) {
+// scan reads the CSV file for the next fact.
+func (r *CSVReader) next() (*Fact, error) {
 	var (
 		err    error
 		record []string
@@ -230,7 +234,7 @@ func (r *csvReader) read() (*Fact, error) {
 		}
 
 		// Line with all empty strings.
-		if isEmpty(record) {
+		if isEmptyRecord(record) {
 			continue
 		}
 
@@ -263,14 +267,37 @@ func (r *csvReader) read() (*Fact, error) {
 	return fact, err
 }
 
-// Next satisfies the Iterator interface.
-func (r *csvReader) Next() (*Fact, error) {
-	return r.read()
+// Next returns the next fact in the stream.
+func (r *CSVReader) Next() *Fact {
+	if r.err != nil {
+		return nil
+	}
+
+	// Scan for the next fact and queue it.
+	f, err := r.next()
+
+	// Error reading the next fact.
+	if err != nil {
+		r.err = err
+		return nil
+	}
+
+	return f
+}
+
+// Err returns the error produced while reading.
+func (r *CSVReader) Err() error {
+	// EOF is an implementation detail of the underlying stream.
+	if r.err == io.EOF {
+		return nil
+	}
+
+	return r.err
 }
 
 // Subscribe satisfies the Publisher interface. It returns a channel of facts that
 // can be consumed by downstream consumers.
-func (r *csvReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error) {
+func (r *CSVReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error) {
 	ch := make(chan *Fact)
 	errch := make(chan error)
 
@@ -292,19 +319,17 @@ func (r *csvReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error)
 				return
 
 			default:
-				f, err = r.read()
+				if f = r.Next(); f != nil {
+					ch <- f
+					continue
+				}
 
-				if err != nil && err != io.EOF {
+				// Signal the error if one occurred.
+				if err = r.Err(); err != nil {
 					errch <- err
-					return
 				}
 
-				// No more or an error.
-				if f == nil {
-					return
-				}
-
-				ch <- f
+				return
 			}
 		}
 	}()
@@ -312,33 +337,8 @@ func (r *csvReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error)
 	return ch, errch
 }
 
-// Read satisfies the Reader interface.
-func (r *csvReader) Read(facts Facts) (int, error) {
-	var (
-		f   *Fact
-		err error
-		l   = len(facts)
-	)
-
-	for i := 0; i < l; i++ {
-		f, err = r.read()
-
-		// EOF or error
-		if err != nil {
-			return i, err
-		}
-
-		// Add fact.
-		if f != nil {
-			facts[i] = f
-		}
-	}
-
-	return l, nil
-}
-
-func CSVReader(reader io.Reader) *csvReader {
-	cr := csv.NewReader(reader)
+func NewCSVReader(r io.Reader) *CSVReader {
+	cr := csv.NewReader(r)
 
 	// Set CSV parameters
 	cr.LazyQuotes = true
@@ -348,28 +348,23 @@ func CSVReader(reader io.Reader) *csvReader {
 	// on the header.
 	cr.FieldsPerRecord = -1
 
-	r := csvReader{
+	return &CSVReader{
 		reader: cr,
 	}
-
-	return &r
 }
 
-type csvWriter struct {
+type CSVWriter struct {
 	writer  *csv.Writer
 	started bool
-	buf     [][]string
-	idx     int
 }
 
-func (w *csvWriter) Write(f *Fact) error {
+func (w *CSVWriter) Write(f *Fact) error {
 	if !w.started {
-		w.buf[w.idx] = csvHeader
-		w.idx++
+		w.writer.Write(csvHeader)
 		w.started = true
 	}
 
-	w.buf[w.idx] = []string{
+	w.writer.Write([]string{
 		f.Domain,
 		f.Operation.String(),
 		fmt.Sprint(f.Transaction),
@@ -380,39 +375,18 @@ func (w *csvWriter) Write(f *Fact) error {
 		f.Attribute.Name,
 		f.Value.Domain,
 		f.Value.Name,
-	}
-
-	w.idx++
-
-	if w.idx == cap(w.buf) {
-		w.idx = 0
-		return w.writer.WriteAll(w.buf)
-	}
-
-	return nil
-}
-
-func (w *csvWriter) Flush() error {
-	if w.idx > 0 {
-		if err := w.writer.WriteAll(w.buf[:w.idx]); err != nil {
-			return err
-		}
-
-		w.idx = 0
-	}
-
-	w.writer.Flush()
+	})
 
 	return w.writer.Error()
 }
 
-func CSVWriter(writer io.Writer) *csvWriter {
-	cw := csv.NewWriter(writer)
+func (w *CSVWriter) Flush() error {
+	w.writer.Flush()
+	return w.writer.Error()
+}
 
-	w := csvWriter{
-		writer: cw,
-		buf:    make([][]string, 500, 500),
+func NewCSVWriter(w io.Writer) *CSVWriter {
+	return &CSVWriter{
+		writer: csv.NewWriter(w),
 	}
-
-	return &w
 }

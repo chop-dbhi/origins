@@ -1,8 +1,8 @@
-package pb;
+package dal;
 
 // A transaction contains information about the state of the system when
 // facts are being transacted.
-message Transaction {
+message ProtoTransaction {
     required uint64 ID = 1;
     required int64 StartTime = 2;
     required int64 EndTime = 3;
@@ -12,7 +12,7 @@ message Transaction {
 // mutable values since it holds the pointer to the head of the linked list.
 // Upon a successful transaction, the head is updated to point to the most
 // segment.
-message Log {
+message ProtoLog {
     optional bytes Head = 1;
 }
 
@@ -20,7 +20,7 @@ message Log {
 // corresponds to a transaction and maintains stats about contained facts.
 // To access the facts, the segment key is combined with a block index, e.g
 // segment.1.0 which translates to "segment 1 block 0".
-message Segment {
+message ProtoSegment {
     required bytes UUID = 1;
     required uint64 Transaction = 2;
     required int64 Time = 3;
@@ -37,7 +37,7 @@ message Segment {
 // Likewise, the the transaction ID is referenced by the segment that is accessed
 // prior to decoding facts. The fact operation is currently encoded as a boolean
 // where true denotes "assert" and false denotes "retract".
-message Fact {
+message ProtoFact {
     required bool Added = 1;
     required string EntityDomain = 2;
     required string Entity = 3;

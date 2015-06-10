@@ -1,7 +1,5 @@
 package origins
 
-import "io"
-
 // Buffer holds a slice of facts. The buffer dynamically grows as facts
 // are written to it. The position is maintained across reads.
 type Buffer struct {
@@ -22,6 +20,16 @@ func (b *Buffer) Grow(n int) {
 // Len returns the length of the unread portion of the buffer.
 func (b *Buffer) Len() int {
 	return b.wpos - b.rpos
+}
+
+// Write writes a fact to the buffer.
+func (b *Buffer) Write(f *Fact) error {
+	_, err := b.Append(f)
+	return err
+}
+
+func (b *Buffer) Flush() error {
+	return nil
 }
 
 // Write takes a slice of facts and writes them to the buffer.
@@ -69,48 +77,20 @@ func (b *Buffer) Reset() {
 	b.Truncate(0)
 }
 
-// Next implements the Iterator interface. It returns the
-// next unread fact in the buffer.
-func (b *Buffer) Next() (*Fact, error) {
-	if b.rpos == b.wpos {
-		return nil, io.EOF
+// Next returns the next unread fact in the buffer.
+func (b *Buffer) Next() *Fact {
+	if b.rpos >= b.wpos {
+		return nil
 	}
 
 	f := b.buf[b.rpos]
 	b.rpos++
 
-	return f, nil
+	return f
 }
 
-// Read implements the Reader interface.
-func (b *Buffer) Read(buf Facts) (int, error) {
-	// Consumed.
-	if b.rpos >= b.wpos {
-		return 0, io.EOF
-	}
-
-	var err error
-
-	l := len(buf)
-
-	lo := b.rpos
-	hi := lo + l
-
-	// Cap hi to the unread facts.
-	if hi >= b.wpos {
-		hi = b.wpos
-		err = io.EOF
-	}
-
-	// Actual number observed.
-	n := hi - lo
-
-	if n > 0 {
-		copy(buf, b.buf[lo:hi])
-		b.rpos += n
-	}
-
-	return n, err
+func (b *Buffer) Err() error {
+	return nil
 }
 
 // NewBuffer initializes a buffer of facts.

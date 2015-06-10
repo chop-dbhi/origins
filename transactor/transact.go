@@ -25,8 +25,8 @@ var (
 )
 
 // txid increments a global transaction ID.
-func txid(s storage.Engine) (uint64, error) {
-	return s.Incr("origins", "tx")
+func txid(engine storage.Engine) (uint64, error) {
+	return engine.Incr("origins", "tx")
 }
 
 // Options are used to supply default values as well as alter the behavior
@@ -69,7 +69,7 @@ type Transaction struct {
 	// The error that caused the transaction to fail is one occurs.
 	Error error
 
-	Storage storage.Engine
+	Engine storage.Engine
 
 	options Options
 
@@ -324,7 +324,7 @@ func (tx *Transaction) complete() {
 
 // commit commits all the pipelines in a transaction.
 func (tx *Transaction) commit() error {
-	return tx.Storage.Multi(func(etx storage.Tx) error {
+	return tx.Engine.Multi(func(etx storage.Tx) error {
 		for pipe, _ := range tx.pipes {
 			if err := pipe.Commit(etx); err != nil {
 				return err
@@ -339,7 +339,7 @@ func (tx *Transaction) commit() error {
 
 // abort aborts all of the pipelines in a transaction.
 func (tx *Transaction) abort() error {
-	return tx.Storage.Multi(func(etx storage.Tx) error {
+	return tx.Engine.Multi(func(etx storage.Tx) error {
 		for pipe, _ := range tx.pipes {
 			if err := pipe.Abort(etx); err != nil {
 				return err
@@ -447,26 +447,17 @@ func (tx *Transaction) Consume(pub origins.Publisher) error {
 }
 
 func (tx *Transaction) AppendIter(iter origins.Iterator) error {
-	var (
-		err  error
-		fact *origins.Fact
-	)
+	var f *origins.Fact
 
 	for {
-		fact, err = iter.Next()
-
-		if err != nil {
-			return err
-		}
-
-		if fact == nil {
+		if f = iter.Next(); f == nil {
 			break
 		}
 
-		tx.stream <- fact
+		tx.stream <- f
 	}
 
-	return nil
+	return iter.Err()
 }
 
 // New initializes and returns a transaction for passed storage engine. The options
@@ -495,7 +486,7 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 	tx := Transaction{
 		ID:        id,
 		StartTime: time.Now().UTC(),
-		Storage:   engine,
+		Engine:    engine,
 		options:   options,
 		pipes:     make(map[Pipeline]chan<- *origins.Fact),
 		router:    options.Router,

@@ -2,106 +2,19 @@ package view
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/dal"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/satori/go.uuid"
 )
 
 var ErrDoesNotExist = errors.New("log: does not exist")
 
-type segment struct {
-	// Unique identifier of the segment.
-	UUID *uuid.UUID
-
-	// ID of the transaction this segment was created in.
-	Transaction uint64
-
-	// The domain this segment corresponds to.
-	Domain string
-
-	// Time the segment was committed.
-	Time time.Time
-
-	// Number of blocks in this segment.
-	Blocks int
-
-	// Total number of facts in the segment.
-	Count int
-
-	// Total number of bytes of the segment take up.
-	Bytes int
-
-	// ID of the segment that acted as the basis for this one. This
-	// is defined as the time the transaction starts.
-	Base *uuid.UUID
-
-	// ID of the segment that this segment succeeds. Typically this is
-	// the same value as Base, except when a conflict is resolved and
-	// the segment position is changed.
-	Next *uuid.UUID
-}
-
-// loadSegment loads a segment header from storage.
-func loadSegment(e storage.Engine, d string, u *uuid.UUID) (*segment, error) {
-	var (
-		b   []byte
-		err error
-		key string
-	)
-
-	seg := segment{
-		UUID:   u,
-		Domain: d,
-	}
-
-	// Get segment header.
-	key = fmt.Sprintf("segment.%s", u)
-
-	if b, err = e.Get(d, key); err != nil {
-		return nil, err
-	}
-
-	// Does not exist.
-	if b == nil {
-		return nil, nil
-	}
-
-	if err = unmarshalSegment(b, &seg); err != nil {
-		return nil, err
-	}
-
-	return &seg, nil
-}
-
-// loadBlock loads a block of facts from storage.
-func loadBlock(e storage.Engine, d string, t uint64, u *uuid.UUID, i int) (origins.Facts, error) {
-	var (
-		b   []byte
-		err error
-		key string
-	)
-
-	// Get block.
-	key = fmt.Sprintf("block.%s.%d", u, i)
-
-	if b, err = e.Get(d, key); err != nil {
-		return nil, err
-	}
-
-	// Does not exist.
-	if b == nil {
-		return nil, nil
-	}
-
-	return unmarshalFacts(b, d, t)
-}
-
-// logIter maintains state of a log that is being read.
-type logIter struct {
+// logView maintains state of a log that is being read.
+type logView struct {
 	name   string
 	domain string
 	head   *uuid.UUID
@@ -110,7 +23,8 @@ type logIter struct {
 	since time.Time
 
 	engine  storage.Engine
-	segment *segment
+	segment *dal.Segment
+	err     error
 
 	block  origins.Facts
 	bindex int
@@ -118,11 +32,15 @@ type logIter struct {
 }
 
 // nextSegment
+<<<<<<< HEAD
 func (li *logIter) nextSegment() error {
+=======
+func (li *logView) nextSegment() error {
 
+>>>>>>> a349a05... Rename Log.Iter to Log.View
 	var (
 		id  *uuid.UUID
-		seg *segment
+		seg *dal.Segment
 		err error
 	)
 
@@ -143,7 +61,7 @@ func (li *logIter) nextSegment() error {
 			return io.EOF
 		}
 
-		seg, err = loadSegment(li.engine, li.domain, id)
+		seg, err = dal.GetSegment(li.engine, li.domain, id)
 
 		if err != nil {
 			return err
@@ -171,7 +89,7 @@ func (li *logIter) nextSegment() error {
 
 // nextBlock returns the block that has the next fact or nil or no
 // more blocks exist.
-func (li *logIter) nextBlock() error {
+func (li *logView) nextBlock() error {
 	// Existing block and still has facts.
 	if li.block != nil && li.bpos < len(li.block) {
 		return nil
@@ -184,8 +102,7 @@ func (li *logIter) nextBlock() error {
 		}
 	}
 
-	// Error loading block
-	block, err := loadBlock(li.engine, li.segment.Domain, li.segment.Transaction, li.segment.UUID, li.bindex)
+	block, err := dal.GetBlock(li.engine, li.segment.Domain, li.segment.UUID, li.bindex, li.segment.Transaction)
 
 	if err != nil {
 		return err
@@ -203,56 +120,187 @@ func (li *logIter) nextBlock() error {
 	return nil
 }
 
-func (li *logIter) Next() (*origins.Fact, error) {
+func (li *logView) Next() *origins.Fact {
+	if li.err != nil {
+		return nil
+	}
+
 	if err := li.nextBlock(); err != nil {
-		return nil, err
+		li.err = err
+		return nil
 	}
 
 	fact := li.block[li.bpos]
 	li.bpos++
 
-	return fact, nil
+	return fact
 }
 
-// Read satisfies the Reader interface.
-func (li *logIter) Read(facts origins.Facts) (int, error) {
-	var (
-		f   *origins.Fact
-		err error
-		l   = len(facts)
-	)
-
-	for i := 0; i < l; i++ {
-		f, err = li.Next()
-
-		// EOF or error
-		if err != nil {
-			return i, err
-		}
-
-		// Add fact.
-		facts[i] = f
+func (li *logView) Err() error {
+	if li.err == io.EOF {
+		return nil
 	}
 
-	return l, nil
+	return li.err
+}
+
+// merger maintains state of a merged stream of facts from multiple domains.
+type merger struct {
+	iterators []origins.Iterator
+	next      []*origins.Fact
+	err       error
+}
+
+func (m *merger) Next() *origins.Fact {
+	// Error occurred.
+	if m.Err() != nil {
+		return nil
+	}
+
+	var (
+		f *origins.Fact
+
+		// Transaction id.
+		tx    uint64 = 1<<64 - 1
+		maxTx uint64 = 1<<64 - 1
+
+		// Index of iterator whose fact will be returned.
+		idx int = -1
+	)
+
+	// look at the next fact coming out of each of the the available logs,
+	// and choose the fact with the greatest transaction ID.
+	for i, iter := range m.iterators {
+		f = m.next[i]
+
+		// No existing fact. Either the iterator is consumed, or no facts have been fetched from it yet,
+		// or its fact was returned in the last iteration.
+		if f == nil {
+			if f = iter.Next(); f == nil {
+				if m.err = iter.Err(); m.Err() != nil {
+					return nil
+				}
+
+				// This iterator is consumed. Continue to next iterator.
+				continue
+			}
+
+			m.next[i] = f
+		}
+
+		// Find the highest tx ID, which denotes the newest fact.
+		// (Iterators return facts in the order of newest facts first).
+		if tx == maxTx || f.Transaction > tx {
+			tx = f.Transaction
+			idx = i
+		}
+	}
+
+	// Iterators are consumed.
+	if idx < 0 {
+		return nil
+	}
+
+	f = m.next[idx]
+	m.next[idx] = nil
+	return f
+}
+
+func (m *merger) Err() error {
+	return m.err
+}
+
+// Merge multiple fact streams into one.
+// Note: iterators return facts in the order opposite to that in which
+// they were committed (i.e. newest facts with largest transaction IDs first),
+// and the Merge operation will preserve that.
+func Merge(iterators ...origins.Iterator) origins.Iterator {
+	return &merger{
+		iterators: iterators,
+		next:      make([]*origins.Fact, len(iterators)),
+	}
+}
+
+// deduplicator maintains the state of a steam of unique facts
+type deduplicator struct {
+	iter          origins.Iterator
+	observedFacts *factMap
+	err           error
+}
+
+func (d *deduplicator) Err() error {
+	return d.err
+}
+
+func (d *deduplicator) Next() *origins.Fact {
+	if d.Err() != nil {
+		return nil
+	}
+
+	for {
+		f := d.iter.Next()
+
+		if d.err = d.iter.Err(); d.Err() != nil || f == nil {
+			return nil
+		}
+
+		if !d.observedFacts.add(f) {
+			return f
+		}
+	}
+}
+
+// remove duplicate facts from a stream
+func Deduplicate(iter origins.Iterator) origins.Iterator {
+	return &deduplicator{
+		iter:          iter,
+		observedFacts: newFactMap(),
+	}
+}
+
+// hash map for facts.
+type factMap struct {
+	facts map[[3]origins.Ident]*origins.Fact
+}
+
+func newFactMap() *factMap {
+	return &factMap{
+		facts: make(map[[3]origins.Ident]*origins.Fact),
+	}
+}
+
+// add a new fact to the fact hash map;
+// return true if the fact was there to begin with, and false otherwise.
+func (fm *factMap) add(fact *origins.Fact) bool {
+	key := [3]origins.Ident{
+		*fact.Entity,
+		*fact.Attribute,
+		*fact.Value,
+	}
+
+	if _, exists := fm.facts[key]; exists {
+		return true
+	}
+
+	fm.facts[key] = fact
+
+	return false
 }
 
 // A Log is an ordered sequence of facts within a domain.
 type Log struct {
-	Name   string
-	Domain string
+	log *dal.Log
 
-	head   *uuid.UUID
 	engine storage.Engine
 }
 
-// Iter returns a value that implements the Iterator interface. This can be
-// called multiple times for independent consumers.
-func (l *Log) Iter(since, asof time.Time) *logIter {
-	return &logIter{
-		domain: l.Domain,
+// View returns a view of the log for the specified time period. It is safe for
+// multiple consumers to create views of a log.
+func (l *Log) View(since, asof time.Time) *logView {
+	return &logView{
+		domain: l.log.Domain,
+		head:   l.log.Head,
 		engine: l.engine,
-		head:   l.head,
 		since:  since,
 		asof:   asof,
 	}
@@ -260,44 +308,35 @@ func (l *Log) Iter(since, asof time.Time) *logIter {
 
 // Now returns a view of the log with a time boundary set to the current time.
 // This is equivalent to: Asof(time.Now().UTC())
-func (l *Log) Now() *logIter {
+func (l *Log) Now() origins.Iterator {
 	return l.Asof(time.Now())
 }
 
 // Asof returns a view of the log with an explicit upper time boundary.
-func (l *Log) Asof(t time.Time) *logIter {
-	return l.Iter(time.Time{}, t.UTC())
+func (l *Log) Asof(t time.Time) origins.Iterator {
+	return l.View(time.Time{}, t.UTC())
 }
 
 // Since returns a view of the log with an explicit lower time boundary.
-func (l *Log) Since(t time.Time) *logIter {
-	return l.Iter(t.UTC(), time.Time{})
+func (l *Log) Since(t time.Time) origins.Iterator {
+	return l.View(t.UTC(), time.Time{})
 }
 
 // OpenLog opens a log for reading.
-func OpenLog(e storage.Engine, d, n string) (*Log, error) {
-	var (
-		b   []byte
-		err error
-	)
+func OpenLog(engine storage.Engine, domain, name string) (*Log, error) {
+	log, err := dal.GetLog(engine, domain, name)
 
-	if b, err = e.Get(d, n); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	// Does not exist.
-	if b == nil {
+	if log == nil {
 		return nil, ErrDoesNotExist
 	}
 
 	l := Log{
-		Name:   n,
-		Domain: d,
-		engine: e,
-	}
-
-	if err = unmarshalLog(b, &l); err != nil {
-		return nil, err
+		log:    log,
+		engine: engine,
 	}
 
 	return &l, nil

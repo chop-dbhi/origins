@@ -9,6 +9,25 @@ Origins is an open source bi-temporal database for storing and retrieving facts 
 - For more information consult the [documentation](https://origins.readme.io/docs).
 - Learn how you can [contribute](https://origins.readme.io/v0.9/docs/contributing).
 
+## Docker
+
+Run in-memory Origins HTTP service.
+
+```
+docker run -p 49110:49110 dbhi/origins http
+```
+
+Use the BoltDB storage engine with a volume.
+
+```
+docker run \
+    -p 49110:49110 \
+    -v <host-dir>:/data \
+    dbhi/origins http \
+    --storage=boltdb \
+    --path=/data/origins.boltdb
+```
+
 ## Development
 
 ### Environment

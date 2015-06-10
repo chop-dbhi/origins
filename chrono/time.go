@@ -84,6 +84,10 @@ func TimeMicro(t time.Time) int64 {
 
 // Format returns a string representation of the time.
 func Format(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
 	return t.Format(time.RFC3339)
 }
 
@@ -129,6 +133,17 @@ func MustParse(s string) time.Time {
 
 	if err != nil {
 		panic(err)
+	}
+
+	return t
+}
+
+// JSON returns an interface value for a time value intended to be used
+// when preparing a custom value for JSON encoding. It uses nil for zero
+// time values.
+func JSON(t time.Time) interface{} {
+	if t.IsZero() {
+		return nil
 	}
 
 	return t

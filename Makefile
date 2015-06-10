@@ -7,7 +7,7 @@ doc:
 	godoc -http=:6060
 
 proto:
-	protoc --go_out=. pb/*.proto
+	protoc --go_out=. dal/*.proto
 
 install:
 	go get github.com/sirupsen/logrus
@@ -18,6 +18,8 @@ install:
 	go get github.com/spf13/cobra
 	go get github.com/psilva261/timsort
 	go get github.com/satori/go.uuid
+	go get github.com/julienschmidt/httprouter
+	go get github.com/rs/cors
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover

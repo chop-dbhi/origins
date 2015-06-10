@@ -7,23 +7,22 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
+	"github.com/chop-dbhi/origins/dal"
 	"github.com/chop-dbhi/origins/testutil"
 )
 
 func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint64) {
-	b, err := engine.Get(domain, fmt.Sprintf(LogKey, commitLogName))
+	log, err := dal.GetLog(engine, domain, "commit")
 
-	log := Log{}
-
-	if err = unmarshalLog(b, &log); err != nil {
+	if err != nil {
 		t.Fatal(err)
+	} else if log == nil {
+		t.Fatalf("transactor: %s log does not exist", "commit")
 	}
 
-	b, err = engine.Get(domain, fmt.Sprintf(SegmentKey, log.Head))
+	seg, err := dal.GetSegment(engine, domain, log.Head)
 
-	seg := Segment{}
-
-	if err = unmarshalSegment(b, &seg); err != nil {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -33,21 +32,19 @@ func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint6
 }
 
 func checkCanceled(t *testing.T, engine storage.Engine, domain string, id uint64) {
-	if b, err := engine.Get(domain, fmt.Sprintf(SegmentKey, id)); err != nil {
-		t.Errorf("transact: %s", err)
-	} else if b != nil {
-		t.Errorf("transact: expected segment %d to not exist", id)
+	log, err := dal.GetLog(engine, domain, "commit")
+
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	b, _ := engine.Get(domain, LogKey)
-
-	if b != nil {
-		t.Errorf("transact: expected log to not exist")
+	if log != nil {
+		t.Error("transact: log should not exist")
 	}
 }
 
 func TestCommit(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	domain := "test"
 
@@ -62,7 +59,7 @@ func TestCommit(t *testing.T) {
 }
 
 func TestCancel(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	domain := "test"
 
@@ -77,7 +74,7 @@ func TestCancel(t *testing.T) {
 }
 
 func TestMultiple(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	domain := "test"
 
@@ -94,7 +91,7 @@ func TestMultiple(t *testing.T) {
 }
 
 func TestMultipleDomains(t *testing.T) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	tx, _ := New(engine, DefaultOptions)
 
@@ -123,7 +120,7 @@ func TestMultipleDomains(t *testing.T) {
 func benchTransaction(b *testing.B, n int, m int) {
 	b.StopTimer()
 
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	var (
 		wg sync.WaitGroup

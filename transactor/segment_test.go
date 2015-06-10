@@ -1,18 +1,18 @@
 package transactor
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/dal"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/testutil"
 )
 
 func TestSegment(t *testing.T) {
-	engine, err := origins.Open("mem", nil)
+	engine, err := origins.Init("mem", nil)
 
-	segment := NewSegment(engine, 1, "test")
+	segment := NewSegment(engine, "test", 1)
 
 	gen := testutil.NewRandGenerator("test", 1, 0)
 
@@ -22,7 +22,7 @@ func TestSegment(t *testing.T) {
 	)
 
 	for i := 0; i < n; i++ {
-		f, _ = gen.Next()
+		f = gen.Next()
 
 		if err = segment.Append(f); err != nil {
 			t.Fatal(err)
@@ -37,18 +37,13 @@ func TestSegment(t *testing.T) {
 		t.Errorf("segment: expected %d blocks, got %d", n/blockSize, segment.Blocks)
 	}
 
-	var (
-		k string
-		b []byte
-	)
+	id := segment.UUID
 
-	// Confirm bolt is doing its job..
 	for i := 0; i < segment.Blocks; i++ {
-		k = fmt.Sprintf(BlockKey, segment.UUID, i)
-		b, err = engine.Get("test", k)
+		bl, _ := dal.GetBlock(engine, "test", id, i, segment.Transaction)
 
-		if b == nil {
-			t.Fatalf("segment: %s is nil", k)
+		if bl == nil {
+			t.Errorf("segment: block %s.%d is nil", id, i)
 		}
 	}
 
@@ -56,19 +51,17 @@ func TestSegment(t *testing.T) {
 		t.Error("segment: abort %s", err)
 	}
 
-	// Confirm aborted entries have been deleted
 	for i := 0; i < segment.Blocks; i++ {
-		k = fmt.Sprintf(BlockKey, segment.UUID, i)
-		b, err = engine.Get("test", k)
+		bl, _ := dal.GetBlock(engine, "test", id, i, segment.Transaction)
 
-		if b != nil {
-			t.Fatalf("segment: %s should be nil", k)
+		if bl != nil {
+			t.Fatalf("segment: %s.%d should be nil", id, i)
 		}
 	}
 }
 
 func benchSegmentBlockSize(b *testing.B, bs int) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	blockSize = bs
 
@@ -76,10 +69,10 @@ func benchSegmentBlockSize(b *testing.B, bs int) {
 
 	gen := testutil.NewRandGenerator("test", 1, 0)
 
-	segment := NewSegment(engine, 1, "test")
+	segment := NewSegment(engine, "test", 1)
 
 	for i := 0; i < b.N; i++ {
-		f, _ = gen.Next()
+		f = gen.Next()
 		segment.Append(f)
 	}
 
@@ -115,16 +108,16 @@ func BenchmarkSegmentBlockSize__10000(b *testing.B) {
 }
 
 func benchSegmentSize(b *testing.B, n int) {
-	engine, _ := origins.Open("mem", nil)
+	engine, _ := origins.Init("mem", nil)
 
 	var f *origins.Fact
 
 	for i := 0; i < b.N; i++ {
 		gen := testutil.NewRandGenerator("test", 1, n)
-		segment := NewSegment(engine, 1, "test")
+		segment := NewSegment(engine, "test", 1)
 
 		for j := 0; j < n; j++ {
-			f, _ = gen.Next()
+			f = gen.Next()
 			segment.Append(f)
 		}
 

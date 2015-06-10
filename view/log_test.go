@@ -1,7 +1,7 @@
 package view
 
 import (
-	"io"
+	"strconv"
 	"testing"
 	"time"
 
@@ -14,12 +14,55 @@ import (
 // Initializes an in-memory store and generates n transactions each with m
 // randomly generated facts.
 func randStorage(domain string, n, m int) storage.Engine {
-	engine, _ := origins.Open("memory", nil)
+	engine, _ := origins.Init("memory", nil)
 
 	for i := 0; i < m; i++ {
 		tx, _ := transactor.New(engine, transactor.DefaultOptions)
 
 		gen := testutil.NewRandGenerator(domain, tx.ID, n)
+
+		tx.AppendIter(gen)
+		tx.Commit()
+	}
+
+	return engine
+}
+
+// Initializes an in-memory store and generates n transactions each with m
+// randomly generated facts that belong to one of the specified domains.
+func randMultidomainStorage(domains []string, n, m int) storage.Engine {
+	engine, _ := origins.Init("memory", nil)
+
+	for i := 0; i < m; i++ {
+		tx, _ := transactor.New(engine, transactor.DefaultOptions)
+
+		gen := testutil.NewMultidomainGenerator(domains, tx.ID, n)
+
+		tx.AppendIter(gen)
+		tx.Commit()
+	}
+
+	return engine
+}
+
+// Initializes an in-memory store and generates n transactions each with m
+// facts randomly generated from the same dictionary of possible E, A, V values.
+// Varying the size of the dictionary relative to the size of the store
+// allows to guarantee repeating facts.
+<<<<<<< HEAD
+func randStorageWRepeats(domain string, n, m, nE, nA, nV int) storage.Engine {
+	engine, _ := origins.Open("memory", nil)
+=======
+func randStorageWRepeats(domain string, n, m, eLen, aLen, vLen int) storage.Engine {
+	engine, _ := origins.Init("memory", nil)
+>>>>>>> 787ebb2... more review comments
+
+	dictionary := testutil.NewEAVDictionary(eLen, aLen, vLen)
+
+	for i := 0; i < m; i++ {
+		tx, _ := transactor.New(engine, transactor.DefaultOptions)
+
+		gen := testutil.NewDictionaryBasedGenerator(dictionary, domain, tx.ID, n)
 
 		tx.AppendIter(gen)
 		tx.Commit()
@@ -40,35 +83,233 @@ func TestLogIter(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var i int
+	num, err := testNext(log.Now())
 
-	iter := log.Now()
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	if num != n*m {
+		t.Errorf("expected %d facts, got %d", n*m, num)
+	}
+}
+
+func TestMultiDomainLogIter(t *testing.T) {
+	domains := []string{"test", "another_test"}
+
+	// Number of transactions
+	n := 100
+
+	// Number of facts per transaction
+	m := 100
+
+	engine := randMultidomainStorage(domains, n, m)
+
+	// Open and merge the commit logs.
+
+	log0, err := OpenLog(engine, domains[0], "commit")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	log1, err := OpenLog(engine, domains[1], "commit")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	now := time.Now()
+	mergedStreams := Merge(log0.Asof(now), log1.Asof(now))
+
+	if err = mergedStreams.Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	i := 0
+	var prevTrnId uint64 = 1<<64 - 1
 	for {
-		f, err := iter.Next()
+		f := mergedStreams.Next()
 
-		if f != nil {
-			i++
+		if err = mergedStreams.Err(); err != nil {
+			t.Fatal(err)
 		}
 
-		if err != nil {
-			if err == io.EOF {
-				break
+		if f == nil {
+			break
+		} else {
+			if prevTrnId < f.Transaction {
+				t.Errorf("Transactions are ordered incorrectly")
 			}
-
-			t.Fatal(err)
+			i++
 		}
 	}
 
 	if i != n*m {
 		t.Errorf("expected %d facts, got %d", n*m, i)
 	}
+}
+
+// Test the Next() method for the given iterator.
+// Return the number of elements encountered.
+func testNext(iter origins.Iterator) (int, error) {
+	var (
+		i int
+		f *origins.Fact
+	)
+
+	for {
+		if f = iter.Next(); f == nil {
+			break
+		}
+
+		i++
+	}
+
+	if err := iter.Err(); err != nil {
+		return 0, err
+	}
+
+	return i, nil
+}
+
+func TestLogExcludeDuplicates(t *testing.T) {
+	domain := "test"
+
+	// number of transactions
+	n := 100
+
+	// number of facts per transaction
+	m := 100
+
+	eLen, aLen, vLen := 2, 3, 4
+
+	engine := randStorageWRepeats(domain, n, m, eLen, aLen, vLen)
+
+	// Open the commit log.
+	log, err := OpenLog(engine, domain, "log.commit")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// first check the total number of facts
+	num, err := testNext(log.Now())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if num != n*m {
+		t.Errorf("expected %d total facts, got %d", n*m, num)
+	}
+
+	// Now check that Next() works on the deduplicated stream,
+	// and verify the number of unique facts.
+
+	iter := Deduplicate(log.Now())
+	if err := iter.Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	num, err = testNext(iter)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// With the dictionary size being very small (e.g. 24) compared to the number of generated facts (e.g. 10,000),
+	// the probability that any of the possible facts didn't get generated is negligible
+	if num != eLen*aLen*vLen {
+		t.Errorf("expected %d unique facts, got %d", eLen*aLen*vLen, num)
+	}
+}
+
+func benchmarkDeduplication(b *testing.B, numTrn, factsPerTrn, eLen, aLen, vLen int) {
+	domain := "test"
+
+	engine := randStorageWRepeats(domain, numTrn, factsPerTrn, eLen, aLen, vLen)
+	log, err := OpenLog(engine, domain, "commit")
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+
+		now := log.Now()
+
+		iter := Deduplicate(now)
+		if err = iter.Err(); err != nil {
+			b.Fatal(err)
+		}
+
+		// The Deduplicate() operation is lazy, and most of the actual work happens during Next(),
+		// so to evaluate the true cost of deduplication we need to time how long it takes to step
+		// through the resulting iterator.
+		_, err = testNext(iter)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkDeduplication(b *testing.B) {
+	benchmarkDeduplication(b, 100, 100, 3, 4, 5)
+}
+
+func benchmarkDomainMerge(b *testing.B, numTrn, factsPerTrn, numDomains int) {
+	domains := make([]string, numDomains)
+	var err error
+	iters := make([]origins.Iterator, len(domains))
+	logs := make([]*Log, len(domains))
+
+	for j := 0; j < numDomains; j++ {
+		domains[j] = "domain_" + strconv.Itoa(j+1)
+	}
+
+	engine := randMultidomainStorage(domains, numTrn, factsPerTrn)
+
+	for j := 0; j < len(domains); j++ {
+		logs[j], err = OpenLog(engine, domains[j], "commit")
+
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+
+	now := time.Now()
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(domains); j++ {
+			iters[j] = logs[j].Asof(now)
+		}
+
+		iter := Merge(iters...)
+
+		if err := iter.Err(); err != nil {
+			b.Fatal(err)
+		}
+
+		// The Merge() operation is lazy, and most of the actual work happens during Next(),
+		// so to evaluate the true cost of merging we need to time how long it takes to step
+		// through the resulting iterator.
+		_, err = testNext(iter)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkDomainMerge(b *testing.B) {
+	benchmarkDomainMerge(b, 100, 100, 3)
 }
 
 func TestLogReader(t *testing.T) {
@@ -83,7 +324,7 @@ func TestLogReader(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +334,7 @@ func TestLogReader(t *testing.T) {
 
 	facts, err := origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -114,7 +355,7 @@ func TestLogAsof(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	// 1 minute before
 	max := time.Now().Add(-time.Minute)
@@ -123,7 +364,7 @@ func TestLogAsof(t *testing.T) {
 
 	facts, err := origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -138,7 +379,7 @@ func TestLogAsof(t *testing.T) {
 
 	facts, err = origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -159,7 +400,7 @@ func TestLogSince(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "log.commit")
+	log, err := OpenLog(engine, domain, "commit")
 
 	// 1 minute before
 	min := time.Now().Add(-time.Minute)
@@ -168,7 +409,7 @@ func TestLogSince(t *testing.T) {
 
 	facts, err := origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -183,7 +424,7 @@ func TestLogSince(t *testing.T) {
 
 	facts, err = origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 

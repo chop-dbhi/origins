@@ -1,9 +1,8 @@
 package transactor
 
 import (
-	"fmt"
-
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/dal"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/satori/go.uuid"
 )
@@ -70,24 +69,19 @@ func (p *DomainPipeline) Stats() *Stats {
 }
 
 func (p *DomainPipeline) Init(tx *Transaction) error {
-	var (
-		b   []byte
-		err error
-	)
-
 	// Get the commit log for this domain.
-	log := Log{}
+	log, err := dal.GetLog(tx.Engine, p.Domain, commitLogName)
 
-	if b, err = tx.Storage.Get(p.Domain, fmt.Sprintf(LogKey, commitLogName)); err != nil {
+	if err != nil {
 		return err
 	}
 
-	if err = unmarshalLog(b, &log); err != nil {
-		return err
+	if log == nil {
+		log = &dal.Log{}
 	}
 
 	// Initialize new segment pointing to the head of the log.
-	p.segment = NewSegment(tx.Storage, tx.ID, p.Domain)
+	p.segment = NewSegment(tx.Engine, p.Domain, tx.ID)
 	p.segment.Base = log.Head
 	p.segment.Next = log.Head
 	p.segment.Time = tx.StartTime
@@ -105,8 +99,8 @@ func (p *DomainPipeline) Abort(tx storage.Tx) error {
 
 func (p *DomainPipeline) Commit(tx storage.Tx) error {
 	var (
-		b   []byte
 		err error
+		log *dal.Log
 	)
 
 	// Write the remaining block of the segment.
@@ -114,32 +108,27 @@ func (p *DomainPipeline) Commit(tx storage.Tx) error {
 		return err
 	}
 
-	log := Log{}
-
 	// Compare and swap ID on domain's commit log.
-	if b, err = tx.Get(p.Domain, fmt.Sprintf(LogKey, commitLogName)); err != nil {
+	if log, err = dal.GetLog(tx, p.Domain, commitLogName); err != nil {
 		return err
 	}
 
 	// Existing commit log, check if the head is the same.
-	if b != nil {
-		if err = unmarshalLog(b, &log); err != nil {
-			return err
-		}
-
+	if log != nil {
 		// TODO: determine path to handle conflicts.
 		if log.Head != nil && !uuid.Equal(*log.Head, *p.segment.Base) {
 			return ErrCommitConflict
+		}
+	} else {
+		log = &dal.Log{
+			Name:   commitLogName,
+			Domain: p.Domain,
 		}
 	}
 
 	log.Head = p.segment.UUID
 
-	if b, err = marshalLog(&log); err != nil {
-		return err
-	}
+	_, err = dal.SetLog(tx, p.Domain, log)
 
-	tx.Set(p.Domain, fmt.Sprintf(LogKey, commitLogName), b)
-
-	return nil
+	return err
 }
