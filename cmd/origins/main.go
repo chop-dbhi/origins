@@ -26,6 +26,7 @@ var mainCmd = &cobra.Command{
 
 func main() {
 	mainCmd.AddCommand(versionCmd)
+	mainCmd.AddCommand(generateCmd)
 	mainCmd.AddCommand(transactCmd)
 	mainCmd.AddCommand(logCmd)
 	mainCmd.AddCommand(httpCmd)
