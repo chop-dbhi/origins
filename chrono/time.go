@@ -84,6 +84,10 @@ func TimeMicro(t time.Time) int64 {
 
 // Format returns a string representation of the time.
 func Format(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
 	return t.Format(time.RFC3339)
 }
 
