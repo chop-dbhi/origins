@@ -72,7 +72,7 @@ var logCmd = &cobra.Command{
 			logrus.Fatal("unknown format", format)
 		}
 
-		n, err := origins.ReadWriter(v, fw)
+		n, err := origins.Copy(v, fw)
 
 		if err != nil {
 			logrus.Fatal(err)

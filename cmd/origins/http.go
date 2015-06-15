@@ -220,7 +220,7 @@ func httpLogView(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	if _, err := origins.ReadWriter(v, fw); err != nil {
+	if _, err := origins.Copy(v, fw); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprint(err)))
 		return

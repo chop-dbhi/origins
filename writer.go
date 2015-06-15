@@ -9,9 +9,9 @@ type Writer interface {
 	Flush() error
 }
 
-// ReadWriter reads all facts from the reader and writes them to the writer.
+// Copy reads all facts from the reader and copies them to the writer.
 // The number of facts written is returned and an error if present.
-func ReadWriter(r Reader, w Writer) (int, error) {
+func Copy(r Reader, w Writer) (int, error) {
 	var (
 		n, rn      int
 		rerr, werr error
