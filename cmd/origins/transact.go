@@ -7,19 +7,15 @@ import (
 	"os"
 
 	"github.com/chop-dbhi/origins"
-	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/transactor"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func transactFile(engine storage.Engine, r io.Reader, format, compression string) {
+func transactFile(tx *transactor.Transaction, r io.Reader, format, compression string) {
 	var (
 		err error
-
-		domain = viper.GetString("transact_domain")
-		fake   = viper.GetBool("transact_fake")
 	)
 
 	// Apply decompression.
@@ -44,31 +40,9 @@ func transactFile(engine storage.Engine, r io.Reader, format, compression string
 		logrus.Fatal("transact: unsupported file format", format)
 	}
 
-	tx, err := transactor.New(engine, transactor.Options{
-		DefaultDomain: domain,
-	})
-
-	if err != nil {
-		logrus.Fatal("transact: error starting transaction:", err)
-	}
-
 	if err = tx.Consume(pub); err != nil {
 		logrus.Fatal("transact:", err)
 	}
-
-	if fake {
-		err = tx.Cancel()
-	} else {
-		err = tx.Commit()
-	}
-
-	if err != nil {
-		logrus.Fatalf("transact:", err)
-	}
-
-	info, _ := json.MarshalIndent(tx.Info(), "", "\t")
-
-	fmt.Println(string(info))
 }
 
 var transactCmd = &cobra.Command{
@@ -83,37 +57,60 @@ var transactCmd = &cobra.Command{
 
 		format := viper.GetString("transact_format")
 		compression := viper.GetString("transact_compression")
+		domain := viper.GetString("transact_domain")
+		fake := viper.GetBool("transact_fake")
+
+		tx, err := transactor.New(engine, transactor.Options{
+			DefaultDomain: domain,
+		})
+
+		if err != nil {
+			logrus.Fatal("transact: error starting transaction:", err)
+		}
 
 		// No path provided, use stdin.
 		if len(args) == 0 {
-			transactFile(engine, os.Stdin, format, compression)
-			return
+			transactFile(tx, os.Stdin, format, compression)
+		} else {
+			for _, fn := range args {
+				// Reset to initial value
+				format = viper.GetString("transact_format")
+				compression = viper.GetString("transact_compression")
+
+				if format == "" {
+					format = origins.DetectFileFormat(fn)
+				}
+
+				if compression == "" {
+					compression = origins.DetectFileCompression(fn)
+				}
+
+				file, err := os.Open(fn)
+
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				defer file.Close()
+
+				transactFile(tx, file, format, compression)
+			}
 		}
 
-		for _, fn := range args {
-			// Reset to initial value
-			format = viper.GetString("transact_format")
-			compression = viper.GetString("transact_compression")
-
-			if format == "" {
-				format = origins.DetectFileFormat(fn)
-			}
-
-			if compression == "" {
-				compression = origins.DetectFileCompression(fn)
-			}
-
-			file, err := os.Open(fn)
-
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			defer file.Close()
-
-			transactFile(engine, file, format, compression)
+		if fake {
+			err = tx.Cancel()
+		} else {
+			err = tx.Commit()
 		}
+
+		if err != nil {
+			logrus.Fatalf("transact:", err)
+		}
+
+		info, _ := json.MarshalIndent(tx.Info(), "", "\t")
+
+		fmt.Println(string(info))
 	},
 }
 
