@@ -64,4 +64,7 @@ type Transaction struct {
 	// The start and end time of transaction.
 	StartTime time.Time
 	EndTime   time.Time
+
+	// Error that occurred during the transaction.
+	Error error
 }

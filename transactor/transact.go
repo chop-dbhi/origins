@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/dal"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/sirupsen/logrus"
 )
@@ -25,8 +26,8 @@ var (
 )
 
 // txid increments a global transaction ID.
-func txid(engine storage.Engine) (uint64, error) {
-	return engine.Incr("origins", "tx")
+func txid(tx storage.Tx) (uint64, error) {
+	return tx.Incr("origins", "tx")
 }
 
 // Options are used to supply default values as well as alter the behavior
@@ -320,6 +321,18 @@ func (tx *Transaction) complete() {
 			logrus.Debugf("transactor(%d): abort succeeded", tx.ID)
 		}
 	}
+
+	// Update transaction record.
+	_, err = dal.SetTransaction(tx.Engine, &dal.Transaction{
+		ID:        tx.ID,
+		StartTime: tx.StartTime,
+		EndTime:   tx.EndTime,
+		Error:     tx.Error,
+	})
+
+	if err != nil {
+		logrus.Errorf("transactor(%d): error writing transaction record: %s", tx.ID, err)
+	}
 }
 
 // commit commits all the pipelines in a transaction.
@@ -453,11 +466,29 @@ func (tx *Transaction) Consume(pub origins.Publisher) error {
 // New initializes and returns a transaction for passed storage engine. The options
 // are used to change the behavior of the transaction itself.
 func New(engine storage.Engine, options Options) (*Transaction, error) {
-	// Get the next transaction ID.
-	id, err := txid(engine)
+	var (
+		id  uint64
+		err error
+	)
+
+	now := time.Now().UTC()
+
+	// Increment the transaction ID and store the record.
+	err = engine.Multi(func(tx storage.Tx) error {
+		if id, err = txid(tx); err != nil {
+			return err
+		}
+
+		_, err = dal.SetTransaction(tx, &dal.Transaction{
+			ID:        id,
+			StartTime: now,
+		})
+
+		return err
+	})
 
 	if err != nil {
-		logrus.Errorf("transactor: could not generate ID: %s", err)
+		logrus.Errorf("transactor: could not create transaction: %s", err)
 		return nil, ErrNoID
 	}
 

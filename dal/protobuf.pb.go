@@ -28,7 +28,8 @@ var _ = math.Inf
 type ProtoTransaction struct {
 	ID               *uint64 `protobuf:"varint,1,req" json:"ID,omitempty"`
 	StartTime        *int64  `protobuf:"varint,2,req" json:"StartTime,omitempty"`
-	EndTime          *int64  `protobuf:"varint,3,req" json:"EndTime,omitempty"`
+	EndTime          *int64  `protobuf:"varint,3,opt" json:"EndTime,omitempty"`
+	Error            *string `protobuf:"bytes,4,opt" json:"Error,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -55,6 +56,13 @@ func (m *ProtoTransaction) GetEndTime() int64 {
 		return *m.EndTime
 	}
 	return 0
+}
+
+func (m *ProtoTransaction) GetError() string {
+	if m != nil && m.Error != nil {
+		return *m.Error
+	}
+	return ""
 }
 
 // A log is the header of a linked list of segments. It is one of the few
