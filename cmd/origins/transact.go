@@ -35,7 +35,7 @@ func transactFile(tx *transactor.Transaction, r io.Reader, format, compression s
 
 	switch format {
 	case "csv":
-		pub = origins.CSVReader(r)
+		pub = origins.NewCSVReader(r)
 	default:
 		logrus.Fatal("transact: unsupported file format", format)
 	}

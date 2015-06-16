@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"io"
 	"math/rand"
 	"time"
 
@@ -30,7 +29,7 @@ type FactGen struct {
 	size      int
 }
 
-func (r *FactGen) generate() *origins.Fact {
+func (r *FactGen) Next() *origins.Fact {
 	if r.size > 0 && r.count == r.size {
 		return nil
 	}
@@ -40,25 +39,8 @@ func (r *FactGen) generate() *origins.Fact {
 	return r.generator(r.domain, r.tx)
 }
 
-func (r *FactGen) Read(buf origins.Facts) (int, error) {
-	var (
-		f *origins.Fact
-		c = cap(buf)
-	)
-
-	for i := c; i < c; i++ {
-		f = r.generate()
-
-		if f == nil {
-			return i, io.EOF
-		}
-	}
-
-	return c, nil
-}
-
-func (r *FactGen) Next() (*origins.Fact, error) {
-	return r.generate(), nil
+func (r *FactGen) Err() error {
+	return nil
 }
 
 // Subscribe implements the Stream interface.
@@ -75,7 +57,7 @@ func (r *FactGen) Subscribe(closer chan struct{}) (chan *origins.Fact, chan erro
 			case <-closer:
 				break loop
 			default:
-				if f = r.generate(); f == nil {
+				if f = r.Next(); f == nil {
 					break loop
 				}
 

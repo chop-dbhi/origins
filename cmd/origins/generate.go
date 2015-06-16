@@ -81,16 +81,16 @@ https://github.com/chop-dbhi/origins-generators`,
 		}
 
 		var (
-			reader origins.Reader
-			writer origins.Writer
+			iterator origins.Iterator
+			writer   origins.Writer
 		)
 
 		// Data written to the buffer are converted into facts, normalized, and
 		// copied to the CSV writer.
-		reader = origins.CSVReader(stdout)
+		iterator = origins.NewCSVReader(stdout)
 
 		// Facts are written to stdout.
-		writer = origins.CSVWriter(os.Stdout)
+		writer = origins.NewCSVWriter(os.Stdout)
 
 		// Modify the fact before writing using the passed arguments.
 		// TODO: there is a overlap with the transactor.
@@ -117,7 +117,7 @@ https://github.com/chop-dbhi/origins-generators`,
 			os.Exit(1)
 		}
 
-		origins.Copy(reader, writer)
+		origins.Copy(iterator, writer)
 
 		// Wait until the command exits.
 		if err := pcmd.Wait(); err != nil {

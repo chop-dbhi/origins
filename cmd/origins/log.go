@@ -67,7 +67,7 @@ var logCmd = &cobra.Command{
 
 		switch format {
 		case "csv":
-			fw = origins.CSVWriter(w)
+			fw = origins.NewCSVWriter(w)
 		default:
 			logrus.Fatal("unknown format", format)
 		}

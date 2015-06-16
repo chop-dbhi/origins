@@ -22,7 +22,7 @@ func TestSegment(t *testing.T) {
 	)
 
 	for i := 0; i < n; i++ {
-		f, _ = gen.Next()
+		f = gen.Next()
 
 		if err = segment.Append(f); err != nil {
 			t.Fatal(err)
@@ -72,7 +72,7 @@ func benchSegmentBlockSize(b *testing.B, bs int) {
 	segment := NewSegment(engine, "test", 1)
 
 	for i := 0; i < b.N; i++ {
-		f, _ = gen.Next()
+		f = gen.Next()
 		segment.Append(f)
 	}
 
@@ -117,7 +117,7 @@ func benchSegmentSize(b *testing.B, n int) {
 		segment := NewSegment(engine, "test", 1)
 
 		for j := 0; j < n; j++ {
-			f, _ = gen.Next()
+			f = gen.Next()
 			segment.Append(f)
 		}
 

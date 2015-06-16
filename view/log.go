@@ -24,6 +24,7 @@ type logView struct {
 
 	engine  storage.Engine
 	segment *dal.Segment
+	err     error
 
 	block  origins.Facts
 	bindex int
@@ -115,38 +116,28 @@ func (li *logView) nextBlock() error {
 	return nil
 }
 
-func (li *logView) Next() (*origins.Fact, error) {
+func (li *logView) Next() *origins.Fact {
+	if li.err != nil {
+		return nil
+	}
+
 	if err := li.nextBlock(); err != nil {
-		return nil, err
+		li.err = err
+		return nil
 	}
 
 	fact := li.block[li.bpos]
 	li.bpos++
 
-	return fact, nil
+	return fact
 }
 
-// Read satisfies the Reader interface.
-func (li *logView) Read(facts origins.Facts) (int, error) {
-	var (
-		f   *origins.Fact
-		err error
-		l   = len(facts)
-	)
-
-	for i := 0; i < l; i++ {
-		f, err = li.Next()
-
-		// EOF or error
-		if err != nil {
-			return i, err
-		}
-
-		// Add fact.
-		facts[i] = f
+func (li *logView) Err() error {
+	if li.err == io.EOF {
+		return nil
 	}
 
-	return l, nil
+	return li.err
 }
 
 // A Log is an ordered sequence of facts within a domain.
@@ -170,17 +161,17 @@ func (l *Log) View(since, asof time.Time) *logView {
 
 // Now returns a view of the log with a time boundary set to the current time.
 // This is equivalent to: Asof(time.Now().UTC())
-func (l *Log) Now() *logView {
+func (l *Log) Now() origins.Iterator {
 	return l.Asof(time.Now())
 }
 
 // Asof returns a view of the log with an explicit upper time boundary.
-func (l *Log) Asof(t time.Time) *logView {
+func (l *Log) Asof(t time.Time) origins.Iterator {
 	return l.View(time.Time{}, t.UTC())
 }
 
 // Since returns a view of the log with an explicit lower time boundary.
-func (l *Log) Since(t time.Time) *logView {
+func (l *Log) Since(t time.Time) origins.Iterator {
 	return l.View(t.UTC(), time.Time{})
 }
 

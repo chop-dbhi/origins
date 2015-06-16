@@ -1,7 +1,6 @@
 package view
 
 import (
-	"io"
 	"testing"
 	"time"
 
@@ -46,24 +45,23 @@ func TestLogIter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var i int
+	var (
+		i int
+		f *origins.Fact
+	)
 
 	iter := log.Now()
 
 	for {
-		f, err := iter.Next()
-
-		if f != nil {
-			i++
+		if f = iter.Next(); f == nil {
+			break
 		}
 
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
+		i++
+	}
 
-			t.Fatal(err)
-		}
+	if iter.Err() != nil {
+		t.Fatal(iter.Err())
 	}
 
 	if i != n*m {
@@ -93,7 +91,7 @@ func TestLogReader(t *testing.T) {
 
 	facts, err := origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -123,7 +121,7 @@ func TestLogAsof(t *testing.T) {
 
 	facts, err := origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -138,7 +136,7 @@ func TestLogAsof(t *testing.T) {
 
 	facts, err = origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -168,7 +166,7 @@ func TestLogSince(t *testing.T) {
 
 	facts, err := origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -183,7 +181,7 @@ func TestLogSince(t *testing.T) {
 
 	facts, err = origins.ReadAll(iter)
 
-	if err != nil && err != io.EOF {
+	if err != nil {
 		t.Fatal(err)
 	}
 

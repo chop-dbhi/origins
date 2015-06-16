@@ -26,7 +26,7 @@ func TestBuffer(t *testing.T) {
 	assert.Equal(3, buf.Len())
 
 	// Read the next fact.
-	f, _ := buf.Next()
+	f := buf.Next()
 	assert.Equal(f0, f)
 
 	// One fact read, 2 remain
@@ -40,11 +40,11 @@ func TestBuffer(t *testing.T) {
 	assert.Equal(1, buf.Len())
 
 	// Confirm.
-	f, _ = buf.Next()
+	f = buf.Next()
 	assert.Equal(f1, f)
 
 	// Buffer is consumed.
-	f, _ = buf.Next()
+	f = buf.Next()
 
 	if f != nil {
 		t.Error("expected nil on next")

@@ -447,26 +447,17 @@ func (tx *Transaction) Consume(pub origins.Publisher) error {
 }
 
 func (tx *Transaction) AppendIter(iter origins.Iterator) error {
-	var (
-		err  error
-		fact *origins.Fact
-	)
+	var f *origins.Fact
 
 	for {
-		fact, err = iter.Next()
-
-		if err != nil {
-			return err
-		}
-
-		if fact == nil {
+		if f = iter.Next(); f == nil {
 			break
 		}
 
-		tx.stream <- fact
+		tx.stream <- f
 	}
 
-	return nil
+	return iter.Err()
 }
 
 // New initializes and returns a transaction for passed storage engine. The options
