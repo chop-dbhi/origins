@@ -21,7 +21,7 @@ sue,city,Allentown
 func TestTimeline(t *testing.T) {
 	buf := bytes.NewBufferString(testData)
 
-	csv := origins.CSVReader(buf)
+	csv := origins.NewCSVReader(buf)
 
 	engine, err := origins.Init("memory", nil)
 

@@ -23,7 +23,7 @@ func TestCSVReader(t *testing.T) {
 
 	buf := bytes.NewBufferString(csvString)
 
-	r := CSVReader(buf)
+	r := NewCSVReader(buf)
 
 	facts, err := ReadAll(r)
 
@@ -49,7 +49,7 @@ func TestCSVReader(t *testing.T) {
 func BenchmarkCSVParse(b *testing.B) {
 	header, _ := parseHeader(csvHeader)
 
-	reader := csvReader{
+	reader := CSVReader{
 		header: header,
 	}
 

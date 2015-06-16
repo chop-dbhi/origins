@@ -195,12 +195,12 @@ func httpLogView(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	switch format {
 	case "text", "csv":
-		fw = origins.CSVWriter(w)
+		fw = origins.NewCSVWriter(w)
 
 	case "json":
 		encoder := json.NewEncoder(w)
 
-		facts, err := origins.ReadIterAll(v)
+		facts, err := origins.ReadAll(v)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

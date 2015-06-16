@@ -2,7 +2,6 @@ package view
 
 import (
 	"encoding/json"
-	"io"
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
@@ -113,14 +112,8 @@ func Timeline(iter origins.Iterator, order Order) ([]*Event, error) {
 	facts := make(map[[4]string]*origins.Fact)
 
 	for {
-		fact, err = iter.Next()
-
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			return nil, err
+		if fact = iter.Next(); fact == nil {
+			break
 		}
 
 		// Uniquely identities an entity-attribute pair. The fact domain
@@ -176,6 +169,10 @@ func Timeline(iter origins.Iterator, order Order) ([]*Event, error) {
 		}
 
 		events = append(events, event)
+	}
+
+	if err = iter.Err(); err != nil {
+		return nil, err
 	}
 
 	// TODO: The final set of facts represent the current state
