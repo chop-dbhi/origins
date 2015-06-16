@@ -21,7 +21,7 @@ func randStorage(domain string, n, m int) storage.Engine {
 
 		gen := testutil.NewRandGenerator(domain, tx.ID, n)
 
-		tx.AppendIter(gen)
+		origins.Copy(gen, tx)
 		tx.Commit()
 	}
 
@@ -38,7 +38,7 @@ func randMultidomainStorage(domains []string, n, m int) storage.Engine {
 
 		gen := testutil.NewMultidomainGenerator(domains, tx.ID, n)
 
-		tx.AppendIter(gen)
+		origins.Copy(gen, tx)
 		tx.Commit()
 	}
 
@@ -59,7 +59,7 @@ func randStorageWRepeats(domain string, n, m, eLen, aLen, vLen int) storage.Engi
 
 		gen := testutil.NewDictionaryBasedGenerator(dictionary, domain, tx.ID, n)
 
-		tx.AppendIter(gen)
+		origins.Copy(gen, tx)
 		tx.Commit()
 	}
 

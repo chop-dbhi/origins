@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/chop-dbhi/origins"
-	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/dal"
+	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/testutil"
 )
 
@@ -52,7 +52,7 @@ func TestCommit(t *testing.T) {
 
 	gen := testutil.NewRandGenerator(domain, tx.ID, 500)
 
-	tx.AppendIter(gen)
+	origins.Copy(gen, tx)
 	tx.Commit()
 
 	checkCommitted(t, engine, domain, tx.ID)
@@ -67,7 +67,7 @@ func TestCancel(t *testing.T) {
 
 	gen := testutil.NewRandGenerator("test", tx.ID, 2000)
 
-	tx.AppendIter(gen)
+	origins.Copy(gen, tx)
 	tx.Cancel()
 
 	checkCanceled(t, engine, domain, tx.ID)
@@ -83,7 +83,7 @@ func TestMultiple(t *testing.T) {
 
 		gen := testutil.NewRandGenerator(domain, tx.ID, 5000)
 
-		tx.AppendIter(gen)
+		origins.Copy(gen, tx)
 		tx.Commit()
 
 		checkCommitted(t, engine, domain, tx.ID)
@@ -102,7 +102,7 @@ func TestMultipleDomains(t *testing.T) {
 		go func(i int) {
 			domain := fmt.Sprintf("test.%d", i)
 			gen := testutil.NewRandGenerator(domain, tx.ID, 10000)
-			tx.AppendIter(gen)
+			origins.Copy(gen, tx)
 			wg.Done()
 		}(i)
 	}
@@ -141,7 +141,7 @@ func benchTransaction(b *testing.B, n int, m int) {
 			go func(j int) {
 				domain := fmt.Sprintf("test.%d", j)
 				gen := testutil.NewRandGenerator(domain, tx.ID, n)
-				tx.AppendIter(gen)
+				origins.Copy(gen, tx)
 				wg.Done()
 			}(j)
 		}

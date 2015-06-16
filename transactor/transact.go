@@ -410,8 +410,12 @@ func (tx *Transaction) Commit() error {
 	return tx.Error
 }
 
-func (tx *Transaction) Append(fact *origins.Fact) error {
+func (tx *Transaction) Write(fact *origins.Fact) error {
 	tx.stream <- fact
+	return nil
+}
+
+func (tx *Transaction) Flush() error {
 	return nil
 }
 
@@ -444,20 +448,6 @@ func (tx *Transaction) Consume(pub origins.Publisher) error {
 	}
 
 	return nil
-}
-
-func (tx *Transaction) AppendIter(iter origins.Iterator) error {
-	var f *origins.Fact
-
-	for {
-		if f = iter.Next(); f == nil {
-			break
-		}
-
-		tx.stream <- f
-	}
-
-	return iter.Err()
 }
 
 // New initializes and returns a transaction for passed storage engine. The options
