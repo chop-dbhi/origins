@@ -140,6 +140,150 @@ func (li *logView) Err() error {
 	return li.err
 }
 
+// merger maintains state of a merged stream of facts from multiple domains.
+type merger struct {
+	iterators []origins.Iterator
+	next      []*origins.Fact
+	err       error
+}
+
+func (m *merger) Next() *origins.Fact {
+	// Error occurred.
+	if m.err != nil {
+		return nil
+	}
+
+	var (
+		f *origins.Fact
+
+		// Transaction id.
+		tx    uint64 = 1<<64 - 1
+		maxTx uint64 = 1<<64 - 1
+
+		// Index of iterator whose fact will be returned.
+		idx int = -1
+	)
+
+	// look at the next fact coming out of each of the the available logs,
+	// and choose the fact with the greatest transaction ID.
+	for i, iter := range m.iterators {
+		f = m.next[i]
+
+		// No existing fact. Either the iterator is consumed, or no facts have been fetched from it yet,
+		// or its fact was returned in the last iteration.
+		if f == nil {
+			if f = iter.Next(); f == nil {
+				if m.err = iter.Err(); m.err != nil {
+					return nil
+				}
+
+				// This iterator is consumed. Continue to next iterator.
+				continue
+			}
+
+			m.next[i] = f
+		}
+
+		// Find the highest tx ID, which denotes the newest fact.
+		// (Iterators return facts in the order of newest facts first).
+		if tx == maxTx || f.Transaction > tx {
+			tx = f.Transaction
+			idx = i
+		}
+	}
+
+	// Iterators are consumed.
+	if idx < 0 {
+		return nil
+	}
+
+	f = m.next[idx]
+	m.next[idx] = nil
+	return f
+}
+
+func (m *merger) Err() error {
+	return m.err
+}
+
+// Merge multiple fact streams into one.
+// Note: iterators return facts in the order opposite to that in which
+// they were committed (i.e. newest facts with largest transaction IDs first),
+// and the Merge operation will preserve that.
+func Merge(iterators ...origins.Iterator) origins.Iterator {
+	return &merger{
+		iterators: iterators,
+		next:      make([]*origins.Fact, len(iterators)),
+	}
+}
+
+// deduplicator maintains the state of a steam of unique facts
+type deduplicator struct {
+	iter          origins.Iterator
+	observedFacts *factMap
+}
+
+func (d *deduplicator) Err() error {
+	return d.iter.Err()
+}
+
+func (d *deduplicator) Next() *origins.Fact {
+	if d.iter.Err() != nil {
+		return nil
+	}
+
+	var f *origins.Fact
+
+	for {
+		if f = d.iter.Next(); f == nil {
+			break
+		}
+
+		if !d.observedFacts.add(f) {
+			return f
+		}
+	}
+
+	return nil
+}
+
+// remove duplicate facts from a stream
+func Deduplicate(iter origins.Iterator) origins.Iterator {
+	return &deduplicator{
+		iter:          iter,
+		observedFacts: newFactMap(),
+	}
+}
+
+// hash map for facts.
+type factMap struct {
+	facts map[[3]origins.Ident]*origins.Fact
+}
+
+func newFactMap() *factMap {
+	return &factMap{
+		facts: make(map[[3]origins.Ident]*origins.Fact),
+	}
+}
+
+// add a new fact to the fact hash map;
+// return true if the fact was there to begin with, and false otherwise.
+func (fm *factMap) add(fact *origins.Fact) bool {
+	key := [3]origins.Ident{
+		*fact.Entity,
+		*fact.Attribute,
+		*fact.Value,
+	}
+
+	if _, exists := fm.facts[key]; exists {
+		return true
+	}
+
+	fm.facts[key] = fact
+
+	return false
+}
+
 // A Log is an ordered sequence of facts within a domain.
 type Log struct {
 	log *dal.Log
