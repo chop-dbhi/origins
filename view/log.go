@@ -26,9 +26,9 @@ type logView struct {
 	segment *dal.Segment
 	err     error
 
-	block  origins.Facts
+	block  *dal.BlockDecoder
 	bindex int
-	bpos   int
+	bcount int
 }
 
 // nextSegment
@@ -43,7 +43,6 @@ func (li *logView) nextSegment() error {
 	// Reset segment block state.
 	li.bindex = 0
 	li.block = nil
-	li.bpos = 0
 
 	// Loop until a valid segment is found.
 	for {
@@ -53,30 +52,30 @@ func (li *logView) nextSegment() error {
 			id = li.segment.Next
 		}
 
+		// No more segments.
 		if id == nil {
 			return io.EOF
 		}
 
-		seg, err = dal.GetSegment(li.engine, li.domain, id)
-
-		if err != nil {
+		// Decode segment.
+		if seg, err = dal.GetSegment(li.engine, li.domain, id); err != nil {
 			return err
 		}
 
-		// Update state.
+		// Segment next segment. This is done before checking if it is in range so
+		// it can be evaluated in the next iteration is necessary.
 		li.segment = seg
 
-		// Too late
+		// Too late, skip segment.
 		if !li.asof.IsZero() && seg.Time.After(li.asof) {
 			continue
 		}
 
-		// Too early
+		// Too early, skip segment.
 		if !li.since.IsZero() && seg.Time.Before(li.since) {
 			continue
 		}
 
-		// Segment is within range.
 		break
 	}
 
@@ -86,19 +85,20 @@ func (li *logView) nextSegment() error {
 // nextBlock returns the block that has the next fact or nil or no
 // more blocks exist.
 func (li *logView) nextBlock() error {
-	// Existing block and still has facts.
-	if li.block != nil && li.bpos < len(li.block) {
+	// Existing block and is not empty.
+	if li.block != nil && !li.block.Empty() {
 		return nil
 	}
 
-	// First segment or no blocks left in segment.
+	// First segment or there are no blocks left in segment.
 	if li.segment == nil || li.bindex == li.segment.Blocks {
 		if err := li.nextSegment(); err != nil {
 			return err
 		}
 	}
 
-	block, err := dal.GetBlock(li.engine, li.segment.Domain, li.segment.UUID, li.bindex, li.segment.Transaction)
+	// Get the block.
+	block, err := dal.GetBlock(li.engine, li.segment.Domain, li.segment.UUID, li.bindex)
 
 	if err != nil {
 		return err
@@ -109,9 +109,9 @@ func (li *logView) nextBlock() error {
 		return io.EOF
 	}
 
-	li.block = block
-	li.bpos = 0
+	li.block = dal.NewBlockDecoder(block, li.segment.Domain, li.segment.Transaction)
 	li.bindex++
+	li.bcount = 0
 
 	return nil
 }
@@ -126,13 +126,21 @@ func (li *logView) Next() *origins.Fact {
 		return nil
 	}
 
-	fact := li.block[li.bpos]
-	li.bpos++
+	fact := li.block.Next()
+
+	if fact != nil {
+		li.bcount++
+	}
 
 	return fact
 }
 
 func (li *logView) Err() error {
+	// No local error, defer to block decoder.
+	if li.err == nil && li.block != nil {
+		return li.block.Err()
+	}
+
 	if li.err == io.EOF {
 		return nil
 	}
@@ -169,8 +177,9 @@ func (m *merger) Next() *origins.Fact {
 	for i, iter := range m.iterators {
 		f = m.next[i]
 
-		// No existing fact. Either the iterator is consumed, or no facts have been fetched from it yet,
-		// or its fact was returned in the last iteration.
+		// No existing fact. Either the iterator is consumed, or no facts have
+		// been fetched from it yet, or its fact was returned in the last
+		// iteration.
 		if f == nil {
 			if f = iter.Next(); f == nil {
 				if m.err = iter.Err(); m.err != nil {

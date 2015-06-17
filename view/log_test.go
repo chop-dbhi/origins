@@ -199,14 +199,15 @@ func TestLogExcludeDuplicates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if num != n*m {
 		t.Errorf("expected %d total facts, got %d", n*m, num)
 	}
 
 	// Now check that Next() works on the deduplicated stream,
 	// and verify the number of unique facts.
-
 	iter := Deduplicate(log.Now())
+
 	if err := iter.Err(); err != nil {
 		t.Fatal(err)
 	}

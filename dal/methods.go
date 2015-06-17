@@ -3,7 +3,6 @@ package dal
 import (
 	"fmt"
 
-	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/satori/go.uuid"
 )
@@ -130,36 +129,16 @@ func DeleteSegment(e storage.Tx, domain string, id *uuid.UUID) error {
 // GetBlock returns a block from storage. The lookup requires the domain, ID of the segment
 // the block is contained in, the index of the block in the segment, and the transaction
 // that processed the segment.
-func GetBlock(e storage.Tx, domain string, id *uuid.UUID, idx int, tx uint64) (origins.Facts, error) {
-	var (
-		bytes []byte
-		err   error
-		key   string
-	)
+func GetBlock(e storage.Tx, domain string, id *uuid.UUID, idx int) ([]byte, error) {
+	var key string
 
 	key = fmt.Sprintf(blockKey, id, idx)
 
-	if bytes, err = e.Get(domain, key); err != nil {
-		return nil, err
-	}
-
-	if bytes == nil {
-		return nil, nil
-	}
-
-	return unmarshalBlock(bytes, domain, tx)
+	return e.Get(domain, key)
 }
 
-func SetBlock(e storage.Tx, domain string, id *uuid.UUID, idx int, block origins.Facts) (int, error) {
-	var (
-		bytes []byte
-		err   error
-		key   string
-	)
-
-	if bytes, err = marshalBlock(block); err != nil {
-		return 0, err
-	}
+func SetBlock(e storage.Tx, domain string, id *uuid.UUID, idx int, bytes []byte) (int, error) {
+	var key string
 
 	key = fmt.Sprintf(blockKey, id, idx)
 

@@ -411,23 +411,28 @@ func (tx *Transaction) spawn(pipe Pipeline) chan<- *origins.Fact {
 	return ch
 }
 
+// Write writes a fact to the transaction.
+func (tx *Transaction) Write(fact *origins.Fact) error {
+	tx.stream <- fact
+	return nil
+}
+
+// Cancel cancels the transaction.
 func (tx *Transaction) Cancel() error {
 	tx.errch <- ErrCanceled
 	tx.mainwg.Wait()
 	return tx.Error
 }
 
+// Commit commits the transaction. All head of all affected logs will be
+// atomically updated to make the transacted data visible to clients.
 func (tx *Transaction) Commit() error {
 	close(tx.stream)
 	tx.mainwg.Wait()
 	return tx.Error
 }
 
-func (tx *Transaction) Write(fact *origins.Fact) error {
-	tx.stream <- fact
-	return nil
-}
-
+// Consume reads data from a stream and writes it to the transaction.
 func (tx *Transaction) Consume(pub origins.Publisher) error {
 	var (
 		ok   bool
@@ -452,7 +457,7 @@ func (tx *Transaction) Consume(pub origins.Publisher) error {
 				return nil
 			}
 
-			tx.stream <- fact
+			tx.Write(fact)
 		}
 	}
 

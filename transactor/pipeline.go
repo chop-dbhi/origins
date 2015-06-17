@@ -90,7 +90,7 @@ func (p *DomainPipeline) Init(tx *Transaction) error {
 }
 
 func (p *DomainPipeline) Receive(fact *origins.Fact) error {
-	return p.segment.Append(fact)
+	return p.segment.Write(fact)
 }
 
 func (p *DomainPipeline) Abort(tx storage.Tx) error {
@@ -104,7 +104,7 @@ func (p *DomainPipeline) Commit(tx storage.Tx) error {
 	)
 
 	// Write the remaining block of the segment.
-	if err = p.segment.Write(tx); err != nil {
+	if err = p.segment.Commit(tx); err != nil {
 		return err
 	}
 
