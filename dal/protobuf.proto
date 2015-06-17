@@ -5,7 +5,8 @@ package dal;
 message ProtoTransaction {
     required uint64 ID = 1;
     required int64 StartTime = 2;
-    required int64 EndTime = 3;
+    optional int64 EndTime = 3;
+    optional string Error = 4;
 }
 
 // A log is the header of a linked list of segments. It is one of the few
