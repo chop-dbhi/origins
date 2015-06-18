@@ -364,10 +364,17 @@ func (w *CSVWriter) Write(f *Fact) error {
 		w.started = true
 	}
 
+	// Encode empty transaction as a empty string.
+	var txs string
+
+	if f.Transaction > 0 {
+		txs = fmt.Sprint(f.Transaction)
+	}
+
 	w.writer.Write([]string{
 		f.Domain,
 		f.Operation.String(),
-		fmt.Sprint(f.Transaction),
+		txs,
 		chrono.Format(f.Time),
 		f.Entity.Domain,
 		f.Entity.Name,
