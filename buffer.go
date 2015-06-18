@@ -28,10 +28,6 @@ func (b *Buffer) Write(f *Fact) error {
 	return err
 }
 
-func (b *Buffer) Flush() error {
-	return nil
-}
-
 // Write takes a slice of facts and writes them to the buffer.
 func (b *Buffer) Append(buf ...*Fact) (int, error) {
 	if len(buf) == 0 {

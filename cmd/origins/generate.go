@@ -138,7 +138,13 @@ func (w *modWriter) Write(f *origins.Fact) error {
 }
 
 func (w *modWriter) Flush() error {
-	return w.writer.Flush()
+	// If the writer implements Flusher, flush it.
+	switch x := w.writer.(type) {
+	case origins.Flusher:
+		return x.Flush()
+	}
+
+	return nil
 }
 
 func init() {

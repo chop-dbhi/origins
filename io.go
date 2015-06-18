@@ -27,8 +27,12 @@ type Iterator interface {
 type Writer interface {
 	// Write writes a fact to the underlying stream.
 	Write(*Fact) error
+}
 
-	// Flush flushes any buffered data to the underlying stream.
+// Flusher is an interface that defines the Flush method. Types that
+// are buffered and require being *flushed* at the end of processing
+// implement this method.
+type Flusher interface {
 	Flush() error
 }
 
@@ -87,6 +91,12 @@ func Copy(it Iterator, w Writer) (int, error) {
 	// If a write error did not occur, set the read error.
 	if err != nil {
 		err = it.Err()
+	}
+
+	// If the writer implements Flusher, flush it.
+	switch x := w.(type) {
+	case Flusher:
+		err = x.Flush()
 	}
 
 	return n, err

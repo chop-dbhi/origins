@@ -428,10 +428,6 @@ func (tx *Transaction) Write(fact *origins.Fact) error {
 	return nil
 }
 
-func (tx *Transaction) Flush() error {
-	return nil
-}
-
 func (tx *Transaction) Consume(pub origins.Publisher) error {
 	var (
 		ok   bool
