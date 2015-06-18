@@ -82,6 +82,11 @@ func TimeMicro(t time.Time) int64 {
 	return int64(elapsedSeconds*microsPerSecond + int64(t.Nanosecond())/microsPerNano)
 }
 
+// Norm takes a time and normalizes it to microsecond resolution.
+func Norm(t time.Time) time.Time {
+	return MicroTime(TimeMicro(t))
+}
+
 // Format returns a string representation of the time.
 func Format(t time.Time) string {
 	if t.IsZero() {
