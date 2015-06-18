@@ -56,6 +56,7 @@ func BenchmarkCSVParse(b *testing.B) {
 	record := []string{
 		"people",
 		"assert",
+		"5",
 		"2014-02-01",
 		"people",
 		"bob",

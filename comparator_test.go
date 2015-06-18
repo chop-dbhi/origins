@@ -49,7 +49,7 @@ func testComparator(t *testing.T, comp Comparator) Facts {
 	return facts
 }
 
-func TestentityComparator(t *testing.T) {
+func TestEntityComparator(t *testing.T) {
 	facts := testComparator(t, entityComparator)
 
 	// bob, bob, sue, sue
@@ -63,7 +63,7 @@ func TestentityComparator(t *testing.T) {
 	assert.Equal(t, exp, facts)
 }
 
-func TestattributeComparator(t *testing.T) {
+func TestAttributeComparator(t *testing.T) {
 	facts := testComparator(t, attributeComparator)
 
 	// color, color, name, name
@@ -77,7 +77,7 @@ func TestattributeComparator(t *testing.T) {
 	assert.Equal(t, exp, facts)
 }
 
-func TestvalueComparator(t *testing.T) {
+func TestValueComparator(t *testing.T) {
 	facts := testComparator(t, valueComparator)
 
 	// blue, Bob, Sue, red
@@ -91,7 +91,7 @@ func TestvalueComparator(t *testing.T) {
 	assert.Equal(t, exp, facts)
 }
 
-func TesttimeComparator(t *testing.T) {
+func TestTimeComparator(t *testing.T) {
 	facts := testComparator(t, timeComparator)
 
 	// t0, t0, t1, t1
@@ -105,7 +105,7 @@ func TesttimeComparator(t *testing.T) {
 	assert.Equal(t, exp, facts)
 }
 
-func TesteavtComparator(t *testing.T) {
+func TestEAVTComparator(t *testing.T) {
 	facts := testComparator(t, eavtComparator)
 
 	// bob:color:red, bob:name:Bob, sue:color:blue, sue:name:Sue
@@ -119,7 +119,7 @@ func TesteavtComparator(t *testing.T) {
 	assert.Equal(t, exp, facts)
 }
 
-func TestavetComparator(t *testing.T) {
+func TestAVETComparator(t *testing.T) {
 	facts := testComparator(t, avetComparator)
 
 	// color:blue:sue, color:red:bob, name:Bob:bob, name:Sue:sue
@@ -133,7 +133,7 @@ func TestavetComparator(t *testing.T) {
 	assert.Equal(t, exp, facts)
 }
 
-func TestaevtComparator(t *testing.T) {
+func TestAEVTComparator(t *testing.T) {
 	facts := testComparator(t, aevtComparator)
 
 	// color:bob:red, color:sue:blue, name:bob:Bob, name:sue:Sue
@@ -147,7 +147,7 @@ func TestaevtComparator(t *testing.T) {
 	assert.Equal(t, exp, facts)
 }
 
-func TestvaetComparator(t *testing.T) {
+func TestVAETComparator(t *testing.T) {
 	facts := testComparator(t, vaetComparator)
 
 	// Bob:name:bob, Sue:name:sue, blue:color:sue, red:color:bob,

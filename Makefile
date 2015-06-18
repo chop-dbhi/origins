@@ -24,13 +24,15 @@ install:
 test-install: install
 	go get golang.org/x/tools/cmd/cover
 	go get github.com/stretchr/testify/assert
-	go get github.com/cespare/prettybench
 
 build-install: install test-install
 	go get github.com/mitchellh/gox
 
 test:
 	go test -cover ./...
+
+bench:
+	go test -run=none -bench=. -benchmem ./...
 
 build:
 	go build -o $(GOPATH)/bin/origins ./cmd/origins
@@ -44,15 +46,12 @@ build-all: build
 		-arch="amd64" \
 		./cmd/origins > /dev/null
 
-
-bench:
-	go test -run=none -bench=. ./... | prettybench
-
 fmt:
 	go vet ./...
 	go fmt ./...
 
 lint:
 	golint ./...
+
 
 .PHONY: test proto
