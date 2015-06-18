@@ -15,9 +15,23 @@ func TestBuffer(t *testing.T) {
 	v2 := &Ident{"", "pizza"}
 	v3 := &Ident{"", "coffee"}
 
-	f0, _ := Assert(e, a, v1)
-	f1, _ := Assert(e, a, v2)
-	f2, _ := Assert(e, a, v3)
+	f0 := &Fact{
+		Entity:    e,
+		Attribute: a,
+		Value:     v1,
+	}
+
+	f1 := &Fact{
+		Entity:    e,
+		Attribute: a,
+		Value:     v2,
+	}
+
+	f2 := &Fact{
+		Entity:    e,
+		Attribute: a,
+		Value:     v3,
+	}
 
 	facts := Facts{f0, f1, f2}
 

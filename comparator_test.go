@@ -27,10 +27,33 @@ func init() {
 	t0 := chrono.MustParse("2015-01-01")
 	t1 := chrono.MustParse("2015-01-02")
 
-	bobName, _ = AssertForTime(e1, a1, v1, t0)
-	bobColor, _ = AssertForTime(e1, a2, v3, t0)
-	sueName, _ = AssertForTime(e2, a1, v2, t1)
-	sueColor, _ = AssertForTime(e2, a2, v4, t1)
+	bobName = &Fact{
+		Time:      t0,
+		Entity:    e1,
+		Attribute: a1,
+		Value:     v1,
+	}
+
+	bobColor = &Fact{
+		Time:      t0,
+		Entity:    e1,
+		Attribute: a2,
+		Value:     v3,
+	}
+
+	sueName = &Fact{
+		Time:      t1,
+		Entity:    e2,
+		Attribute: a1,
+		Value:     v2,
+	}
+
+	sueColor = &Fact{
+		Time:      t1,
+		Entity:    e2,
+		Attribute: a2,
+		Value:     v4,
+	}
 
 	compFacts = Facts{
 		bobName,

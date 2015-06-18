@@ -99,64 +99,6 @@ func (f *Fact) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func parseIdent(id interface{}) (*Ident, error) {
-	switch x := id.(type) {
-	case *Ident:
-		return x, nil
-	case string:
-		return ParseIdent(x)
-	}
-
-	return nil, fmt.Errorf("ident: cannot parse %v", id)
-}
-
-func parseFact(op Operation, e, a, v interface{}, t time.Time) (*Fact, error) {
-	var (
-		err           error
-		eid, aid, vid *Ident
-	)
-
-	if eid, err = parseIdent(e); err != nil {
-		return nil, err
-	}
-
-	if aid, err = parseIdent(a); err != nil {
-		return nil, err
-	}
-
-	if vid, err = parseIdent(v); err != nil {
-		return nil, err
-	}
-
-	return &Fact{
-		Operation: op,
-		Entity:    eid,
-		Attribute: aid,
-		Value:     vid,
-		Time:      t,
-	}, nil
-}
-
-// Assert returns an asserted fact. The EAV values can be strings or Ident values.
-func Assert(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Assertion, e, a, v, time.Time{})
-}
-
-// Retract returns a retracted fact. The EAV values can be strings or Ident values.
-func Retract(e, a, v interface{}) (*Fact, error) {
-	return parseFact(Retraction, e, a, v, time.Time{})
-}
-
-// AssertForTime returns an asserted fact at a specified time.
-func AssertForTime(e, a, v interface{}, t time.Time) (*Fact, error) {
-	return parseFact(Assertion, e, a, v, t)
-}
-
-// RetractForTime returns a retracted fact at a specified time.
-func RetractForTime(e, a, v interface{}, t time.Time) (*Fact, error) {
-	return parseFact(Retraction, e, a, v, t)
-}
-
 // Facts is a slice of facts.
 type Facts []*Fact
 

@@ -24,17 +24,29 @@ func generateSet(n, m int, r float32) Facts {
 	l := 0
 
 	for i := 0; i < n; i++ {
-		e := Ident{"test", strconv.Itoa(i)}
+		e := &Ident{
+			Domain: "test",
+			Name:   strconv.Itoa(i),
+		}
 
 		// Shuffle order of attributes per entity to give it a bit
 		// more permutation.
 		for _, j := range rand.Perm(m) {
-			a := Ident{"test", strconv.Itoa(j)}
+			facts[l] = &Fact{
+				Domain:    "test",
+				Operation: Assertion,
+				Time:      t,
+				Entity:    e,
+				Attribute: &Ident{
+					Domain: "test",
+					Name:   strconv.Itoa(j),
+				},
+				Value: &Ident{
+					Domain: "test",
+					Name:   strconv.Itoa(rand.Intn(vn)),
+				},
+			}
 
-			v := Ident{"test", strconv.Itoa(rand.Intn(vn))}
-
-			f, _ := AssertForTime(e, a, v, t)
-			facts[l] = f
 			l += 1
 		}
 	}
