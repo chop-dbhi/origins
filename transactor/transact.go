@@ -233,6 +233,7 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 	if ch, ok = tx.pipes[pipe]; !ok {
 		ch = tx.spawn(pipe)
 		tx.pipes[pipe] = ch
+		tx.pipewg.Add(1)
 	}
 
 	// Send fact to the pipeline.
@@ -370,9 +371,6 @@ func (tx *Transaction) abort() error {
 // spawn all values on the channel on the pipeline.
 func (tx *Transaction) spawn(pipe Pipeline) chan<- *origins.Fact {
 	ch := make(chan *origins.Fact)
-
-	tx.pipes[pipe] = ch
-	tx.pipewg.Add(1)
 
 	go func() {
 		defer func() {
