@@ -21,38 +21,44 @@ func TestSegment(t *testing.T) {
 		n = 10000
 	)
 
+	// Write facts to segment.
 	for i := 0; i < n; i++ {
 		f = gen.Next()
 
-		if err = segment.Append(f); err != nil {
+		if err = segment.Write(f); err != nil {
 			t.Fatal(err)
 		}
 	}
 
+	// Compare counts.
 	if segment.Count != n {
 		t.Errorf("segment: expected %d count, got %d", n, segment.Count)
 	}
 
+	// Compare expected number of blocks.
 	if segment.Blocks != n/blockSize {
 		t.Errorf("segment: expected %d blocks, got %d", n/blockSize, segment.Blocks)
 	}
 
+	// Validate the blocks have been written to storage (even though the
+	// data has been committed).
 	id := segment.UUID
 
 	for i := 0; i < segment.Blocks; i++ {
-		bl, _ := dal.GetBlock(engine, "test", id, i, segment.Transaction)
+		bl, _ := dal.GetBlock(engine, "test", id, i)
 
 		if bl == nil {
 			t.Errorf("segment: block %s.%d is nil", id, i)
 		}
 	}
 
+	// Abort the segment.
 	if err = segment.Abort(engine); err != nil {
-		t.Error("segment: abort %s", err)
+		t.Error("segment: abort failed %s", err)
 	}
 
 	for i := 0; i < segment.Blocks; i++ {
-		bl, _ := dal.GetBlock(engine, "test", id, i, segment.Transaction)
+		bl, _ := dal.GetBlock(engine, "test", id, i)
 
 		if bl != nil {
 			t.Fatalf("segment: %s.%d should be nil", id, i)
@@ -73,11 +79,11 @@ func benchSegmentBlockSize(b *testing.B, bs int) {
 
 	for i := 0; i < b.N; i++ {
 		f = gen.Next()
-		segment.Append(f)
+		segment.Write(f)
 	}
 
 	engine.Multi(func(tx storage.Tx) error {
-		return segment.Write(tx)
+		return segment.Commit(tx)
 	})
 
 	blockSize = 1000
@@ -118,11 +124,11 @@ func benchSegmentSize(b *testing.B, n int) {
 
 		for j := 0; j < n; j++ {
 			f = gen.Next()
-			segment.Append(f)
+			segment.Write(f)
 		}
 
 		engine.Multi(func(tx storage.Tx) error {
-			return segment.Write(tx)
+			return segment.Commit(tx)
 		})
 	}
 }
