@@ -241,47 +241,9 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 	return nil
 }
 
-// receive is the coordinator for receiving and routing facts.
-func (tx *Transaction) receive() {
-	var (
-		err  error
-		fact *origins.Fact
-	)
-
-	logrus.Debugf("transactor(%d): begin receiving facts", tx.ID)
-
-loop:
-	for {
-		select {
-		// An error occurred in a pipeline.
-		case err = <-tx.errch:
-			logrus.Debugf("transactor(%d): %s", tx.ID, err)
-			close(tx.stream)
-			break loop
-
-		// Receive facts from stream and route to pipeline.
-		// If an error occurs while routing, stop processing.
-		case fact = <-tx.stream:
-			if fact == nil {
-				logrus.Debugf("transactor(%d): end of stream", tx.ID)
-				break loop
-			}
-
-			if err = tx.route(fact); err != nil {
-				logrus.Debugf("transactor(%d): error routing fact", tx.ID)
-				break loop
-			}
-
-		// Transaction timeout.
-		case <-time.After(tx.options.ReceiveWait):
-			logrus.Debugf("transactor(%d): receive timeout", tx.ID)
-			err = ErrReceiveTimeout
-			break loop
-		}
-	}
-
-	// Set the error if one occurred.
-	tx.Error = err
+func (tx *Transaction) run() {
+	// Start the receiver. This blocks until the stream ends or is interrupted.
+	tx.Error = tx.receive()
 
 	// Signal the transaction is closed.
 	close(tx.done)
@@ -296,6 +258,46 @@ loop:
 	tx.complete()
 
 	tx.mainwg.Done()
+}
+
+// receive is the coordinator for receiving and routing facts.
+func (tx *Transaction) receive() error {
+	var (
+		err  error
+		fact *origins.Fact
+	)
+
+	logrus.Debugf("transactor(%d): begin receiving facts", tx.ID)
+
+	for {
+		select {
+		// An error occurred in a pipeline.
+		case err = <-tx.errch:
+			logrus.Debugf("transactor(%d): %s", tx.ID, err)
+			close(tx.stream)
+			return err
+
+		// Receive facts from stream and route to pipeline.
+		// If an error occurs while routing, stop processing.
+		case fact = <-tx.stream:
+			if fact == nil {
+				logrus.Debugf("transactor(%d): end of stream", tx.ID)
+				return nil
+			}
+
+			if err = tx.route(fact); err != nil {
+				logrus.Debugf("transactor(%d): error routing fact", tx.ID)
+				return err
+			}
+
+		// Transaction timeout.
+		case <-time.After(tx.options.ReceiveWait):
+			logrus.Debugf("transactor(%d): receive timeout", tx.ID)
+			return ErrReceiveTimeout
+		}
+	}
+
+	return nil
 }
 
 // complete commits or aborts the transaction depending if an error occurred
@@ -521,8 +523,8 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 
 	tx.mainwg.Add(1)
 
-	// Start the receiving goroutine.
-	go tx.receive()
+	// Run transaction.
+	go tx.run()
 
 	return &tx, nil
 }
