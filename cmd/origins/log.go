@@ -8,16 +8,73 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
+	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var logCmd = &cobra.Command{
-	Use: "log <domain>",
+func concatDomains(engine storage.Engine, w origins.Writer, domains []string, since, asof time.Time) int {
+	var (
+		err      error
+		n, count int
+		log      *view.Log
+	)
 
-	Short: "Output the log for a domain.",
+	// Output facts for each domain in the order they are supplied.
+	for _, d := range domains {
+		log, err = view.OpenLog(engine, d, "commit")
+
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		v := log.View(since, asof)
+
+		n, err = origins.Copy(v, w)
+
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		count += n
+	}
+
+	return count
+}
+
+func mergeDomains(engine storage.Engine, w origins.Writer, domains []string, since, asof time.Time) int {
+	var (
+		err   error
+		count int
+		log   *view.Log
+	)
+
+	iters := make([]origins.Iterator, len(domains))
+
+	// Merge and output facts across domains.
+	for i, d := range domains {
+		log, err = view.OpenLog(engine, d, "commit")
+
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		iters[i] = log.View(since, asof)
+	}
+
+	if count, err = origins.Copy(view.Merge(iters...), w); err != nil {
+		logrus.Fatal(err)
+	}
+
+	return count
+}
+
+var logCmd = &cobra.Command{
+	Use: "log <domain> [...]",
+
+	Short: "Output the log for one or more domains.",
 
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
@@ -27,27 +84,18 @@ var logCmd = &cobra.Command{
 
 		var (
 			w           io.Writer
-			err         error
 			fw          origins.Writer
 			asof, since time.Time
 
-			domain = args[0]
-			file   = viper.GetString("log_file")
-			format = viper.GetString("log_format")
+			domains = args
+			file    = viper.GetString("log_file")
+			format  = viper.GetString("log_format")
 		)
-
-		engine := initStorage()
-
-		log, err := view.OpenLog(engine, domain, "commit")
-
-		if err != nil {
-			logrus.Fatal(err)
-		}
 
 		since, _ = chrono.Parse(viper.GetString("log_since"))
 		asof, _ = chrono.Parse(viper.GetString("log_asof"))
 
-		v := log.View(since, asof)
+		engine := initStorage()
 
 		if file == "" {
 			w = os.Stdout
@@ -72,13 +120,15 @@ var logCmd = &cobra.Command{
 			logrus.Fatal("unknown format", format)
 		}
 
-		n, err := origins.Copy(v, fw)
+		var count int
 
-		if err != nil {
-			logrus.Fatal(err)
+		if viper.GetBool("log_merge") {
+			count = mergeDomains(engine, fw, domains, since, asof)
+		} else {
+			count = concatDomains(engine, fw, domains, since, asof)
 		}
 
-		fmt.Fprintf(os.Stderr, "%d facts\n", n)
+		fmt.Fprintf(os.Stderr, "%d facts\n", count)
 	},
 }
 
@@ -89,9 +139,11 @@ func init() {
 	flags.String("since", "", "Defines the lower time boundary of facts to be read. ")
 	flags.String("file", "", "Path to a file to write the log to.")
 	flags.String("format", "csv", "The output format of the log.")
+	flags.Bool("merge", false, "Multiple domains will be merged.")
 
 	viper.BindPFlag("log_asof", flags.Lookup("asof"))
 	viper.BindPFlag("log_since", flags.Lookup("since"))
 	viper.BindPFlag("log_file", flags.Lookup("file"))
 	viper.BindPFlag("log_format", flags.Lookup("format"))
+	viper.BindPFlag("log_merge", flags.Lookup("merge"))
 }
