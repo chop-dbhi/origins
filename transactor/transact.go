@@ -3,6 +3,7 @@ package transactor
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -94,6 +95,9 @@ type Transaction struct {
 
 	// Pipelines and channels.
 	pipes map[Pipeline]chan<- *origins.Fact
+
+	// Set of domains that were transacted.
+	domains map[string]struct{}
 }
 
 // Info holds information about a transaction.
@@ -223,6 +227,13 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 		return err
 	}
 
+	// Ignore internal domains.
+	if !strings.HasPrefix(fact.Domain, "origins") {
+		if _, ok = tx.domains[fact.Domain]; !ok {
+			tx.domains[fact.Domain] = struct{}{}
+		}
+	}
+
 	// Route.
 	if pipe, err = tx.router.Route(fact); err != nil {
 		logrus.Debugf("transactor: could not route: %s", err)
@@ -244,9 +255,42 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 
 func (tx *Transaction) run() {
 	// Start the receiver. This blocks until the stream ends or is interrupted.
-	tx.Error = tx.receive()
+	err := tx.receive()
 
-	// Signal the transaction is closed.
+	if err == nil {
+		// Collect the domains affected across transacted facts and generates
+		// facts about them.
+		var (
+			domain string
+			fact   *origins.Fact
+		)
+
+		identAttr := &origins.Ident{
+			Domain: "origins.attrs",
+			Name:   "ident",
+		}
+
+		for domain, _ = range tx.domains {
+			fact = &origins.Fact{
+				Domain: "origins.domains",
+				Entity: &origins.Ident{
+					Name: domain,
+				},
+				Attribute: identAttr,
+				Value: &origins.Ident{
+					Name: domain,
+				},
+			}
+
+			if err = tx.route(fact); err != nil {
+				break
+			}
+		}
+	}
+
+	tx.Error = err
+
+	// Signal the transaction is closed so no more external facts are received.
 	close(tx.done)
 
 	// Wait for the pipelines to finish there work.
@@ -517,6 +561,7 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		errch:     make(chan error),
 		pipewg:    &sync.WaitGroup{},
 		mainwg:    &sync.WaitGroup{},
+		domains:   make(map[string]struct{}),
 	}
 
 	tx.mainwg.Add(1)
