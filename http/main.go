@@ -59,7 +59,8 @@ func Serve(engine storage.Engine, host string, port int) {
 	router.GET("/log/:domain/attributes", httpDomainAttributes)
 	router.GET("/log/:domain/values", httpDomainValues)
 
-	router.GET("/timeline/:domain", httpTimeline)
+	router.GET("/history/:domain", httpHistory)
+	router.GET("/history/:domain/:name", httpEntityHistory)
 
 	// Add CORS middleware
 	c := cors.New(cors.Options{
@@ -130,7 +131,7 @@ func httpLog(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 }
 
-func httpTimeline(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func httpHistory(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	domain := p.ByName("domain")
 
 	iter, err := domainIteratorResource(domain, w, r, p)
@@ -139,7 +140,7 @@ func httpTimeline(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	events, err := view.Timeline(iter, view.Descending)
+	history, err := view.History(httpEngine, iter)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -149,7 +150,40 @@ func httpTimeline(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	encoder := json.NewEncoder(w)
 
-	if err = encoder.Encode(events); err != nil {
+	if err = encoder.Encode(history); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+}
+
+func httpEntityHistory(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	domain := p.ByName("domain")
+	name := p.ByName("name")
+
+	iter, err := domainIteratorResource(domain, w, r, p)
+
+	if err != nil {
+		return
+	}
+
+	// Restrict to the entity.
+	iter = origins.Entity(iter, &origins.Ident{
+		Domain: domain,
+		Name:   name,
+	})
+
+	history, err := view.History(httpEngine, iter)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+
+	if err = encoder.Encode(history); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprint(err)))
 		return
