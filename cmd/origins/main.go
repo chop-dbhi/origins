@@ -30,6 +30,7 @@ func main() {
 	mainCmd.AddCommand(transactCmd)
 	mainCmd.AddCommand(logCmd)
 	mainCmd.AddCommand(httpCmd)
+	mainCmd.AddCommand(domainsCmd)
 
 	viper.SetEnvPrefix("ORIGINS")
 	viper.AutomaticEnv()
