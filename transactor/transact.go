@@ -3,6 +3,7 @@ package transactor
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -94,6 +95,9 @@ type Transaction struct {
 
 	// Pipelines and channels.
 	pipes map[Pipeline]chan<- *origins.Fact
+
+	// Set of domains that were transacted.
+	domains map[string]struct{}
 }
 
 // Info holds information about a transaction.
@@ -223,6 +227,13 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 		return err
 	}
 
+	// Ignore internal domains.
+	if !strings.HasPrefix(fact.Domain, "origins") {
+		if _, ok = tx.domains[fact.Domain]; !ok {
+			tx.domains[fact.Domain] = struct{}{}
+		}
+	}
+
 	// Route.
 	if pipe, err = tx.router.Route(fact); err != nil {
 		logrus.Debugf("transactor: could not route: %s", err)
@@ -233,6 +244,7 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 	if ch, ok = tx.pipes[pipe]; !ok {
 		ch = tx.spawn(pipe)
 		tx.pipes[pipe] = ch
+		tx.pipewg.Add(1)
 	}
 
 	// Send fact to the pipeline.
@@ -241,49 +253,44 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 	return nil
 }
 
-// receive is the coordinator for receiving and routing facts.
-func (tx *Transaction) receive() {
-	var (
-		err  error
-		fact *origins.Fact
-	)
+func (tx *Transaction) run() {
+	// Start the receiver. This blocks until the stream ends or is interrupted.
+	err := tx.receive()
 
-	logrus.Debugf("transactor(%d): begin receiving facts", tx.ID)
+	if err == nil {
+		// Collect the domains affected across transacted facts and generates
+		// facts about them.
+		var (
+			domain string
+			fact   *origins.Fact
+		)
 
-loop:
-	for {
-		select {
-		// An error occurred in a pipeline.
-		case err = <-tx.errch:
-			logrus.Debugf("transactor(%d): %s", tx.ID, err)
-			close(tx.stream)
-			break loop
+		identAttr := &origins.Ident{
+			Domain: "origins.attrs",
+			Name:   "ident",
+		}
 
-		// Receive facts from stream and route to pipeline.
-		// If an error occurs while routing, stop processing.
-		case fact = <-tx.stream:
-			if fact == nil {
-				logrus.Debugf("transactor(%d): end of stream", tx.ID)
-				break loop
+		for domain, _ = range tx.domains {
+			fact = &origins.Fact{
+				Domain: "origins.domains",
+				Entity: &origins.Ident{
+					Name: domain,
+				},
+				Attribute: identAttr,
+				Value: &origins.Ident{
+					Name: domain,
+				},
 			}
 
 			if err = tx.route(fact); err != nil {
-				logrus.Debugf("transactor(%d): error routing fact", tx.ID)
-				break loop
+				break
 			}
-
-		// Transaction timeout.
-		case <-time.After(tx.options.ReceiveWait):
-			logrus.Debugf("transactor(%d): receive timeout", tx.ID)
-			err = ErrReceiveTimeout
-			break loop
 		}
 	}
 
-	// Set the error if one occurred.
 	tx.Error = err
 
-	// Signal the transaction is closed.
+	// Signal the transaction is closed so no more external facts are received.
 	close(tx.done)
 
 	// Wait for the pipelines to finish there work.
@@ -296,6 +303,46 @@ loop:
 	tx.complete()
 
 	tx.mainwg.Done()
+}
+
+// receive is the coordinator for receiving and routing facts.
+func (tx *Transaction) receive() error {
+	var (
+		err  error
+		fact *origins.Fact
+	)
+
+	logrus.Debugf("transactor(%d): begin receiving facts", tx.ID)
+
+	for {
+		select {
+		// An error occurred in a pipeline.
+		case err = <-tx.errch:
+			logrus.Debugf("transactor(%d): %s", tx.ID, err)
+			close(tx.stream)
+			return err
+
+		// Receive facts from stream and route to pipeline.
+		// If an error occurs while routing, stop processing.
+		case fact = <-tx.stream:
+			if fact == nil {
+				logrus.Debugf("transactor(%d): end of stream", tx.ID)
+				return nil
+			}
+
+			if err = tx.route(fact); err != nil {
+				logrus.Debugf("transactor(%d): error routing fact", tx.ID)
+				return err
+			}
+
+		// Transaction timeout.
+		case <-time.After(tx.options.ReceiveWait):
+			logrus.Debugf("transactor(%d): receive timeout", tx.ID)
+			return ErrReceiveTimeout
+		}
+	}
+
+	return nil
 }
 
 // complete commits or aborts the transaction depending if an error occurred
@@ -368,9 +415,6 @@ func (tx *Transaction) abort() error {
 // spawn all values on the channel on the pipeline.
 func (tx *Transaction) spawn(pipe Pipeline) chan<- *origins.Fact {
 	ch := make(chan *origins.Fact)
-
-	tx.pipes[pipe] = ch
-	tx.pipewg.Add(1)
 
 	go func() {
 		defer func() {
@@ -517,12 +561,13 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		errch:     make(chan error),
 		pipewg:    &sync.WaitGroup{},
 		mainwg:    &sync.WaitGroup{},
+		domains:   make(map[string]struct{}),
 	}
 
 	tx.mainwg.Add(1)
 
-	// Start the receiving goroutine.
-	go tx.receive()
+	// Run transaction.
+	go tx.run()
 
 	return &tx, nil
 }
