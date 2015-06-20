@@ -20,6 +20,7 @@ install:
 	go get github.com/satori/go.uuid
 	go get github.com/julienschmidt/httprouter
 	go get github.com/rs/cors
+	go get github.com/jteeuwen/go-bindata/...
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover
@@ -27,6 +28,11 @@ test-install: install
 
 build-install: install test-install
 	go get github.com/mitchellh/gox
+
+# Build the binary assets.
+assets:
+	go-bindata -o testutil/bindata.go -pkg testutil \
+		-ignore \\.sw[a-z] -ignore \\.DS_Store assets/
 
 test:
 	go test -cover ./...
@@ -54,4 +60,4 @@ lint:
 	golint ./...
 
 
-.PHONY: test proto
+.PHONY: test proto assets

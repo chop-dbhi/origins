@@ -1,0 +1,82 @@
+domain,entity,attribute_domain,attribute,value_domain,value
+origins.attrs,name,,name,,name
+origins.attrs,name,,label,,Name
+origins.attrs,name,,doc,,Unique name of the entity in the domain.
+origins.attrs,name,,type,origins.types,string
+origins.attrs,name,,cardinality,origins.cardinalities,one
+origins.attrs,name,,unique,,true
+origins.attrs,label,,name,,label
+origins.attrs,label,,label,,Label
+origins.attrs,label,,doc,,Human-readable label of an identity.
+origins.attrs,label,,type,,string
+origins.attrs,label,,cardinality,origins.types,string
+origins.attrs,label,,unique,origins.cardinalities,one
+origins.attrs,doc,,name,,doc
+origins.attrs,doc,,label,,Documentation
+origins.attrs,doc,,doc,,Documentation of the identity.
+origins.attrs,doc,,type,,string
+origins.attrs,doc,,cardinality,,one
+origins.attrs,doc,,unique,,false
+origins.attrs,type,,name,,unique
+origins.attrs,type,,label,,Unique
+origins.attrs,type,,doc,,Flags whether this attribute is unique across entities in a domain.
+origins.attrs,type,,type,origins.types,ref
+origins.attrs,type,,cardinality,origins.cardinalities,one
+origins.attrs,type,,unique,,false
+origins.attrs,cardinality,,name,,cardinality
+origins.attrs,cardinality,,label,,Cardinality
+origins.attrs,cardinality,,doc,,"The cardinality of an attribute, whether attribute/value pairs can be associated to an entity."
+origins.attrs,cardinality,,type,origins.types,ref
+origins.attrs,cardinality,,cardinality,origins.cardinalities,one
+origins.attrs,cardinality,,unique,,false
+origins.attrs,unique,,name,,unique
+origins.attrs,unique,,label,,Unique
+origins.attrs,unique,,doc,,Flags whether this attribute is unique across entities in a domain.
+origins.attrs,unique,,type,origins.types,boolean
+origins.attrs,unique,,cardinality,origins.cardinalities,one
+origins.attrs,unique,,unique,,false
+origins.cardinalities,one,origins.attrs,name,,one
+origins.cardinalities,one,origins.attrs,label,,One
+origins.cardinalities,one,origins.attrs,doc,,"Denotes only one attribute/value pair can be asserted at any time on an entity. If a subsequent value is asserted, the previous will be automatically retracted."
+origins.cardinalities,many,origins.attrs,name,,many
+origins.cardinalities,many,origins.attrs,label,,Many
+origins.cardinalities,many,origins.attrs,doc,,Denotes zero or more attribute/value pairs can be asserted on an entity.
+origins.types,string,origins.attrs,name,,string
+origins.types,string,origins.attrs,label,,String
+origins.types,string,origins.attrs,doc,,String type.
+origins.types,int,origins.attrs,name,,int
+origins.types,int,origins.attrs,label,,Integer
+origins.types,int,origins.attrs,doc,,64-bit int type.
+origins.types,uint,origins.attrs,name,,uint
+origins.types,uint,origins.attrs,label,,Unsigned Integer
+origins.types,uint,origins.attrs,doc,,64-bit uint type.
+origins.types,bool,origins.attrs,name,,bool
+origins.types,bool,origins.attrs,label,,Boolean
+origins.types,bool,origins.attrs,doc,,Boolean type.
+origins.types,float,origins.attrs,name,,float
+origins.types,float,origins.attrs,label,,Float
+origins.types,float,origins.attrs,doc,,64-bit float type.
+origins.types,time,origins.attrs,name,,time
+origins.types,time,origins.attrs,label,,Time
+origins.types,time,origins.attrs,doc,,Time type.
+origins.types,ref,origins.attrs,name,,ref
+origins.types,ref,origins.attrs,label,,Reference
+origins.types,ref,origins.attrs,doc,,Reference to an entity.
+origins.macros,tx,origins.attrs,name,,tx
+origins.macros,tx,origins.attrs,label,,Transaction
+origins.macros,tx,origins.attrs,doc,,A macro that expands to the current transaction.
+origins.macros,tx,origins.attrs,type,origins.types,ref
+origins.macros,tx,origins.attrs,cardinality,origins.cardinalities,one
+origins.macros,tx,origins.attrs,unique,,false
+origins.macros,now,origins.attrs,name,,now
+origins.macros,now,origins.attrs,label,,Now
+origins.macros,now,origins.attrs,doc,,A macro that expands to the current time.
+origins.macros,now,origins.attrs,type,origins.types,timestamp
+origins.macros,now,origins.attrs,cardinality,origins.cardinalities,one
+origins.macros,now,origins.attrs,unique,,false
+origins.macros,domain,origins.attrs,name,,domain
+origins.macros,domain,origins.attrs,label,,Domain
+origins.macros,domain,origins.attrs,doc,,A macro that expands to the current domain.
+origins.macros,domain,origins.attrs,type,origins.types,ref
+origins.macros,domain,origins.attrs,cardinality,origins.cardinalities,one
+origins.macros,domain,origins.attrs,unique,,false
