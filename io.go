@@ -56,6 +56,51 @@ func Read(it Iterator, buf Facts) (int, error) {
 	return i, it.Err()
 }
 
+type sliceIter struct {
+	iter          Iterator
+	offset, limit int
+	count, index  int
+}
+
+func (s *sliceIter) Next() *Fact {
+	// If the limit has been reached, exit.
+	if s.limit > 0 && s.count >= s.limit {
+		return nil
+	}
+
+	var fact *Fact
+
+	for {
+		if fact = s.iter.Next(); fact == nil {
+			return nil
+		}
+
+		// Skip fact if not within range.
+		if s.index >= s.offset {
+			s.index++
+			s.count++
+			return fact
+		}
+
+		s.index++
+	}
+
+	return nil
+}
+
+func (s *sliceIter) Err() error {
+	return s.iter.Err()
+}
+
+// Slice applies an offset and limit to the iterator.
+func Slice(iter Iterator, offset, limit int) Iterator {
+	return &sliceIter{
+		iter:   iter,
+		offset: offset,
+		limit:  limit,
+	}
+}
+
 // ReadAll reads all facts from the reader.
 func ReadAll(it Iterator) (Facts, error) {
 	buf := NewBuffer(nil)

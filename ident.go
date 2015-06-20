@@ -78,3 +78,18 @@ func ParseIdent(s string) (*Ident, error) {
 
 	return id, nil
 }
+
+// Idents is a slice of idents.
+type Idents []*Ident
+
+func (ids Idents) Len() int {
+	return len(ids)
+}
+
+func (ids Idents) Swap(i, j int) {
+	ids[i], ids[j] = ids[j], ids[i]
+}
+
+func (ids Idents) Less(i, j int) bool {
+	return IdentComparator(ids[i], ids[j])
+}

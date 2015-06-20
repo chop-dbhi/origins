@@ -1,49 +1,12 @@
 package view
 
-import (
-	"bytes"
-	"testing"
-
-	"github.com/chop-dbhi/origins"
-	"github.com/chop-dbhi/origins/transactor"
-)
-
-var testData = `
-entity,attribute,value
-bob,city,Norristown
-sue,city,Bethlehem
-bob,city,Bethlehem
-bob,city,Philadelphia
-bob,city,Allentown
-sue,city,Allentown
-`
+import "testing"
 
 func TestTimeline(t *testing.T) {
-	buf := bytes.NewBufferString(testData)
+	// See utils_test for function.
+	iter := buildIter(t)
 
-	csv := origins.NewCSVReader(buf)
-
-	engine, err := origins.Init("memory", nil)
-
-	tx, err := transactor.New(engine, transactor.Options{
-		DefaultDomain: "users",
-	})
-
-	if err = tx.Consume(csv); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = tx.Commit(); err != nil {
-		t.Fatal(err)
-	}
-
-	log, err := OpenLog(engine, "users", "commit")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	events, err := Timeline(log.Now(), Ascending)
+	events, err := Timeline(iter, Ascending)
 
 	if err != nil {
 		t.Fatal(err)

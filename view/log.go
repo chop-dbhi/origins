@@ -302,7 +302,7 @@ type Log struct {
 
 // View returns a view of the log for the specified time period. It is safe for
 // multiple consumers to create views of a log.
-func (l *Log) View(since, asof time.Time) *logView {
+func (l *Log) View(since, asof time.Time) origins.Iterator {
 	return &logView{
 		domain: l.log.Domain,
 		head:   l.log.Head,

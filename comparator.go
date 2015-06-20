@@ -36,43 +36,42 @@ func identComparator(i1, i2 *Ident) int8 {
 	return compEqual
 }
 
-// entityComparator compares two entity identities.
-func entityComparator(f1, f2 *Fact) bool {
-	switch identComparator(f1.Entity, f2.Entity) {
-	case compTrue:
+// IdentComparator compares to identities.
+func IdentComparator(id1, id2 *Ident) bool {
+	if identComparator(id1, id2) == compTrue {
 		return true
-	default:
-		return false
 	}
+
+	return false
 }
 
-// attributeComparator compares two attribute identities.
-func attributeComparator(f1, f2 *Fact) bool {
-	switch identComparator(f1.Attribute, f2.Attribute) {
-	case compTrue:
-		return true
-	default:
-		return false
-	}
+// EntityComparator compares two entity identities.
+func EntityComparator(f1, f2 *Fact) bool {
+	return IdentComparator(f1.Entity, f2.Entity)
 }
 
-// valueComparator compares two value identities.
-func valueComparator(f1, f2 *Fact) bool {
-	switch identComparator(f1.Value, f2.Value) {
-	case compTrue:
-		return true
-	default:
-		return false
-	}
+// AttributeComparator compares two attribute identities.
+func AttributeComparator(f1, f2 *Fact) bool {
+	return IdentComparator(f1.Attribute, f2.Attribute)
 }
 
-// timeComparator compares two times.
-func timeComparator(f1, f2 *Fact) bool {
+// ValueComparator compares two value identities.
+func ValueComparator(f1, f2 *Fact) bool {
+	return IdentComparator(f1.Value, f2.Value)
+}
+
+// TransactionComparator compares two value identities.
+func TransactionComparator(f1, f2 *Fact) bool {
+	return f1.Transaction < f2.Transaction
+}
+
+// TimeComparator compares two times.
+func TimeComparator(f1, f2 *Fact) bool {
 	return f1.Time.Before(f2.Time)
 }
 
-// eavtComparator compares two facts using an entity-attribute-value-time sort.
-func eavtComparator(f1, f2 *Fact) bool {
+// EAVTComparator compares two facts using an entity-attribute-value-time sort.
+func EAVTComparator(f1, f2 *Fact) bool {
 	switch identComparator(f1.Entity, f2.Entity) {
 	case compTrue:
 		return true
@@ -94,11 +93,11 @@ func eavtComparator(f1, f2 *Fact) bool {
 		return false
 	}
 
-	return timeComparator(f1, f2)
+	return TransactionComparator(f1, f2)
 }
 
-// aevtComparator compares two facts using an attribute-entity-value-time sort.
-func aevtComparator(f1, f2 *Fact) bool {
+// AEVTComparator compares two facts using an attribute-entity-value-time sort.
+func AEVTComparator(f1, f2 *Fact) bool {
 	switch identComparator(f1.Attribute, f2.Attribute) {
 	case compTrue:
 		return true
@@ -120,11 +119,11 @@ func aevtComparator(f1, f2 *Fact) bool {
 		return false
 	}
 
-	return timeComparator(f1, f2)
+	return TransactionComparator(f1, f2)
 }
 
-// avetComparator compares two facts using an attribute-value-entity-time sort.
-func avetComparator(f1, f2 *Fact) bool {
+// AVETComparator compares two facts using an attribute-value-entity-time sort.
+func AVETComparator(f1, f2 *Fact) bool {
 	switch identComparator(f1.Attribute, f2.Attribute) {
 	case compTrue:
 		return true
@@ -146,11 +145,11 @@ func avetComparator(f1, f2 *Fact) bool {
 		return false
 	}
 
-	return timeComparator(f1, f2)
+	return TransactionComparator(f1, f2)
 }
 
-// vaetComparator compares two facts using an value-attribute-entity-time sort.
-func vaetComparator(f1, f2 *Fact) bool {
+// VAETComparator compares two facts using an value-attribute-entity-time sort.
+func VAETComparator(f1, f2 *Fact) bool {
 	switch identComparator(f1.Value, f2.Value) {
 	case compTrue:
 		return true
@@ -172,5 +171,5 @@ func vaetComparator(f1, f2 *Fact) bool {
 		return false
 	}
 
-	return timeComparator(f1, f2)
+	return TransactionComparator(f1, f2)
 }
