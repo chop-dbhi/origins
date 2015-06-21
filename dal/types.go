@@ -53,18 +53,3 @@ type Segment struct {
 	// the segment position is changed.
 	Next *uuid.UUID
 }
-
-// Transaction contains information about the state of the database while
-// facts are being transacted. Unlike the other structures, transactions
-// are globally unique across domains.
-type Transaction struct {
-	// Unique ID for the transaction.
-	ID uint64
-
-	// The start and end time of transaction.
-	StartTime time.Time
-	EndTime   time.Time
-
-	// Error that occurred during the transaction.
-	Error error
-}

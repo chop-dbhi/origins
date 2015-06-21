@@ -173,38 +173,6 @@ func unmarshalFact(m *ProtoFact, b []byte, d string, t uint64, f *origins.Fact) 
 	return nil
 }
 
-func marshalTx(tx *Transaction) ([]byte, error) {
-	m := ProtoTransaction{
-		ID:        proto.Uint64(tx.ID),
-		StartTime: proto.Int64(chrono.TimeMicro(tx.StartTime)),
-		EndTime:   proto.Int64(chrono.TimeMicro(tx.EndTime)),
-	}
-
-	if tx.Error != nil {
-		m.Error = proto.String(fmt.Sprint(tx.Error))
-	}
-
-	return proto.Marshal(&m)
-}
-
-func unmarshalTx(b []byte, tx *Transaction) error {
-	m := ProtoTransaction{}
-
-	if err := proto.Unmarshal(b, &m); err != nil {
-		return err
-	}
-
-	tx.ID = m.GetID()
-	tx.StartTime = chrono.MicroTime(m.GetStartTime())
-	tx.EndTime = chrono.MicroTime(m.GetEndTime())
-
-	if m.Error != nil {
-		tx.Error = errors.New(m.GetError())
-	}
-
-	return nil
-}
-
 // BlockEncoder encodes facts into a buffer.
 type BlockEncoder struct {
 	Count int

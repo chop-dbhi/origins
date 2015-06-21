@@ -1,7 +1,6 @@
 package dal
 
 import (
-	"errors"
 	"testing"
 	"time"
 
@@ -73,32 +72,6 @@ func TestSegmentMethods(t *testing.T) {
 
 	assert.Equal(t, s.Transaction, s2.Transaction)
 	assert.Equal(t, *s.Next, *s2.Next)
-}
-
-func TestTransactionMethods(t *testing.T) {
-	engine, _ := origins.Init("memory", nil)
-
-	start := time.Now().UTC()
-	end := start.Add(2 * time.Second)
-
-	tx := &Transaction{
-		ID:        1,
-		StartTime: chrono.Norm(start),
-		EndTime:   chrono.Norm(end),
-		Error:     errors.New("transaction error"),
-	}
-
-	_, err := SetTransaction(engine, tx)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	tx2, err := GetTransaction(engine, 1)
-
-	assert.Equal(t, tx.StartTime, tx2.StartTime)
-	assert.Equal(t, tx.EndTime, tx2.EndTime)
-	assert.Equal(t, tx.Error, tx2.Error)
 }
 
 func TestBlockMethods(t *testing.T) {
@@ -237,44 +210,6 @@ func BenchmarkGetSegment(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		GetSegment(engine, "testing", &id)
-	}
-}
-
-func BenchmarkSetTransaction(b *testing.B) {
-	engine, _ := origins.Init("memory", nil)
-
-	start := time.Now().UTC()
-	end := start.Add(2 * time.Second)
-
-	tx := &Transaction{
-		ID:        1,
-		StartTime: chrono.Norm(start),
-		EndTime:   chrono.Norm(end),
-		Error:     errors.New("transaction error"),
-	}
-
-	for i := 0; i < b.N; i++ {
-		SetTransaction(engine, tx)
-	}
-}
-
-func BenchmarkGetTransaction(b *testing.B) {
-	engine, _ := origins.Init("memory", nil)
-
-	start := time.Now().UTC()
-	end := start.Add(2 * time.Second)
-
-	tx := &Transaction{
-		ID:        1,
-		StartTime: chrono.Norm(start),
-		EndTime:   chrono.Norm(end),
-		Error:     errors.New("transaction error"),
-	}
-
-	SetTransaction(engine, tx)
-
-	for i := 0; i < b.N; i++ {
-		GetTransaction(engine, tx.ID)
 	}
 }
 

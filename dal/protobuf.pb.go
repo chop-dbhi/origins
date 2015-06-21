@@ -9,7 +9,6 @@ It is generated from these files:
 	dal/protobuf.proto
 
 It has these top-level messages:
-	ProtoTransaction
 	ProtoLog
 	ProtoSegment
 	ProtoFact
@@ -22,48 +21,6 @@ import math "math"
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = math.Inf
-
-// A transaction contains information about the state of the system when
-// facts are being transacted.
-type ProtoTransaction struct {
-	ID               *uint64 `protobuf:"varint,1,req" json:"ID,omitempty"`
-	StartTime        *int64  `protobuf:"varint,2,req" json:"StartTime,omitempty"`
-	EndTime          *int64  `protobuf:"varint,3,opt" json:"EndTime,omitempty"`
-	Error            *string `protobuf:"bytes,4,opt" json:"Error,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
-}
-
-func (m *ProtoTransaction) Reset()         { *m = ProtoTransaction{} }
-func (m *ProtoTransaction) String() string { return proto.CompactTextString(m) }
-func (*ProtoTransaction) ProtoMessage()    {}
-
-func (m *ProtoTransaction) GetID() uint64 {
-	if m != nil && m.ID != nil {
-		return *m.ID
-	}
-	return 0
-}
-
-func (m *ProtoTransaction) GetStartTime() int64 {
-	if m != nil && m.StartTime != nil {
-		return *m.StartTime
-	}
-	return 0
-}
-
-func (m *ProtoTransaction) GetEndTime() int64 {
-	if m != nil && m.EndTime != nil {
-		return *m.EndTime
-	}
-	return 0
-}
-
-func (m *ProtoTransaction) GetError() string {
-	if m != nil && m.Error != nil {
-		return *m.Error
-	}
-	return ""
-}
 
 // A log is the header of a linked list of segments. It is one of the few
 // mutable values since it holds the pointer to the head of the linked list.
