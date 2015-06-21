@@ -96,6 +96,15 @@ func Format(t time.Time) string {
 	return t.Format(time.RFC3339)
 }
 
+// FormatNano returns a string representation of the time with nanosecond resolution.
+func FormatNano(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+
+	return t.Format(time.RFC3339Nano)
+}
+
 // Parse parses a string into a time value. The string may represent an
 // absolute time, duration relative to the current time, or a microsecond-resolution
 // timestamp. All times are converted to UTC.

@@ -1,14 +1,5 @@
 package dal;
 
-// A transaction contains information about the state of the system when
-// facts are being transacted.
-message ProtoTransaction {
-    required uint64 ID = 1;
-    required int64 StartTime = 2;
-    optional int64 EndTime = 3;
-    optional string Error = 4;
-}
-
 // A log is the header of a linked list of segments. It is one of the few
 // mutable values since it holds the pointer to the head of the linked list.
 // Upon a successful transaction, the head is updated to point to the most

@@ -8,10 +8,6 @@ import (
 )
 
 const (
-	// Transactions are keyed by their unique ID. They are stored within
-	// the reserved origins domain.
-	txKey = "tx.%d"
-
 	// Logs are keyed by their name. They are stored in a domain.
 	logKey = "log.%s"
 
@@ -149,52 +145,4 @@ func DeleteBlock(e storage.Tx, domain string, id *uuid.UUID, idx int) error {
 	key := fmt.Sprintf(blockKey, id, idx)
 
 	return e.Delete(domain, key)
-}
-
-func GetTransaction(e storage.Tx, id uint64) (*Transaction, error) {
-	var (
-		bytes []byte
-		err   error
-		key   string
-	)
-
-	key = fmt.Sprintf(txKey, id)
-
-	if bytes, err = e.Get("origins", key); err != nil {
-		return nil, err
-	}
-
-	if bytes == nil {
-		return nil, nil
-	}
-
-	tx := Transaction{}
-
-	if err = unmarshalTx(bytes, &tx); err != nil {
-		return nil, err
-	}
-
-	return &tx, nil
-}
-
-func SetTransaction(e storage.Tx, tx *Transaction) (int, error) {
-	var (
-		bytes []byte
-		err   error
-		key   string
-	)
-
-	if bytes, err = marshalTx(tx); err != nil {
-		return 0, err
-	}
-
-	key = fmt.Sprintf(txKey, tx.ID)
-
-	return len(bytes), e.Set("origins", key, bytes)
-}
-
-func DeleteTransaction(e storage.Tx, id uint64) error {
-	key := fmt.Sprintf(logKey, id)
-
-	return e.Delete("origins", key)
 }

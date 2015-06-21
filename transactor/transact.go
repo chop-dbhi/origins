@@ -8,13 +8,18 @@ import (
 	"time"
 
 	"github.com/chop-dbhi/origins"
-	"github.com/chop-dbhi/origins/dal"
+	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	macrosDomain = "origins.macros"
+	AttrsDomain         = "origins.attrs"
+	TypesDomain         = "origins.types"
+	MacrosDomain        = "origins.macros"
+	DomainsDomain       = "origins.domains"
+	TransactionsDomain  = "origins.transactions"
+	CardinalitiesDomain = "origins.cardinalities"
 )
 
 var (
@@ -98,6 +103,9 @@ type Transaction struct {
 
 	// Set of domains that were transacted.
 	domains map[string]struct{}
+
+	// Entity ident of transaction.
+	entity *origins.Ident
 }
 
 // Info holds information about a transaction.
@@ -175,29 +183,45 @@ func (tx *Transaction) evaluate(f *origins.Fact) error {
 
 // macro takes a fact and resolves the macro.
 func (tx *Transaction) macro(fact *origins.Fact) error {
-	// Macro domain. Fact is about the domain itself.
-	if fact.Entity.Domain == "origins.macros" {
+	// Do not process facts for the macros themselves.
+	if fact.Domain == MacrosDomain {
+		return nil
+	}
+
+	// Entity-based macro.
+	if fact.Entity.Domain == MacrosDomain {
 		switch fact.Entity.Name {
+
+		// Facts about the domain.
 		case "domain":
 			fact.Entity.Name = fact.Domain
-			fact.Domain = "origins.domains"
+			fact.Domain = DomainsDomain
 			fact.Entity.Domain = ""
 
+		// Facts about the transaction.
 		case "tx":
-			fact.Domain = fmt.Sprintf("origins.tx.%s", fact.Domain)
+			fact.Domain = TransactionsDomain
 			fact.Entity.Domain = ""
-			fact.Entity.Name = tx.StartTime.String()
+			fact.Entity.Name = fmt.Sprint(tx.ID)
 
 		default:
 			return fmt.Errorf("transactor: unknown entity macro: %s", fact.Entity.Name)
 		}
 	}
 
-	if fact.Value.Domain == "origins.macros" {
+	// Value-based macro.
+	if fact.Value.Domain == MacrosDomain {
 		switch fact.Value.Name {
+
+		// Set the value to the transaction time.
 		case "now":
 			fact.Value.Domain = ""
 			fact.Value.Name = tx.StartTime.String()
+
+		// Set the value to the transaction entity.
+		case "tx":
+			fact.Value.Domain = TransactionsDomain
+			fact.Value.Name = fmt.Sprint(tx.ID)
 
 		default:
 			return fmt.Errorf("transactor: unknown value macro: %s", fact.Value.Name)
@@ -266,13 +290,13 @@ func (tx *Transaction) run() {
 		)
 
 		identAttr := &origins.Ident{
-			Domain: "origins.attrs",
+			Domain: AttrsDomain,
 			Name:   "ident",
 		}
 
 		for domain, _ = range tx.domains {
 			fact = &origins.Fact{
-				Domain: "origins.domains",
+				Domain: DomainsDomain,
 				Entity: &origins.Ident{
 					Name: domain,
 				},
@@ -290,14 +314,40 @@ func (tx *Transaction) run() {
 
 	tx.Error = err
 
+	// Mark the end time of processing.
+	tx.EndTime = time.Now().UTC()
+
+	// Transact the end time.
+	tx.route(&origins.Fact{
+		Domain: TransactionsDomain,
+		Entity: tx.entity,
+		Attribute: &origins.Ident{
+			Name: "endTime",
+		},
+		Value: &origins.Ident{
+			Name: chrono.FormatNano(tx.EndTime),
+		},
+	})
+
+	// Transact the error if one occurred.
+	if tx.Error != nil {
+		tx.route(&origins.Fact{
+			Domain: TransactionsDomain,
+			Entity: tx.entity,
+			Attribute: &origins.Ident{
+				Name: "txError",
+			},
+			Value: &origins.Ident{
+				Name: fmt.Sprint(tx.Error),
+			},
+		})
+	}
+
 	// Signal the transaction is closed so no more external facts are received.
 	close(tx.done)
 
 	// Wait for the pipelines to finish there work.
 	tx.pipewg.Wait()
-
-	// Mark the end time of processing.
-	tx.EndTime = time.Now().UTC()
 
 	// Complete the transaction by committing or aborting.
 	tx.complete()
@@ -368,14 +418,6 @@ func (tx *Transaction) complete() {
 			logrus.Debugf("transactor(%d): abort succeeded", tx.ID)
 		}
 	}
-
-	// Update transaction record.
-	_, err = dal.SetTransaction(tx.Engine, &dal.Transaction{
-		ID:        tx.ID,
-		StartTime: tx.StartTime,
-		EndTime:   tx.EndTime,
-		Error:     tx.Error,
-	})
 
 	if err != nil {
 		logrus.Errorf("transactor(%d): error writing transaction record: %s", tx.ID, err)
@@ -516,23 +558,11 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		err error
 	)
 
-	now := time.Now().UTC()
+	// Start time of the transaction.
+	startTime := time.Now().UTC()
 
-	// Increment the transaction ID and store the record.
-	err = engine.Multi(func(tx storage.Tx) error {
-		if id, err = txid(tx); err != nil {
-			return err
-		}
-
-		_, err = dal.SetTransaction(tx, &dal.Transaction{
-			ID:        id,
-			StartTime: now,
-		})
-
-		return err
-	})
-
-	if err != nil {
+	// Increment the transaction ID.
+	if id, err = txid(engine); err != nil {
 		logrus.Errorf("transactor: could not create transaction: %s", err)
 		return nil, ErrNoID
 	}
@@ -551,7 +581,7 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 
 	tx := Transaction{
 		ID:        id,
-		StartTime: time.Now().UTC(),
+		StartTime: startTime,
 		Engine:    engine,
 		options:   options,
 		pipes:     make(map[Pipeline]chan<- *origins.Fact),
@@ -562,12 +592,40 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		pipewg:    &sync.WaitGroup{},
 		mainwg:    &sync.WaitGroup{},
 		domains:   make(map[string]struct{}),
+
+		entity: &origins.Ident{
+			Name: fmt.Sprint(id),
+		},
 	}
 
 	tx.mainwg.Add(1)
 
 	// Run transaction.
 	go tx.run()
+
+	// Write facts about the transaction.
+	tx.Write(&origins.Fact{
+		Domain: TransactionsDomain,
+		Entity: tx.entity,
+		Attribute: &origins.Ident{
+			Domain: AttrsDomain,
+			Name:   "ident",
+		},
+		Value: &origins.Ident{
+			Name: tx.entity.Name,
+		},
+	})
+
+	tx.Write(&origins.Fact{
+		Domain: TransactionsDomain,
+		Entity: tx.entity,
+		Attribute: &origins.Ident{
+			Name: "startTime",
+		},
+		Value: &origins.Ident{
+			Name: chrono.FormatNano(tx.StartTime),
+		},
+	})
 
 	return &tx, nil
 }
