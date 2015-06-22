@@ -39,6 +39,7 @@ https://github.com/chop-dbhi/origins-generators`,
 		// Check optional arguments.
 		domain := viper.GetString("generate_domain")
 		ts := viper.GetString("generate_time")
+		op := viper.GetString("generate_operation")
 
 		var (
 			t   time.Time
@@ -52,6 +53,13 @@ https://github.com/chop-dbhi/origins-generators`,
 				fmt.Println(err)
 				os.Exit(1)
 			}
+		}
+
+		operation, err := origins.ParseOperation(op)
+
+		if err != nil {
+			fmt.Print(err)
+			os.Exit(1)
 		}
 
 		// Construct the full script name.
@@ -102,7 +110,7 @@ https://github.com/chop-dbhi/origins-generators`,
 				}
 
 				if f.Operation == origins.Noop {
-					f.Operation = origins.Assertion
+					f.Operation = operation
 				}
 
 				if f.Time.IsZero() {
@@ -152,7 +160,9 @@ func init() {
 
 	flags.String("domain", "", "Default domain to set on the facts.")
 	flags.String("time", "", "The time the facts are true.")
+	flags.String("operation", "", "The operation to apply to the facts, assert or retract.")
 
 	viper.BindPFlag("generate_domain", flags.Lookup("domain"))
 	viper.BindPFlag("generate_time", flags.Lookup("time"))
+	viper.BindPFlag("generate_operation", flags.Lookup("operation"))
 }
