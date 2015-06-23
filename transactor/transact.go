@@ -64,8 +64,9 @@ type Transaction struct {
 	StartTime time.Time
 	EndTime   time.Time
 
-	// The error that caused the transaction to fail is one occurs.
-	Error error
+	// Error during the transaction and commit error.
+	Error       error
+	CommitError error
 
 	Engine storage.Engine
 
@@ -303,6 +304,7 @@ func (tx *Transaction) run() {
 		}
 	}
 
+	// Set the error.
 	tx.Error = err
 
 	// Mark the end time of processing.
@@ -320,13 +322,13 @@ func (tx *Transaction) run() {
 		},
 	})
 
-	// Transact the error if one occurred.
+	// Error during the transaction that caused the abort.
 	if tx.Error != nil {
 		tx.route(&origins.Fact{
 			Domain: origins.TransactionsDomain,
 			Entity: tx.entity,
 			Attribute: &origins.Ident{
-				Name: "txError",
+				Name: "error",
 			},
 			Value: &origins.Ident{
 				Name: fmt.Sprint(tx.Error),
@@ -413,6 +415,8 @@ func (tx *Transaction) complete() {
 	if err != nil {
 		logrus.Errorf("transactor(%d): error writing transaction record: %s", tx.ID, err)
 	}
+
+	tx.CommitError = err
 }
 
 // commit commits all the pipelines in a transaction.
