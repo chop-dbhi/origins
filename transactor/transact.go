@@ -196,7 +196,7 @@ func (tx *Transaction) macro(fact *origins.Fact) error {
 			fact.Entity.Name = fmt.Sprint(tx.ID)
 
 		default:
-			return fmt.Errorf("transactor: unknown entity macro: %s", fact.Entity.Name)
+			return fmt.Errorf("transactor(%d): unknown entity macro: %s", tx.ID, fact.Entity.Name)
 		}
 	}
 
@@ -215,7 +215,7 @@ func (tx *Transaction) macro(fact *origins.Fact) error {
 			fact.Value.Name = fmt.Sprint(tx.ID)
 
 		default:
-			return fmt.Errorf("transactor: unknown value macro: %s", fact.Value.Name)
+			return fmt.Errorf("transactor(%s): unknown value macro: %s", tx.ID, fact.Value.Name)
 		}
 	}
 
@@ -251,7 +251,7 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 
 	// Route.
 	if pipe, err = tx.router.Route(fact); err != nil {
-		logrus.Debugf("transactor: could not route: %s", err)
+		logrus.Debugf("transactor(%d): could not route: %s", tx.ID, err)
 		return ErrCouldNotRoute
 	}
 
