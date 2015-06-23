@@ -13,15 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	AttrsDomain         = "origins.attrs"
-	TypesDomain         = "origins.types"
-	MacrosDomain        = "origins.macros"
-	DomainsDomain       = "origins.domains"
-	TransactionsDomain  = "origins.transactions"
-	CardinalitiesDomain = "origins.cardinalities"
-)
-
 var (
 	ErrCanceled       = errors.New("transactor: canceled")
 	ErrNoID           = errors.New("transactor: could not create tx id")
@@ -184,23 +175,23 @@ func (tx *Transaction) evaluate(f *origins.Fact) error {
 // macro takes a fact and resolves the macro.
 func (tx *Transaction) macro(fact *origins.Fact) error {
 	// Do not process facts for the macros themselves.
-	if fact.Domain == MacrosDomain {
+	if fact.Domain == origins.MacrosDomain {
 		return nil
 	}
 
 	// Entity-based macro.
-	if fact.Entity.Domain == MacrosDomain {
+	if fact.Entity.Domain == origins.MacrosDomain {
 		switch fact.Entity.Name {
 
 		// Facts about the domain.
 		case "domain":
 			fact.Entity.Name = fact.Domain
-			fact.Domain = DomainsDomain
+			fact.Domain = origins.DomainsDomain
 			fact.Entity.Domain = ""
 
 		// Facts about the transaction.
 		case "tx":
-			fact.Domain = TransactionsDomain
+			fact.Domain = origins.TransactionsDomain
 			fact.Entity.Domain = ""
 			fact.Entity.Name = fmt.Sprint(tx.ID)
 
@@ -210,7 +201,7 @@ func (tx *Transaction) macro(fact *origins.Fact) error {
 	}
 
 	// Value-based macro.
-	if fact.Value.Domain == MacrosDomain {
+	if fact.Value.Domain == origins.MacrosDomain {
 		switch fact.Value.Name {
 
 		// Set the value to the transaction time.
@@ -220,7 +211,7 @@ func (tx *Transaction) macro(fact *origins.Fact) error {
 
 		// Set the value to the transaction entity.
 		case "tx":
-			fact.Value.Domain = TransactionsDomain
+			fact.Value.Domain = origins.TransactionsDomain
 			fact.Value.Name = fmt.Sprint(tx.ID)
 
 		default:
@@ -290,13 +281,13 @@ func (tx *Transaction) run() {
 		)
 
 		identAttr := &origins.Ident{
-			Domain: AttrsDomain,
+			Domain: origins.AttrsDomain,
 			Name:   "ident",
 		}
 
 		for domain, _ = range tx.domains {
 			fact = &origins.Fact{
-				Domain: DomainsDomain,
+				Domain: origins.DomainsDomain,
 				Entity: &origins.Ident{
 					Name: domain,
 				},
@@ -319,7 +310,7 @@ func (tx *Transaction) run() {
 
 	// Transact the end time.
 	tx.route(&origins.Fact{
-		Domain: TransactionsDomain,
+		Domain: origins.TransactionsDomain,
 		Entity: tx.entity,
 		Attribute: &origins.Ident{
 			Name: "endTime",
@@ -332,7 +323,7 @@ func (tx *Transaction) run() {
 	// Transact the error if one occurred.
 	if tx.Error != nil {
 		tx.route(&origins.Fact{
-			Domain: TransactionsDomain,
+			Domain: origins.TransactionsDomain,
 			Entity: tx.entity,
 			Attribute: &origins.Ident{
 				Name: "txError",
@@ -605,10 +596,10 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 
 	// Write facts about the transaction.
 	tx.Write(&origins.Fact{
-		Domain: TransactionsDomain,
+		Domain: origins.TransactionsDomain,
 		Entity: tx.entity,
 		Attribute: &origins.Ident{
-			Domain: AttrsDomain,
+			Domain: origins.AttrsDomain,
 			Name:   "ident",
 		},
 		Value: &origins.Ident{
@@ -617,7 +608,7 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 	})
 
 	tx.Write(&origins.Fact{
-		Domain: TransactionsDomain,
+		Domain: origins.TransactionsDomain,
 		Entity: tx.entity,
 		Attribute: &origins.Ident{
 			Name: "startTime",

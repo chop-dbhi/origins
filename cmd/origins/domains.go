@@ -4,7 +4,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/chop-dbhi/origins/transactor"
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -18,7 +18,7 @@ var domainsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		engine := initStorage()
 
-		log, err := view.OpenLog(engine, transactor.DomainsDomain, "commit")
+		log, err := view.OpenLog(engine, origins.DomainsDomain, "commit")
 
 		if err != nil {
 			logrus.Fatal(err)
