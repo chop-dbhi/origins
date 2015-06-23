@@ -127,3 +127,23 @@ func Filter(iter origins.Iterator, filter FilterFunc) origins.Iterator {
 		filter: filter,
 	}
 }
+
+// Entity takes an iterator and returns the all facts about an entity.
+func Entity(iter origins.Iterator, id *origins.Ident) origins.Iterator {
+	return &filterer{
+		iter: iter,
+		filter: func(f *origins.Fact) bool {
+			return f.Entity.Is(id)
+		},
+	}
+}
+
+// Exists takes an iterator and filter function and returns true if
+// the predicate matches.
+func Exists(iter origins.Iterator, filter FilterFunc) bool {
+	f := Filter(iter, filter)
+
+	fact := f.Next()
+
+	return fact != nil
+}

@@ -146,3 +146,23 @@ func Copy(it Iterator, w Writer) (int, error) {
 
 	return n, err
 }
+
+// Map takes an iterator and passes each fact into the map function.
+func Map(iter Iterator, proc func(*Fact) error) error {
+	var (
+		err  error
+		fact *Fact
+	)
+
+	for {
+		if fact = iter.Next(); fact == nil {
+			break
+		}
+
+		if err = proc(fact); err != nil {
+			return err
+		}
+	}
+
+	return iter.Err()
+}
