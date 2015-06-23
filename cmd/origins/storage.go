@@ -6,8 +6,18 @@ import (
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
+
+// Augments a command's flag set with storage-related flags.
+func addStorageFlags(flags *pflag.FlagSet) {
+	flags.String("storage", "memory", "Storage backend. Choices are: boltdb and memory.")
+	flags.String("path", "", "Path to a file or directory filesystem-based storage backends.")
+
+	viper.BindPFlag("storage", flags.Lookup("storage"))
+	viper.BindPFlag("path", flags.Lookup("path"))
+}
 
 // Commands can call this if it requires use of the store.
 func initStorage() storage.Engine {

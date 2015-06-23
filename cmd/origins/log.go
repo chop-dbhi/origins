@@ -135,6 +135,8 @@ var logCmd = &cobra.Command{
 func init() {
 	flags := logCmd.Flags()
 
+	addStorageFlags(flags)
+
 	flags.String("asof", "", "Defines the upper time boundary of facts to be read.")
 	flags.String("since", "", "Defines the lower time boundary of facts to be read. ")
 	flags.String("file", "", "Path to a file to write the log to.")

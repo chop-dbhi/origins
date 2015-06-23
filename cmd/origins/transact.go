@@ -117,6 +117,8 @@ var transactCmd = &cobra.Command{
 func init() {
 	flags := transactCmd.Flags()
 
+	addStorageFlags(flags)
+
 	flags.String("format", "", "Format of the stream of facts. Choices are: csv")
 	flags.String("compression", "", "Compression method of the stream of facts. Choices are: bzip2, gzip")
 	flags.String("domain", "", "Default domain to transact the facts to. If not supplied, the fact domain attribute must be defined.")

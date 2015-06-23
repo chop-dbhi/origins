@@ -37,3 +37,9 @@ var domainsCmd = &cobra.Command{
 		}
 	},
 }
+
+func init() {
+	flags := domainsCmd.Flags()
+
+	addStorageFlags(flags)
+}

@@ -27,6 +27,8 @@ var httpCmd = &cobra.Command{
 func init() {
 	flags := httpCmd.Flags()
 
+	addStorageFlags(flags)
+
 	flags.String("host", "", "The host the HTTP service will listen on.")
 	flags.Int("port", 49110, "The port the HTTP will bind to.")
 
