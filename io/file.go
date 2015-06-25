@@ -1,4 +1,4 @@
-package origins
+package io
 
 import (
 	"compress/bzip2"

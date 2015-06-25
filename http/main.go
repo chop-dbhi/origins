@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/io"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/julienschmidt/httprouter"
@@ -99,7 +100,7 @@ func httpLog(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	switch format {
 	case "text", "csv":
-		fw = origins.NewCSVWriter(w)
+		fw = io.NewCSVWriter(w)
 
 		if _, err := origins.Copy(iter, fw); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
+	. "github.com/chop-dbhi/origins/io"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/sirupsen/logrus"
@@ -115,7 +116,7 @@ var logCmd = &cobra.Command{
 
 		switch format {
 		case "csv":
-			fw = origins.NewCSVWriter(w)
+			fw = NewCSVWriter(w)
 		default:
 			logrus.Fatal("unknown format", format)
 		}

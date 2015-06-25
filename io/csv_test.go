@@ -1,10 +1,11 @@
-package origins
+package io
 
 import (
 	"bytes"
 	"testing"
 	"time"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,7 @@ func TestCSVReader(t *testing.T) {
 
 	r := NewCSVReader(buf)
 
-	facts, err := ReadAll(r)
+	facts, err := origins.ReadAll(r)
 
 	if err != nil {
 		t.Fatal(err)
@@ -35,12 +36,12 @@ func TestCSVReader(t *testing.T) {
 
 	bk := facts[1]
 
-	assert.Equal(t, Assertion, bk.Operation)
+	assert.Equal(t, origins.Assertion, bk.Operation)
 	assert.Equal(t, bk.Entity.Domain, "test")
 	assert.Equal(t, bk.Entity.Name, "bob")
 
 	assert.Equal(t, time.Date(2015, 3, 6, 0, 0, 0, 0, time.UTC), bk.Time)
-	assert.Equal(t, Retraction, facts[3].Operation)
+	assert.Equal(t, origins.Retraction, facts[3].Operation)
 }
 
 // Benchmark parsing a single record. This is slightly misleading since subsequent

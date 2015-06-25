@@ -8,6 +8,7 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
+	"github.com/chop-dbhi/origins/io"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -95,10 +96,10 @@ https://github.com/chop-dbhi/origins-generators`,
 
 		// Data written to the buffer are converted into facts, normalized, and
 		// copied to the CSV writer.
-		iterator = origins.NewCSVReader(stdout)
+		iterator = io.NewCSVReader(stdout)
 
 		// Facts are written to stdout.
-		writer = origins.NewCSVWriter(os.Stdout)
+		writer = io.NewCSVWriter(os.Stdout)
 
 		// Modify the fact before writing using the passed arguments.
 		// TODO: there is a overlap with the transactor.

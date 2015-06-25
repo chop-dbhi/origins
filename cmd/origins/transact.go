@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/chop-dbhi/origins"
+	. "github.com/chop-dbhi/origins/io"
 	"github.com/chop-dbhi/origins/transactor"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -22,20 +23,20 @@ func transactFile(tx *transactor.Transaction, r io.Reader, format, compression s
 	if compression != "" {
 		logrus.Debugf("transact: applying %s decompression", compression)
 
-		if r, err = origins.Decompressor(r, compression); err != nil {
+		if r, err = Decompressor(r, compression); err != nil {
 			logrus.Fatalf("transact: %s", err)
 		}
 	}
 
 	// Wrap in a reader to handle carriage returns before passing
 	// it into the format reader.
-	r = origins.NewUniversalReader(r)
+	r = NewUniversalReader(r)
 
 	var pub origins.Publisher
 
 	switch format {
 	case "csv":
-		pub = origins.NewCSVReader(r)
+		pub = NewCSVReader(r)
 	default:
 		logrus.Fatal("transact: unsupported file format", format)
 	}
@@ -78,11 +79,11 @@ var transactCmd = &cobra.Command{
 				compression = viper.GetString("transact_compression")
 
 				if format == "" {
-					format = origins.DetectFileFormat(fn)
+					format = DetectFileFormat(fn)
 				}
 
 				if compression == "" {
-					compression = origins.DetectFileCompression(fn)
+					compression = DetectFileCompression(fn)
 				}
 
 				file, err := os.Open(fn)

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/chop-dbhi/origins"
+	"github.com/chop-dbhi/origins/io"
 	"github.com/chop-dbhi/origins/transactor"
 )
 
@@ -23,7 +24,7 @@ func buildIter(t *testing.T) origins.Iterator {
 
 	domain := "users"
 
-	csv := origins.NewCSVReader(buf)
+	csv := io.NewCSVReader(buf)
 
 	engine, err := origins.Init("memory", nil)
 

@@ -1,36 +1,4 @@
-// This module implements a CSV reader for reading facts from CSV-like formatted data.
-//
-// The following fields are supported:
-//
-// - Domain - The domain the fact will be asserted in. This is only required for bulk-formatted data, otherwise it is ignored.
-// - Operation - The operation to apply to this fact. Optional, defaults to "assert".
-// - Valid Time - The time this fact should be considered valid. This is separate from the "database time" which denotes when the fact was physically added. Optional, defaults to "now".
-// - Entity Domain - The domain of the entity. Optional, defaults to the fact domain.
-// - Entity - The local name of the attribute.
-// - Attribute Domain - The domain of the attribute. Optional, defaults to the fact domain.
-// - Attribute - The local name of the attribute.
-// - Value Domain - The domain of the value. Optional, defaults to the fact domain.
-// - Value - The local name of the value.
-//
-// As noted, most of these fields are optional so they do not need to be included in the file. To do this, a header must be present using the above names to denote the field a column corresponds to. For example, this is a valid file:
-//
-// 	entity,attribute,value
-// 	bill,likes,soccer
-// 	bill,likes,fútbol
-// 	soccer,is,fútbol
-//
-// Applying this to the domain "sports", this will expand out to:
-//
-// 	domain,operation,time,entity domain,entity,attribute domain,attribute,value domain,value
-// 	sports,assert,now,sports,bill,sports,likes,sports,soccer
-// 	sports,assert,now,sports,bill,sports,likes,sports,fútbol
-// 	sports,assert,now,sports,soccer,sports,is,sports,fútbol
-//
-// The time "now" will be transaction time when it is committed to the database.
-//
-// At a minimum, the entity, attribute, and value fields must be present.
-
-package origins
+package io
 
 import (
 	"encoding/csv"
@@ -39,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
 	"github.com/sirupsen/logrus"
 )
@@ -114,11 +83,11 @@ func isEmptyRecord(r []string) bool {
 type CSVReader struct {
 	reader *csv.Reader
 	header map[string]int
-	fact   *Fact
+	fact   *origins.Fact
 	err    error
 }
 
-func (r *CSVReader) parse(record []string) (*Fact, error) {
+func (r *CSVReader) parse(record []string) (*origins.Fact, error) {
 	// Map row values to fact fields.
 	var (
 		ok        bool
@@ -126,7 +95,7 @@ func (r *CSVReader) parse(record []string) (*Fact, error) {
 		idx, rlen int
 		val       string
 		dom       string
-		f         = Fact{}
+		f         = origins.Fact{}
 	)
 
 	rlen = len(record)
@@ -138,7 +107,7 @@ func (r *CSVReader) parse(record []string) (*Fact, error) {
 
 	// Operation
 	if idx, ok = r.header["operation"]; ok && idx < rlen {
-		op, err := ParseOperation(record[idx])
+		op, err := origins.ParseOperation(record[idx])
 
 		if err != nil {
 			logrus.Error(err)
@@ -164,7 +133,7 @@ func (r *CSVReader) parse(record []string) (*Fact, error) {
 		}
 	}
 
-	var ident *Ident
+	var ident *origins.Ident
 
 	// Entity
 	idx, _ = r.header["entity"]
@@ -176,7 +145,7 @@ func (r *CSVReader) parse(record []string) (*Fact, error) {
 		dom = ""
 	}
 
-	if ident, err = NewIdent(dom, val); err != nil {
+	if ident, err = origins.NewIdent(dom, val); err != nil {
 		return nil, err
 	}
 
@@ -192,7 +161,7 @@ func (r *CSVReader) parse(record []string) (*Fact, error) {
 		dom = ""
 	}
 
-	if ident, err = NewIdent(dom, val); err != nil {
+	if ident, err = origins.NewIdent(dom, val); err != nil {
 		return nil, err
 	}
 
@@ -208,7 +177,7 @@ func (r *CSVReader) parse(record []string) (*Fact, error) {
 		dom = ""
 	}
 
-	if ident, err = NewIdent(dom, val); err != nil {
+	if ident, err = origins.NewIdent(dom, val); err != nil {
 		return nil, err
 	}
 
@@ -218,11 +187,11 @@ func (r *CSVReader) parse(record []string) (*Fact, error) {
 }
 
 // scan reads the CSV file for the next fact.
-func (r *CSVReader) next() (*Fact, error) {
+func (r *CSVReader) next() (*origins.Fact, error) {
 	var (
 		err    error
 		record []string
-		fact   *Fact
+		fact   *origins.Fact
 	)
 
 	// Logic defined in a loop to skip comments.
@@ -268,7 +237,7 @@ func (r *CSVReader) next() (*Fact, error) {
 }
 
 // Next returns the next fact in the stream.
-func (r *CSVReader) Next() *Fact {
+func (r *CSVReader) Next() *origins.Fact {
 	if r.err != nil {
 		return nil
 	}
@@ -297,8 +266,8 @@ func (r *CSVReader) Err() error {
 
 // Subscribe satisfies the Publisher interface. It returns a channel of facts that
 // can be consumed by downstream consumers.
-func (r *CSVReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error) {
-	ch := make(chan *Fact)
+func (r *CSVReader) Subscribe(done <-chan struct{}) (<-chan *origins.Fact, <-chan error) {
+	ch := make(chan *origins.Fact)
 	errch := make(chan error)
 
 	go func() {
@@ -308,7 +277,7 @@ func (r *CSVReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error)
 		}()
 
 		var (
-			f   *Fact
+			f   *origins.Fact
 			err error
 		)
 
@@ -358,7 +327,7 @@ type CSVWriter struct {
 	started bool
 }
 
-func (w *CSVWriter) Write(f *Fact) error {
+func (w *CSVWriter) Write(f *origins.Fact) error {
 	if !w.started {
 		w.writer.Write(csvHeader)
 		w.started = true
