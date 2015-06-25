@@ -151,11 +151,6 @@ func (tx *Transaction) evaluate(f *origins.Fact) error {
 		f.Domain = tx.options.DefaultDomain
 	}
 
-	// Default to assertion.
-	if f.Operation == origins.Noop {
-		f.Operation = origins.Assertion
-	}
-
 	// Default to fact domain.
 	if f.Entity.Domain == "" {
 		f.Entity.Domain = f.Domain

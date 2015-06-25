@@ -109,9 +109,7 @@ https://github.com/chop-dbhi/origins-generators`,
 					f.Domain = domain
 				}
 
-				if f.Operation == origins.Noop {
-					f.Operation = operation
-				}
+				f.Operation = operation
 
 				if f.Time.IsZero() {
 					f.Time = t

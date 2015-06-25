@@ -22,9 +22,9 @@ func (o Operation) String() string {
 		return "assert"
 	case Retraction:
 		return "retract"
-	default:
-		return ""
 	}
+
+	return ""
 }
 
 func (o Operation) MarshalJSON() ([]byte, error) {
@@ -32,8 +32,7 @@ func (o Operation) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	Noop Operation = iota
-	Assertion
+	Assertion Operation = iota
 	Retraction
 )
 
@@ -47,7 +46,7 @@ func ParseOperation(s string) (Operation, error) {
 		return Retraction, nil
 	}
 
-	return Noop, fmt.Errorf("fact: invalid operation `%s`", s)
+	return -1, fmt.Errorf("fact: invalid operation `%s`", s)
 }
 
 // Fact is the fundamental unit of the information model. It is an immutable
