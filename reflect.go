@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
+	"github.com/chop-dbhi/origins/chrono"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,7 +32,7 @@ func untitle(s string) string {
 // type are included (support for pointers coming soon). The `origins` tag
 // can be used to specify an alternate identity name, an attribute domain
 // name or omit the field all together.
-func Reflect(v interface{}) ([]*Fact, error) {
+func Reflect(v interface{}) (Facts, error) {
 	typ := reflect.TypeOf(v)
 	val := reflect.ValueOf(v)
 
@@ -82,45 +84,64 @@ func Reflect(v interface{}) ([]*Fact, error) {
 			// Omit the field
 			if toks[0] == "-" {
 				continue
-			} else if toks[0] != "" {
+			}
+
+			// First token is attribute name.
+			if toks[0] != "" {
 				attrName = toks[0]
 			}
 
-			// Explicit domain.
-			if len(toks) > 1 {
+			// Explicit attribute domain.
+			if len(toks) > 1 && toks[1] != "" {
 				attrDomain = toks[1]
 			}
 
-			if len(toks) > 2 {
-				logrus.Panic("only the name and domain tags are supported")
+			// Explicit value domain for reference.
+			if len(toks) > 2 && toks[2] != "" {
+				valueDomain = toks[2]
+			}
+
+			if len(toks) > 3 {
+				logrus.Panic("attribute name, attribute domain, value domain tags are supported")
 			}
 		}
 
 		fv = val.Field(i)
 
-		// Only pritimive types are supported.
-		switch sf.Type.Kind() {
-		case reflect.String:
-			valueName = fv.String()
+		// If the value implements the stringer inteface use it.
+		switch x := fv.Interface().(type) {
+		case time.Time:
+			valueName = chrono.Format(x)
 
-		case reflect.Bool:
-			valueName = fmt.Sprint(fv.Bool())
+		case fmt.Stringer:
+			valueName = x.String()
 
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			valueName = fmt.Sprint(fv.Int())
-
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			valueName = fmt.Sprint(fv.Uint())
-
-		case reflect.Float32, reflect.Float64:
-			valueName = fmt.Sprint(fv.Float())
-
-		case reflect.Complex64, reflect.Complex128:
-			valueName = fmt.Sprint(fv.Complex())
-
+		// Evaluate primitive types.
 		default:
-			logrus.Debugf("origins: skipping unsupported field %s (%s type)", sf.Name, sf.Type.Kind())
-			continue
+			// Only pritimive types are supported.
+			switch sf.Type.Kind() {
+			case reflect.String:
+				valueName = fv.String()
+
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				valueName = fmt.Sprint(fv.Int())
+
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				valueName = fmt.Sprint(fv.Uint())
+
+			case reflect.Float32, reflect.Float64:
+				valueName = fmt.Sprint(fv.Float())
+
+			case reflect.Bool:
+				valueName = fmt.Sprint(fv.Bool())
+
+			case reflect.Complex64, reflect.Complex128:
+				valueName = fmt.Sprint(fv.Complex())
+
+			default:
+				logrus.Debugf("origins: skipping unsupported field %s (%s type)", sf.Name, sf.Type.Kind())
+				continue
+			}
 		}
 
 		if attr, err = NewIdent(attrDomain, attrName); err != nil {
