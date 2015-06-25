@@ -8,6 +8,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// untitle takes a title-cased field and lowercases the title portion. This
+// applies to field names.
+func untitle(s string) string {
+	b := []byte(s)
+
+	for i, c := range b {
+		if c >= 65 && c <= 90 {
+			b[i] = c + 32
+		} else {
+			break
+		}
+	}
+
+	return string(b)
+}
+
 // reflectValue takes a value and returns a set of partially defined facts
 // containing attribute and value components. Currently, struct values or
 // pointers to struct values are supported. Struct fields with a primitive
@@ -55,7 +71,7 @@ func Reflect(v interface{}) ([]*Fact, error) {
 		}
 
 		attrDomain = ""
-		attrName = strings.ToLower(sf.Name)
+		attrName = untitle(sf.Name)
 		valueDomain = ""
 		valueName = ""
 
