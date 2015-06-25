@@ -111,7 +111,7 @@ func Reflect(v interface{}) ([]*Fact, error) {
 			return nil, err
 		}
 
-		if attr, err = NewIdent(valueDomain, valueName); err != nil {
+		if value, err = NewIdent(valueDomain, valueName); err != nil {
 			return nil, err
 		}
 
