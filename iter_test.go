@@ -1,11 +1,8 @@
-package view
+package origins
 
 import (
 	"bytes"
 	"testing"
-
-	"github.com/chop-dbhi/origins"
-	"github.com/chop-dbhi/origins/transactor"
 )
 
 var testData = `
@@ -18,34 +15,10 @@ bob,city,Allentown
 sue,city,Allentown
 `
 
-func buildIter(t *testing.T) origins.Iterator {
+func buildIter(t *testing.T) Iterator {
 	buf := bytes.NewBufferString(testData)
 
-	domain := "users"
-
-	csv := origins.NewCSVReader(buf)
-
-	engine, err := origins.Init("memory", nil)
-
-	tx, err := transactor.New(engine, transactor.Options{
-		DefaultDomain: domain,
-	})
-
-	if err = tx.Consume(csv); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = tx.Commit(); err != nil {
-		t.Fatal(err)
-	}
-
-	log, err := OpenLog(engine, domain, "commit")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return log.Now()
+	return NewCSVReader(buf)
 }
 
 func TestEntities(t *testing.T) {

@@ -166,7 +166,7 @@ func httpDomains(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 
 	// Extract the domain names.
-	idents, err := view.Entities(iter)
+	idents, err := origins.Entities(iter)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -209,7 +209,7 @@ func httpDomainEntities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		return
 	}
 
-	idents, err := view.Entities(iter)
+	idents, err := origins.Entities(iter)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -229,7 +229,7 @@ func httpDomainAttributes(w http.ResponseWriter, r *http.Request, p httprouter.P
 		return
 	}
 
-	idents, err := view.Attributes(iter)
+	idents, err := origins.Attributes(iter)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -249,7 +249,7 @@ func httpDomainValues(w http.ResponseWriter, r *http.Request, p httprouter.Param
 		return
 	}
 
-	idents, err := view.Values(iter)
+	idents, err := origins.Values(iter)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -24,7 +24,7 @@ var domainsCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 
-		idents, err := view.Entities(log.Now())
+		idents, err := origins.Entities(log.Now())
 
 		if err != nil {
 			logrus.Fatal(err)
