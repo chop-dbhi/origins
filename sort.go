@@ -16,6 +16,8 @@ import (
 	"github.com/psilva261/timsort"
 )
 
+// sortBy implements the sort.Interface to support sorting facts
+// in place given a comparator.
 type sortBy struct {
 	facts Facts
 	comp  Comparator
@@ -43,34 +45,12 @@ func Sort(facts Facts, comp Comparator) {
 	sort.Sort(&s)
 }
 
-// interfaceFacts converts a slice of facts into a slice of interface values
-// to be used with the timsort implementation.
-func interfaceFacts(fs Facts) []interface{} {
-	vs := make([]interface{}, len(fs), len(fs))
-
-	for i, f := range fs {
-		vs[i] = f
-	}
-
-	return vs
-}
-
-// interfaceComparator is a wrapper for a Comparator to take interface
-// values for the Timsort implementation.
-func interfaceComparator(c Comparator) func(v1, v2 interface{}) bool {
-	return func(v1, v2 interface{}) bool {
-		return c(v1.(*Fact), v2.(*Fact))
-	}
-}
-
 // Timsort performs an in-place sort of the facts using the Timsort algorithm.
 func Timsort(facts Facts, comp Comparator) {
-	vals := interfaceFacts(facts)
-
-	timsort.Sort(vals, interfaceComparator(comp))
-
-	// Update original slice.
-	for i, v := range vals {
-		facts[i] = v.(*Fact)
+	s := sortBy{
+		facts: facts,
+		comp:  comp,
 	}
+
+	timsort.TimSort(&s)
 }
