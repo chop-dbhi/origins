@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/transactor"
@@ -67,6 +69,22 @@ var transactCmd = &cobra.Command{
 		if err != nil {
 			logrus.Fatal("transact: error starting transaction:", err)
 		}
+
+		// Register handler to catch interrupt (ctrl+c). The response
+		// cancels the transaction. A panic recovery is used since facts
+		// may still be sent on the stream after the channel is closed.
+		// TODO: improve the cleanup handling.
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+		go func() {
+			<-sig
+			tx.Cancel()
+		}()
+
+		defer func() {
+			recover()
+		}()
 
 		// No path provided, use stdin.
 		if len(args) == 0 {
