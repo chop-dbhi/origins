@@ -257,8 +257,8 @@ func Transactions(iter Iterator) ([]uint64, error) {
 }
 
 type filterer struct {
-	iter   Iterator
-	filter func(*Fact) bool
+	iter      Iterator
+	predicate func(*Fact) bool
 }
 
 func (f *filterer) Next() *Fact {
@@ -270,7 +270,7 @@ func (f *filterer) Next() *Fact {
 		}
 
 		// Fact matches, return.
-		if f.filter(fact) {
+		if f.predicate(fact) {
 			return fact
 		}
 	}
@@ -283,10 +283,10 @@ func (f *filterer) Err() error {
 }
 
 // Filter filters facts consumed from the iterator and returns an iterator.
-func Filter(iter Iterator, filter func(*Fact) bool) Iterator {
+func Filter(iter Iterator, predicate func(*Fact) bool) Iterator {
 	return &filterer{
-		iter:   iter,
-		filter: filter,
+		iter:      iter,
+		predicate: predicate,
 	}
 }
 
@@ -294,18 +294,22 @@ func Filter(iter Iterator, filter func(*Fact) bool) Iterator {
 func Entity(iter Iterator, id *Ident) Iterator {
 	return &filterer{
 		iter: iter,
-		filter: func(f *Fact) bool {
+		predicate: func(f *Fact) bool {
 			return f.Entity.Is(id)
 		},
 	}
 }
 
-// Exists takes an iterator and filter function and returns true if
+// First takes an iterator and predicate function and returns the first
+// fact that matches the predicate.
+func First(iter Iterator, predicate func(*Fact) bool) *Fact {
+	f := Filter(iter, predicate)
+
+	return f.Next()
+}
+
+// Exists takes an iterator and predicate function and returns true if
 // the predicate matches.
-func Exists(iter Iterator, filter func(*Fact) bool) bool {
-	f := Filter(iter, filter)
-
-	fact := f.Next()
-
-	return fact != nil
+func Exists(iter Iterator, predicate func(*Fact) bool) bool {
+	return First(iter, predicate) != nil
 }
