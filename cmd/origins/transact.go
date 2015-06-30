@@ -117,13 +117,13 @@ var transactCmd = &cobra.Command{
 		}
 
 		if fake {
-			err = tx.Cancel()
+			tx.Cancel()
 		} else {
 			err = tx.Commit()
 		}
 
 		if err != nil {
-			logrus.Fatalf("transact:", err)
+			logrus.Fatalf("transact: %s", err)
 		}
 
 		info, _ := json.MarshalIndent(tx.Info(), "", "\t")
