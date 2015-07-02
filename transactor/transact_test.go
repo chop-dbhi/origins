@@ -9,9 +9,10 @@ import (
 	"github.com/chop-dbhi/origins/dal"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/testutil"
+	"github.com/stretchr/testify/assert"
 )
 
-func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint64) {
+func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint64) *dal.Log {
 	log, err := dal.GetLog(engine, domain, "commit")
 
 	if err != nil {
@@ -29,6 +30,8 @@ func checkCommitted(t *testing.T, engine storage.Engine, domain string, id uint6
 	if seg.Transaction != id {
 		t.Errorf("expected %d, got %d", id, seg.Transaction)
 	}
+
+	return log
 }
 
 func checkCanceled(t *testing.T, engine storage.Engine, domain string, id uint64) {
@@ -115,6 +118,36 @@ func TestMultipleDomains(t *testing.T) {
 		domain := fmt.Sprintf("test.%d", i)
 		checkCommitted(t, engine, domain, tx.ID)
 	}
+}
+
+func TestRedundant(t *testing.T) {
+	engine, _ := origins.Init("mem", nil)
+
+	domain := "test"
+
+	tx1, _ := New(engine, DefaultOptions)
+
+	// Materialize a set of facts to be repeated.
+	facts, _ := origins.ReadAll(testutil.NewRandGenerator(domain, tx1.ID, 500))
+	buf := origins.NewBuffer(facts)
+
+	origins.Copy(buf, tx1)
+
+	tx1.Commit()
+	l1 := checkCommitted(t, engine, domain, tx1.ID)
+
+	tx2, _ := New(engine, DefaultOptions)
+	buf = origins.NewBuffer(facts)
+
+	origins.Copy(buf, tx2)
+
+	tx2.Commit()
+
+	// Using tx1 to check committed since the segment should not have
+	// changed.
+	l2 := checkCommitted(t, engine, domain, tx1.ID)
+
+	assert.Equal(t, l1.Head, l2.Head)
 }
 
 func benchTransaction(b *testing.B, n int, m int) {

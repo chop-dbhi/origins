@@ -21,6 +21,7 @@ install:
 	go get github.com/julienschmidt/httprouter
 	go get github.com/rs/cors
 	go get github.com/jteeuwen/go-bindata/...
+	go get github.com/Workiva/go-datastructures/...
 
 test-install: install
 	go get golang.org/x/tools/cmd/cover
