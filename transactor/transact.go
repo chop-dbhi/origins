@@ -47,12 +47,16 @@ type Options struct {
 	// If true, a zeroed fact time will be set to the transaction start time. This
 	// is useful for facts that are considered "new in the world".
 	SetDefaultTime bool
+
+	// If true, duplicates will facts will be written to storage.
+	AllowDuplicates bool
 }
 
 // DefaultOptions hold the default options for a transaction.
 var DefaultOptions = Options{
-	ReceiveWait: time.Minute,
-	BufferSize:  1000,
+	ReceiveWait:     time.Minute,
+	BufferSize:      1000,
+	AllowDuplicates: false,
 }
 
 // Transaction is the entrypoint for transacting facts.
@@ -141,8 +145,8 @@ func (tx *Transaction) Info() *Info {
 	}
 }
 
-// evaluate evaluates a fact against the log.
-func (tx *Transaction) evaluate(f *origins.Fact) error {
+// defaults fills in the default values for the fact.
+func (tx *Transaction) defaults(f *origins.Fact) error {
 	if f.Domain == "" {
 		if tx.options.DefaultDomain == "" {
 			return ErrNoDomain
@@ -228,8 +232,8 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 		ch   chan<- *origins.Fact
 	)
 
-	// Evaluate.
-	if err = tx.evaluate(fact); err != nil {
+	// Defaults.
+	if err = tx.defaults(fact); err != nil {
 		return err
 	}
 
@@ -282,6 +286,7 @@ func (tx *Transaction) run() {
 		}
 
 		for domain, _ = range tx.domains {
+			// Transact the identity attribute.
 			fact = &origins.Fact{
 				Domain: origins.DomainsDomain,
 				Entity: &origins.Ident{
@@ -291,6 +296,23 @@ func (tx *Transaction) run() {
 				Value: &origins.Ident{
 					Name: domain,
 				},
+			}
+
+			if err = tx.route(fact); err != nil {
+				break
+			}
+
+			// Transact a fact that declares the domain has been seen by this
+			// transaction.
+			fact = &origins.Fact{
+				Domain: origins.DomainsDomain,
+				Entity: &origins.Ident{
+					Name: domain,
+				},
+				Attribute: &origins.Ident{
+					Name: "ping",
+				},
+				Value: tx.entity,
 			}
 
 			if err = tx.route(fact); err != nil {
@@ -340,6 +362,7 @@ func (tx *Transaction) run() {
 	// Complete the transaction by committing or aborting.
 	tx.complete()
 
+	// Signal the main goroutine is done.
 	tx.mainwg.Done()
 }
 
@@ -590,10 +613,11 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 
 	tx.mainwg.Add(1)
 
-	// Run transaction.
+	// Run transaction in the background.
 	go tx.run()
 
-	// Write facts about the transaction.
+	// Write facts about the transaction including the identity
+	// and start time.
 	tx.Write(&origins.Fact{
 		Domain: origins.TransactionsDomain,
 		Entity: tx.entity,

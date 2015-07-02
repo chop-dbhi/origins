@@ -1,4 +1,4 @@
-package view
+package view_test
 
 import (
 	"strconv"
@@ -9,6 +9,7 @@ import (
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/testutil"
 	"github.com/chop-dbhi/origins/transactor"
+	"github.com/chop-dbhi/origins/view"
 )
 
 // Initializes an in-memory store and generates n transactions each with m
@@ -17,7 +18,9 @@ func randStorage(domain string, n, m int) storage.Engine {
 	engine, _ := origins.Init("memory", nil)
 
 	for i := 0; i < m; i++ {
-		tx, _ := transactor.New(engine, transactor.DefaultOptions)
+		tx, _ := transactor.New(engine, transactor.Options{
+			AllowDuplicates: true,
+		})
 
 		gen := testutil.NewRandGenerator(domain, tx.ID, n)
 
@@ -34,7 +37,9 @@ func randMultidomainStorage(domains []string, n, m int) storage.Engine {
 	engine, _ := origins.Init("memory", nil)
 
 	for i := 0; i < m; i++ {
-		tx, _ := transactor.New(engine, transactor.DefaultOptions)
+		tx, _ := transactor.New(engine, transactor.Options{
+			AllowDuplicates: true,
+		})
 
 		gen := testutil.NewMultidomainGenerator(domains, tx.ID, n)
 
@@ -55,7 +60,9 @@ func randStorageWRepeats(domain string, n, m, eLen, aLen, vLen int) storage.Engi
 	dictionary := testutil.NewEAVDictionary(eLen, aLen, vLen)
 
 	for i := 0; i < m; i++ {
-		tx, _ := transactor.New(engine, transactor.DefaultOptions)
+		tx, _ := transactor.New(engine, transactor.Options{
+			AllowDuplicates: true,
+		})
 
 		gen := testutil.NewDictionaryBasedGenerator(dictionary, domain, tx.ID, n)
 
@@ -78,7 +85,7 @@ func TestLogIter(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "commit")
+	log, err := view.OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		t.Fatal(err)
@@ -108,19 +115,19 @@ func TestMultiDomainLogIter(t *testing.T) {
 
 	// Open and merge the commit logs.
 
-	log0, err := OpenLog(engine, domains[0], "commit")
+	log0, err := view.OpenLog(engine, domains[0], "commit")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	log1, err := OpenLog(engine, domains[1], "commit")
+	log1, err := view.OpenLog(engine, domains[1], "commit")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	now := time.Now()
-	mergedStreams := Merge(log0.Asof(now), log1.Asof(now))
+	mergedStreams := view.Merge(log0.Asof(now), log1.Asof(now))
 
 	if err = mergedStreams.Err(); err != nil {
 		t.Fatal(err)
@@ -187,7 +194,7 @@ func TestLogExcludeDuplicates(t *testing.T) {
 	engine := randStorageWRepeats(domain, n, m, eLen, aLen, vLen)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "commit")
+	log, err := view.OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		t.Fatal(err)
@@ -206,7 +213,7 @@ func TestLogExcludeDuplicates(t *testing.T) {
 
 	// Now check that Next() works on the deduplicated stream,
 	// and verify the number of unique facts.
-	iter := Deduplicate(log.Now())
+	iter := view.Deduplicate(log.Now())
 
 	if err := iter.Err(); err != nil {
 		t.Fatal(err)
@@ -229,7 +236,9 @@ func benchmarkDeduplication(b *testing.B, numTrn, factsPerTrn, eLen, aLen, vLen 
 	domain := "test"
 
 	engine := randStorageWRepeats(domain, numTrn, factsPerTrn, eLen, aLen, vLen)
-	log, err := OpenLog(engine, domain, "commit")
+
+	log, err := view.OpenLog(engine, domain, "commit")
+
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -240,7 +249,8 @@ func benchmarkDeduplication(b *testing.B, numTrn, factsPerTrn, eLen, aLen, vLen 
 
 		now := log.Now()
 
-		iter := Deduplicate(now)
+		iter := view.Deduplicate(now)
+
 		if err = iter.Err(); err != nil {
 			b.Fatal(err)
 		}
@@ -249,6 +259,7 @@ func benchmarkDeduplication(b *testing.B, numTrn, factsPerTrn, eLen, aLen, vLen 
 		// so to evaluate the true cost of deduplication we need to time how long it takes to step
 		// through the resulting iterator.
 		_, err = testNext(iter)
+
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -260,10 +271,11 @@ func BenchmarkDeduplication(b *testing.B) {
 }
 
 func benchmarkDomainMerge(b *testing.B, numTrn, factsPerTrn, numDomains int) {
-	domains := make([]string, numDomains)
 	var err error
+
+	domains := make([]string, numDomains)
 	iters := make([]origins.Iterator, len(domains))
-	logs := make([]*Log, len(domains))
+	logs := make([]*view.Log, len(domains))
 
 	for j := 0; j < numDomains; j++ {
 		domains[j] = "domain_" + strconv.Itoa(j+1)
@@ -272,7 +284,7 @@ func benchmarkDomainMerge(b *testing.B, numTrn, factsPerTrn, numDomains int) {
 	engine := randMultidomainStorage(domains, numTrn, factsPerTrn)
 
 	for j := 0; j < len(domains); j++ {
-		logs[j], err = OpenLog(engine, domains[j], "commit")
+		logs[j], err = view.OpenLog(engine, domains[j], "commit")
 
 		if err != nil {
 			b.Fatal(err)
@@ -288,7 +300,7 @@ func benchmarkDomainMerge(b *testing.B, numTrn, factsPerTrn, numDomains int) {
 			iters[j] = logs[j].Asof(now)
 		}
 
-		iter := Merge(iters...)
+		iter := view.Merge(iters...)
 
 		if err := iter.Err(); err != nil {
 			b.Fatal(err)
@@ -320,7 +332,7 @@ func TestLogReader(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "commit")
+	log, err := view.OpenLog(engine, domain, "commit")
 
 	if err != nil {
 		t.Fatal(err)
@@ -351,7 +363,7 @@ func TestLogAsof(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "commit")
+	log, err := view.OpenLog(engine, domain, "commit")
 
 	// 1 minute before
 	max := time.Now().Add(-time.Minute)
@@ -396,7 +408,7 @@ func TestLogSince(t *testing.T) {
 	engine := randStorage(domain, n, m)
 
 	// Open the commit log.
-	log, err := OpenLog(engine, domain, "commit")
+	log, err := view.OpenLog(engine, domain, "commit")
 
 	// 1 minute before
 	min := time.Now().Add(-time.Minute)

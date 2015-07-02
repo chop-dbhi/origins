@@ -3,6 +3,8 @@ package origins
 import (
 	"bytes"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testData = `
@@ -75,4 +77,25 @@ func TestTransasctions(t *testing.T) {
 	if len(idents) != 1 {
 		t.Errorf("expected 1 transaction, got %d", len(idents))
 	}
+}
+
+func TestGroupby(t *testing.T) {
+	iter := buildIter(t)
+
+	g := Groupby(iter, func(a, b *Fact) bool {
+		return a.Entity.Is(b.Entity)
+	})
+
+	var groups []Facts
+
+	MapFacts(g, func(fs Facts) error {
+		groups = append(groups, fs)
+		return nil
+	})
+
+	assert.Equal(t, 4, len(groups))
+	assert.Equal(t, 1, len(groups[0]))
+	assert.Equal(t, 1, len(groups[1]))
+	assert.Equal(t, 3, len(groups[2]))
+	assert.Equal(t, 1, len(groups[3]))
 }
