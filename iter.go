@@ -313,3 +313,103 @@ func First(iter Iterator, predicate func(*Fact) bool) *Fact {
 func Exists(iter Iterator, predicate func(*Fact) bool) bool {
 	return First(iter, predicate) != nil
 }
+
+type grouper struct {
+	iter   Iterator
+	last   *Fact
+	buffer *Buffer
+	cmp    func(f1, f2 *Fact) bool
+}
+
+type FactsIterator interface {
+	Next() Facts
+	Err() error
+}
+
+func (g *grouper) Next() Facts {
+	if g.iter.Err() != nil {
+		return nil
+	}
+
+	var (
+		f  *Fact
+		ok = true
+	)
+
+	// Boundary fact for the last iteration. Add it to the current.
+	// buffer. The last fact is also used for comparison with
+	// subsequent iterations.
+	if g.last != nil {
+		g.buffer.Write(g.last)
+	}
+
+	// Iterate over the facts and write them to the buffer until
+	// the comparator returns false.
+	for {
+		if f = g.iter.Next(); f == nil {
+			// Unset the reference so subsequent calls don't emit
+			// single fact groups.
+			g.last = nil
+			break
+		}
+
+		// Compare against the last fact if one is defined. If they don't
+		// match, break and return the buffered facts.
+		if g.last == nil {
+			g.buffer.Write(f)
+		} else {
+			if ok = g.cmp(g.last, f); ok {
+				g.buffer.Write(f)
+			}
+		}
+
+		// Maintain a reference to the last fact for the next iteration.
+		g.last = f
+
+		if !ok {
+			break
+		}
+	}
+
+	// Check for an error.
+	if err := g.iter.Err(); err != nil {
+		return nil
+	}
+
+	if g.buffer.Len() > 0 {
+		return g.buffer.Facts()
+	}
+
+	return nil
+}
+
+func (g *grouper) Err() error {
+	return g.iter.Err()
+}
+
+func Groupby(iter Iterator, cmp func(f1, f2 *Fact) bool) FactsIterator {
+	return &grouper{
+		iter:   iter,
+		cmp:    cmp,
+		buffer: NewBuffer(nil),
+	}
+}
+
+func MapFacts(iter FactsIterator, proc func(facts Facts) error) error {
+	var (
+		err   error
+		facts Facts
+	)
+
+	for {
+		if facts = iter.Next(); facts == nil {
+			break
+		}
+
+		if err = proc(facts); err != nil {
+			return err
+		}
+	}
+
+	return iter.Err()
+}
