@@ -26,7 +26,7 @@ func untitle(s string) string {
 	return string(b)
 }
 
-// reflectValue takes a value and returns a set of partially defined facts
+// Reflect takes a value and returns a set of partially defined facts
 // containing attribute and value components. Currently, struct values or
 // pointers to struct values are supported. Struct fields with a primitive
 // type are included (support for pointers coming soon). The `origins` tag
