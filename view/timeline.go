@@ -5,7 +5,7 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 // An EventType denotes the type of event

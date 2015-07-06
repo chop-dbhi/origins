@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/chop-dbhi/origins/http"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

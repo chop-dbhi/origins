@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/chop-dbhi/origins/chrono"
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 // untitle takes a title-cased field and lowercases the title portion. This

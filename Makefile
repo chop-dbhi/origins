@@ -10,7 +10,7 @@ proto:
 	protoc --go_out=. dal/*.proto
 
 install:
-	go get github.com/sirupsen/logrus
+	go get github.com/Sirupsen/logrus
 	go get github.com/boltdb/bolt
 	go get github.com/golang/protobuf/proto
 	go get github.com/golang/protobuf/protoc-gen-go

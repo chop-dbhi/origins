@@ -7,7 +7,7 @@ import (
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 const commitLogName = "commit"

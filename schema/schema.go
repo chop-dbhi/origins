@@ -17,7 +17,7 @@ import (
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 // Type defines the data type of a value set for an attribute.

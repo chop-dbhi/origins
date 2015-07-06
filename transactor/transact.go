@@ -10,7 +10,7 @@ import (
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/storage"
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 var (

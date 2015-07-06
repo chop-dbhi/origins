@@ -11,7 +11,7 @@ import (
 	"github.com/chop-dbhi/origins/chrono"
 	"github.com/golang/protobuf/proto"
 	"github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 // A slice of facts use length-prefix framing to delimit facts. The prefix is
