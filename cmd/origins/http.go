@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/chop-dbhi/origins/http"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,7 +21,9 @@ var httpCmd = &cobra.Command{
 			port = viper.GetInt("http_port")
 		)
 
-		http.Serve(initStorage(), host, port)
+		debug := logrus.GetLevel() == logrus.DebugLevel
+
+		http.Serve(initStorage(), host, port, debug)
 	},
 }
 

@@ -1,8 +1,6 @@
 package http
 
 import (
-	"encoding/json"
-	"fmt"
 	"mime"
 	"net/http"
 	"strconv"
@@ -11,8 +9,30 @@ import (
 
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
+	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
-	"github.com/julienschmidt/httprouter"
+)
+
+const defaultFormat = "json"
+
+var (
+	mimetypes = map[string]string{
+		"application/json": "json",
+		"text/csv":         "csv",
+		"text/plain":       "text",
+	}
+
+	formatMimetypes = map[string]string{
+		"csv":  "text/csv",
+		"json": "application/json",
+		"text": "text/plain",
+	}
+
+	queryFormats = map[string]string{
+		"json": "json",
+		"csv":  "csv",
+		"text": "text",
+	}
 )
 
 // detectFormat applies content negotiation logic to determine the
@@ -43,7 +63,7 @@ func detectFormat(w http.ResponseWriter, r *http.Request) string {
 }
 
 // Encapsulates the logic for building a domain-based iterator.
-func domainIteratorResource(domain string, w http.ResponseWriter, r *http.Request, p httprouter.Params) (origins.Iterator, error) {
+func domainIteratorResource(domain string, r *http.Request, e storage.Engine) (origins.Iterator, int, error) {
 	var (
 		err           error
 		since, asof   time.Time
@@ -51,23 +71,21 @@ func domainIteratorResource(domain string, w http.ResponseWriter, r *http.Reques
 	)
 
 	if since, asof, err = parseTimeParams(r); err != nil {
-		w.WriteHeader(StatusUnprocessableEntity)
-		w.Write([]byte(fmt.Sprint(err)))
-		return nil, err
+		return nil, StatusUnprocessableEntity, err
 	}
 
 	if offset, limit, err = parseSliceParams(r); err != nil {
-		w.WriteHeader(StatusUnprocessableEntity)
-		w.Write([]byte(fmt.Sprint(err)))
-		return nil, err
+		return nil, StatusUnprocessableEntity, err
 	}
 
-	log, err := view.OpenLog(httpEngine, domain, "commit")
+	log, err := view.OpenLog(e, domain, "commit")
+
+	if err == view.ErrDoesNotExist {
+		return nil, http.StatusNotFound, err
+	}
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprint(err)))
-		return nil, err
+		return nil, http.StatusInternalServerError, err
 	}
 
 	iter := log.View(since, asof)
@@ -76,7 +94,7 @@ func domainIteratorResource(domain string, w http.ResponseWriter, r *http.Reques
 		iter = origins.Slice(iter, offset, limit)
 	}
 
-	return iter, nil
+	return iter, http.StatusOK, nil
 }
 
 // Parses the since and asof time values from the request.
@@ -126,33 +144,4 @@ func parseSliceParams(r *http.Request) (int, int, error) {
 	}
 
 	return offset, limit, nil
-}
-
-// jsonResponse attempts to encode the passed value as JSON.
-func jsonResponse(w http.ResponseWriter, v interface{}) {
-	e := json.NewEncoder(w)
-
-	if err := e.Encode(v); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprint(err)))
-	}
-}
-
-func writeIdents(idents origins.Idents, w http.ResponseWriter, r *http.Request) {
-	format := detectFormat(w, r)
-
-	switch format {
-	case "json":
-		encoder := json.NewEncoder(w)
-
-		if err := encoder.Encode(idents); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprint(err)))
-			return
-		}
-
-	default:
-		w.WriteHeader(http.StatusNotAcceptable)
-		return
-	}
 }

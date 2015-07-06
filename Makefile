@@ -18,7 +18,7 @@ install:
 	go get github.com/spf13/cobra
 	go get github.com/psilva261/timsort
 	go get github.com/satori/go.uuid
-	go get github.com/julienschmidt/httprouter
+	go get github.com/labstack/echo
 	go get github.com/rs/cors
 	go get github.com/jteeuwen/go-bindata/...
 	go get github.com/Workiva/go-datastructures/...
