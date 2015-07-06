@@ -43,9 +43,7 @@ func TestCSVReader(t *testing.T) {
 	assert.Equal(t, Retraction, facts[3].Operation)
 }
 
-// Benchmark parsing a single record. This is slightly misleading since subsequent
-// iterations will use the `idents` cache, but this would be used during a parsing
-// anyway.
+// Benchmark parsing a single record.
 func BenchmarkCSVParse(b *testing.B) {
 	header, _ := parseHeader(csvHeader)
 
@@ -65,6 +63,8 @@ func BenchmarkCSVParse(b *testing.B) {
 		"people",
 		"jane",
 	}
+
+	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		reader.parse(record)
