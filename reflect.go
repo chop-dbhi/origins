@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chop-dbhi/origins/chrono"
 	"github.com/Sirupsen/logrus"
+	"github.com/chop-dbhi/origins/chrono"
 )
 
 // untitle takes a title-cased field and lowercases the title portion. This
@@ -108,40 +108,56 @@ func Reflect(v interface{}) (Facts, error) {
 
 		fv = val.Field(i)
 
-		// If the value implements the stringer inteface use it.
-		switch x := fv.Interface().(type) {
-		case time.Time:
-			valueName = chrono.Format(x)
-
-		case fmt.Stringer:
-			valueName = x.String()
-
 		// Evaluate primitive types.
-		default:
-			// Only pritimive types are supported.
-			switch sf.Type.Kind() {
-			case reflect.String:
-				valueName = fv.String()
+		// Only pritimive types are supported.
+		switch sf.Type.Kind() {
+		case reflect.String:
+			valueName = fv.String()
 
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				valueName = fmt.Sprint(fv.Int())
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			valueName = fmt.Sprint(fv.Int())
 
-			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				valueName = fmt.Sprint(fv.Uint())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			valueName = fmt.Sprint(fv.Uint())
 
-			case reflect.Float32, reflect.Float64:
-				valueName = fmt.Sprint(fv.Float())
+		case reflect.Float32, reflect.Float64:
+			valueName = fmt.Sprint(fv.Float())
 
-			case reflect.Bool:
-				valueName = fmt.Sprint(fv.Bool())
+		case reflect.Bool:
+			valueName = fmt.Sprint(fv.Bool())
 
-			case reflect.Complex64, reflect.Complex128:
-				valueName = fmt.Sprint(fv.Complex())
+		case reflect.Complex64, reflect.Complex128:
+			valueName = fmt.Sprint(fv.Complex())
+
+		case reflect.Struct:
+			switch x := fv.Interface().(type) {
+			case time.Time:
+				valueName = chrono.Format(x)
+
+			case fmt.Stringer:
+				valueName = x.String()
 
 			default:
-				logrus.Debugf("origins: skipping unsupported field %s (%s type)", sf.Name, sf.Type.Kind())
 				continue
 			}
+
+		case reflect.Array, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+			if fv.IsNil() {
+				continue
+			}
+
+			// If the value implements the stringer inteface use it.
+			switch x := fv.Interface().(type) {
+			case fmt.Stringer:
+				valueName = x.String()
+
+			default:
+				continue
+			}
+
+		default:
+			logrus.Debugf("origins: skipping unsupported field %s (%s type)", sf.Name, sf.Type.Kind())
+			continue
 		}
 
 		if attr, err = NewIdent(attrDomain, attrName); err != nil {
