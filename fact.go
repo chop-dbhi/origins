@@ -87,6 +87,12 @@ func (f *Fact) String() string {
 }
 
 func (f *Fact) MarshalJSON() ([]byte, error) {
+	var tx interface{}
+
+	if f.Transaction > 0 {
+		tx = f.Transaction
+	}
+
 	return json.Marshal(map[string]interface{}{
 		"Operation":   f.Operation,
 		"Domain":      f.Domain,
@@ -94,7 +100,7 @@ func (f *Fact) MarshalJSON() ([]byte, error) {
 		"Attribute":   f.Attribute,
 		"Value":       f.Value,
 		"Time":        chrono.JSON(f.Time),
-		"Transaction": f.Transaction,
+		"Transaction": tx,
 	})
 }
 
