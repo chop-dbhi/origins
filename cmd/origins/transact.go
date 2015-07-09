@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/transactor"
-	"github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -55,7 +55,7 @@ var transactCmd = &cobra.Command{
 	Long: `transact reads facts from stdin or from one or more paths specified paths.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		engine := initStorage()
+		engine := initStorage("transact")
 
 		format := viper.GetString("transact_format")
 		compression := viper.GetString("transact_compression")
@@ -135,7 +135,7 @@ var transactCmd = &cobra.Command{
 func init() {
 	flags := transactCmd.Flags()
 
-	addStorageFlags(flags)
+	addStorageFlags(flags, "transact")
 
 	flags.String("format", "", "Format of the stream of facts. Choices are: csv")
 	flags.String("compression", "", "Compression method of the stream of facts. Choices are: bzip2, gzip")

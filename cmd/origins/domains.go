@@ -4,9 +4,9 @@ import (
 	"os"
 	"sort"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/view"
-	"github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ var domainsCmd = &cobra.Command{
 	Short: "Outputs a list of domains.",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		engine := initStorage()
+		engine := initStorage("domains")
 
 		log, err := view.OpenLog(engine, origins.DomainsDomain, "commit")
 
@@ -41,5 +41,5 @@ var domainsCmd = &cobra.Command{
 func init() {
 	flags := domainsCmd.Flags()
 
-	addStorageFlags(flags)
+	addStorageFlags(flags, "domains")
 }

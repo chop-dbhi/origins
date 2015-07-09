@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
-	"github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -95,7 +95,7 @@ var logCmd = &cobra.Command{
 		since, _ = chrono.Parse(viper.GetString("log_since"))
 		asof, _ = chrono.Parse(viper.GetString("log_asof"))
 
-		engine := initStorage()
+		engine := initStorage("log")
 
 		if file == "" {
 			w = os.Stdout
@@ -135,7 +135,7 @@ var logCmd = &cobra.Command{
 func init() {
 	flags := logCmd.Flags()
 
-	addStorageFlags(flags)
+	addStorageFlags(flags, "log")
 
 	flags.String("asof", "", "Defines the upper time boundary of facts to be read.")
 	flags.String("since", "", "Defines the lower time boundary of facts to be read. ")
