@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/chrono"
 	"github.com/chop-dbhi/origins/storage"
-	"github.com/Sirupsen/logrus"
 )
 
 var (
@@ -529,38 +529,6 @@ func (tx *Transaction) Commit() error {
 	close(tx.stream)
 	tx.mainwg.Wait()
 	return tx.Error
-}
-
-// Consume reads data from a stream and writes it to the transaction.
-func (tx *Transaction) Consume(pub origins.Publisher) error {
-	var (
-		ok   bool
-		err  error
-		fact *origins.Fact
-	)
-
-	// Subscribe to the publisher. It takes a channel to signal when
-	// this consumer is done and returns a channel that produces facts.
-	ch, errch := pub.Subscribe(tx.done)
-
-	// Consume facts until the producer is closed. This may occur upstream
-	// by the producer itself or the transaction is closed prematurely.
-	for {
-		select {
-		case err = <-errch:
-			return err
-
-		case fact, ok = <-ch:
-			// Publisher closed the channel.
-			if !ok {
-				return nil
-			}
-
-			tx.Write(fact)
-		}
-	}
-
-	return nil
 }
 
 // New initializes and returns a transaction for passed storage engine. The options

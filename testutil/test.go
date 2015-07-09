@@ -70,34 +70,6 @@ func (r *FactGen) Err() error {
 	return nil
 }
 
-// Subscribe implements the Stream interface.
-func (r *FactGen) Subscribe(closer chan struct{}) (chan *origins.Fact, chan error) {
-	var f *origins.Fact
-
-	fch := make(chan *origins.Fact, 1000)
-	errch := make(chan error)
-
-	go func() {
-	loop:
-		for {
-			select {
-			case <-closer:
-				break loop
-			default:
-				if f = r.Next(); f == nil {
-					break loop
-				}
-
-				fch <- f
-			}
-		}
-
-		close(fch)
-	}()
-
-	return fch, errch
-}
-
 func NewGenerator(domains []string, tx uint64, size int, gen GeneratorFunc) *FactGen {
 	return &FactGen{
 		generator: gen,

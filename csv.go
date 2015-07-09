@@ -39,8 +39,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/chop-dbhi/origins/chrono"
 	"github.com/Sirupsen/logrus"
+	"github.com/chop-dbhi/origins/chrono"
 )
 
 var (
@@ -293,48 +293,6 @@ func (r *CSVReader) Err() error {
 	}
 
 	return r.err
-}
-
-// Subscribe satisfies the Publisher interface. It returns a channel of facts that
-// can be consumed by downstream consumers.
-func (r *CSVReader) Subscribe(done <-chan struct{}) (<-chan *Fact, <-chan error) {
-	ch := make(chan *Fact)
-	errch := make(chan error)
-
-	go func() {
-		defer func() {
-			close(ch)
-			close(errch)
-		}()
-
-		var (
-			f   *Fact
-			err error
-		)
-
-		for {
-			select {
-			// Upstream consumer is done.
-			case <-done:
-				return
-
-			default:
-				if f = r.Next(); f != nil {
-					ch <- f
-					continue
-				}
-
-				// Signal the error if one occurred.
-				if err = r.Err(); err != nil {
-					errch <- err
-				}
-
-				return
-			}
-		}
-	}()
-
-	return ch, errch
 }
 
 func NewCSVReader(r io.Reader) *CSVReader {

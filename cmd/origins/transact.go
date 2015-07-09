@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/transactor"
-	"github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -33,16 +33,16 @@ func transactFile(tx *transactor.Transaction, r io.Reader, format, compression s
 	// it into the format reader.
 	r = origins.NewUniversalReader(r)
 
-	var pub origins.Publisher
+	var iter origins.Iterator
 
 	switch format {
 	case "csv":
-		pub = origins.NewCSVReader(r)
+		iter = origins.NewCSVReader(r)
 	default:
 		logrus.Fatal("transact: unsupported file format", format)
 	}
 
-	if err = tx.Consume(pub); err != nil {
+	if _, err = origins.Copy(iter, tx); err != nil {
 		logrus.Fatal("transact:", err)
 	}
 }
