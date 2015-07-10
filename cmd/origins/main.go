@@ -53,8 +53,14 @@ func main() {
 	viper.BindPFlag("log", flags.Lookup("log"))
 	viper.BindPFlag("config", flags.Lookup("config"))
 
-	// Turn on debugging for all commands.
-	mainCmd.ParseFlags(os.Args)
+	// If the target subcommand is generate, remove the generator
+	// arguments to prevent flag parsing errors.
+	args := parseGenerateArgs(os.Args[1:])
+
+	// Set explicit arguments and parse the flags to setup
+	// the config file and logging.
+	mainCmd.SetArgs(args)
+	mainCmd.ParseFlags(args)
 
 	config := viper.GetString("config")
 
@@ -65,6 +71,7 @@ func main() {
 	// Read configuration file if present.
 	viper.ReadInConfig()
 
+	// Turn on debugging for all commands.
 	level, err := logrus.ParseLevel(viper.GetString("log"))
 
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 // The generate command executes a program that generates facts form an
 // external source.
 var generateCmd = &cobra.Command{
-	Use: "generate <name> ...",
+	Use: "generate [options] <name> [args...]",
 
 	Short: "Generate facts from an existing data source.",
 
@@ -73,8 +73,11 @@ https://github.com/chop-dbhi/origins-generators`,
 			os.Exit(1)
 		}
 
+		// Get the generate arguments.
+		gen_args := viper.Get("generate_args").([]string)
+
 		// Construct the command to execute the generator.
-		pcmd := exec.Command(path, args[1:]...)
+		pcmd := exec.Command(path, gen_args...)
 
 		// Proxy standard interfaces.
 		pcmd.Stdin = os.Stdin
@@ -151,6 +154,43 @@ func (w *modWriter) Flush() error {
 	}
 
 	return nil
+}
+
+func parseGenerateArgs(args []string) []string {
+	var lo, hi int
+
+	// Find the first non-flag argument and check if it's the generate command.
+	for i, arg := range args {
+		if arg[0] != '-' {
+			if arg == generateCmd.Name() {
+				// Offset 0-based index.
+				lo = i + 1
+			}
+
+			break
+		}
+	}
+
+	if lo == 0 {
+		return args
+	}
+
+	hi = lo
+
+	// Loop through to find the first non-flag argument which
+	// would be the generator name. Set the arguments *after*
+	// that as the generator arguments.
+	for i, arg := range args[lo:] {
+		if arg[0] != '-' {
+			// Offset 0-based index.
+			hi = lo + i + 1
+			break
+		}
+	}
+
+	viper.Set("generate_args", args[hi:])
+
+	return args[:hi]
 }
 
 func init() {
