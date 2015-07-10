@@ -77,6 +77,8 @@ var logCmd = &cobra.Command{
 	Short: "Output the log for one or more domains.",
 
 	Run: func(cmd *cobra.Command, args []string) {
+		bindStorageFlags(cmd.Flags())
+
 		if len(args) == 0 {
 			cmd.Usage()
 			os.Exit(1)
@@ -95,7 +97,7 @@ var logCmd = &cobra.Command{
 		since, _ = chrono.Parse(viper.GetString("log_since"))
 		asof, _ = chrono.Parse(viper.GetString("log_asof"))
 
-		engine := initStorage("log")
+		engine := initStorage()
 
 		if file == "" {
 			w = os.Stdout
@@ -135,7 +137,7 @@ var logCmd = &cobra.Command{
 func init() {
 	flags := logCmd.Flags()
 
-	addStorageFlags(flags, "log")
+	addStorageFlags(flags)
 
 	flags.String("asof", "", "Defines the upper time boundary of facts to be read.")
 	flags.String("since", "", "Defines the lower time boundary of facts to be read. ")

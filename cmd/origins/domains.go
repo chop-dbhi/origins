@@ -16,7 +16,9 @@ var domainsCmd = &cobra.Command{
 	Short: "Outputs a list of domains.",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		engine := initStorage("domains")
+		bindStorageFlags(cmd.Flags())
+
+		engine := initStorage()
 
 		log, err := view.OpenLog(engine, origins.DomainsDomain, "commit")
 
@@ -40,6 +42,5 @@ var domainsCmd = &cobra.Command{
 
 func init() {
 	flags := domainsCmd.Flags()
-
-	addStorageFlags(flags, "domains")
+	addStorageFlags(flags)
 }
