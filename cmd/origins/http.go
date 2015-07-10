@@ -16,21 +16,21 @@ var httpCmd = &cobra.Command{
 	Long: "Runs a process exposing an HTTP interface.",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		var (
-			host = viper.GetString("http_host")
-			port = viper.GetInt("http_port")
-		)
+		bindStorageFlags(cmd.Flags())
 
+		engine := initStorage()
+		host := viper.GetString("http_host")
+		port := viper.GetInt("http_port")
 		debug := logrus.GetLevel() == logrus.DebugLevel
 
-		http.Serve(initStorage("http"), host, port, debug)
+		http.Serve(engine, host, port, debug)
 	},
 }
 
 func init() {
 	flags := httpCmd.Flags()
 
-	addStorageFlags(flags, "http")
+	addStorageFlags(flags)
 
 	flags.String("host", "", "The host the HTTP service will listen on.")
 	flags.Int("port", 49110, "The port the HTTP will bind to.")
