@@ -3,7 +3,6 @@ package transactor
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -36,9 +35,6 @@ type Options struct {
 
 	// Duration of time wait to receive facts before timing out the transaction.
 	ReceiveWait time.Duration
-
-	// The router to use for the transaction.
-	Router Router
 
 	// Defines the buffer size of the channel that receives facts for processing.
 	// Increasing this may increase throughput at the expense of memory.
@@ -76,9 +72,6 @@ type Transaction struct {
 
 	options Options
 
-	// Router for the transaction.
-	router Router
-
 	// Main channel received facts are received by.
 	stream chan *origins.Fact
 
@@ -94,11 +87,11 @@ type Transaction struct {
 	mainwg *sync.WaitGroup
 	pipewg *sync.WaitGroup
 
-	// Pipelines and channels.
-	pipes map[Pipeline]chan<- *origins.Fact
+	// Domain to pipeline.
+	pipes map[string]*Pipeline
 
 	// Set of domains that were transacted.
-	domains map[string]struct{}
+	domains []string
 
 	// Entity ident of transaction.
 	entity *origins.Ident
@@ -110,8 +103,7 @@ type Info struct {
 	StartTime time.Time
 	EndTime   time.Time
 	Duration  time.Duration
-	Pipelines int
-	Domains   []string
+	Domains   []*Stats
 	Bytes     int
 	Count     int
 }
@@ -120,17 +112,22 @@ type Info struct {
 // them from the pipelines.
 func (tx *Transaction) Info() *Info {
 	var (
-		domains      []string
-		bytes, count int
-
-		stats *Stats
+		bytes int
+		count int
+		s     *Stats
+		stats = make([]*Stats, len(tx.domains))
 	)
 
-	for pipe := range tx.pipes {
-		stats = pipe.Stats()
-		domains = append(domains, stats.Domains...)
-		bytes += stats.Bytes
-		count += stats.Count
+	var i int
+
+	for _, d := range tx.domains {
+		s = tx.pipes[d].Stats()
+
+		bytes += s.Bytes
+		count += s.Count
+
+		stats[i] = s
+		i++
 	}
 
 	return &Info{
@@ -138,8 +135,7 @@ func (tx *Transaction) Info() *Info {
 		StartTime: tx.StartTime,
 		EndTime:   tx.EndTime,
 		Duration:  tx.EndTime.Sub(tx.StartTime),
-		Pipelines: len(tx.pipes),
-		Domains:   domains,
+		Domains:   stats,
 		Bytes:     bytes,
 		Count:     count,
 	}
@@ -223,13 +219,11 @@ func (tx *Transaction) macro(fact *origins.Fact) error {
 }
 
 // route uses the router to get the pipeline for the fact.
-// Each pipeline
-func (tx *Transaction) route(fact *origins.Fact) error {
+func (tx *Transaction) route(fact *origins.Fact, track bool) error {
 	var (
 		ok   bool
 		err  error
-		pipe Pipeline
-		ch   chan<- *origins.Fact
+		pipe *Pipeline
 	)
 
 	// Defaults.
@@ -242,28 +236,18 @@ func (tx *Transaction) route(fact *origins.Fact) error {
 		return err
 	}
 
-	// Ignore internal domains.
-	if !strings.HasPrefix(fact.Domain, "origins") {
-		if _, ok = tx.domains[fact.Domain]; !ok {
-			tx.domains[fact.Domain] = struct{}{}
+	// Initialize a pipeline for the domain if one does not exit.
+	if pipe, ok = tx.pipes[fact.Domain]; !ok {
+		if track {
+			tx.domains = append(tx.domains, fact.Domain)
 		}
-	}
 
-	// Route.
-	if pipe, err = tx.router.Route(fact); err != nil {
-		logrus.Debugf("transactor(%d): could not route: %s", tx.ID, err)
-		return ErrCouldNotRoute
-	}
-
-	// Get or spawn a pipeline.
-	if ch, ok = tx.pipes[pipe]; !ok {
-		ch = tx.spawn(pipe)
-		tx.pipes[pipe] = ch
-		tx.pipewg.Add(1)
+		pipe = tx.spawn(fact.Domain)
+		tx.pipes[fact.Domain] = pipe
 	}
 
 	// Send fact to the pipeline.
-	ch <- fact
+	pipe.receiver <- fact
 
 	return nil
 }
@@ -285,7 +269,7 @@ func (tx *Transaction) run() {
 			Name:   "ident",
 		}
 
-		for domain, _ = range tx.domains {
+		for _, domain = range tx.domains {
 			// Transact the identity attribute.
 			fact = &origins.Fact{
 				Domain: origins.DomainsDomain,
@@ -298,7 +282,7 @@ func (tx *Transaction) run() {
 				},
 			}
 
-			if err = tx.route(fact); err != nil {
+			if err = tx.route(fact, false); err != nil {
 				break
 			}
 
@@ -315,7 +299,7 @@ func (tx *Transaction) run() {
 				Value: tx.entity,
 			}
 
-			if err = tx.route(fact); err != nil {
+			if err = tx.route(fact, false); err != nil {
 				break
 			}
 		}
@@ -337,7 +321,7 @@ func (tx *Transaction) run() {
 		Value: &origins.Ident{
 			Name: chrono.FormatNano(tx.EndTime),
 		},
-	})
+	}, false)
 
 	// Error during the transaction that caused the abort.
 	if tx.Error != nil {
@@ -350,7 +334,7 @@ func (tx *Transaction) run() {
 			Value: &origins.Ident{
 				Name: fmt.Sprint(tx.Error),
 			},
-		})
+		}, false)
 	}
 
 	// Signal the transaction is closed so no more external facts are received.
@@ -391,7 +375,7 @@ func (tx *Transaction) receive() error {
 				return nil
 			}
 
-			if err = tx.route(fact); err != nil {
+			if err = tx.route(fact, true); err != nil {
 				logrus.Debugf("transactor(%d): error routing fact", tx.ID)
 				return err
 			}
@@ -440,7 +424,7 @@ func (tx *Transaction) complete() {
 // commit commits all the pipelines in a transaction.
 func (tx *Transaction) commit() error {
 	return tx.Engine.Multi(func(etx storage.Tx) error {
-		for pipe, _ := range tx.pipes {
+		for _, pipe := range tx.pipes {
 			if err := pipe.Commit(etx); err != nil {
 				return err
 			}
@@ -455,7 +439,7 @@ func (tx *Transaction) commit() error {
 // abort aborts all of the pipelines in a transaction.
 func (tx *Transaction) abort() error {
 	return tx.Engine.Multi(func(etx storage.Tx) error {
-		for pipe, _ := range tx.pipes {
+		for _, pipe := range tx.pipes {
 			if err := pipe.Abort(etx); err != nil {
 				return err
 			}
@@ -467,13 +451,18 @@ func (tx *Transaction) abort() error {
 	})
 }
 
-// spawn all values on the channel on the pipeline.
-func (tx *Transaction) spawn(pipe Pipeline) chan<- *origins.Fact {
-	ch := make(chan *origins.Fact)
+// spawn creates a pipeline for the domain and spawns a goroutine to receive facts.
+func (tx *Transaction) spawn(domain string) *Pipeline {
+	pipe := &Pipeline{
+		Domain:   domain,
+		receiver: make(chan *origins.Fact),
+	}
+
+	tx.pipewg.Add(1)
 
 	go func() {
 		defer func() {
-			close(ch)
+			close(pipe.receiver)
 			tx.pipewg.Done()
 		}()
 
@@ -498,8 +487,8 @@ func (tx *Transaction) spawn(pipe Pipeline) chan<- *origins.Fact {
 			case <-tx.done:
 				return
 
-			case fact = <-ch:
-				if err = pipe.Receive(fact); err != nil {
+			case fact = <-pipe.receiver:
+				if err = pipe.Handle(fact); err != nil {
 					tx.errch <- err
 					return
 				}
@@ -507,7 +496,7 @@ func (tx *Transaction) spawn(pipe Pipeline) chan<- *origins.Fact {
 		}
 	}()
 
-	return ch
+	return pipe
 }
 
 // Write writes a fact to the transaction.
@@ -548,10 +537,6 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		return nil, ErrNoID
 	}
 
-	if options.Router == nil {
-		options.Router = NewDomainRouter()
-	}
-
 	if options.ReceiveWait == 0 {
 		options.ReceiveWait = DefaultOptions.ReceiveWait
 	}
@@ -565,14 +550,12 @@ func New(engine storage.Engine, options Options) (*Transaction, error) {
 		StartTime: startTime,
 		Engine:    engine,
 		options:   options,
-		pipes:     make(map[Pipeline]chan<- *origins.Fact),
-		router:    options.Router,
+		pipes:     make(map[string]*Pipeline),
 		stream:    make(chan *origins.Fact, options.BufferSize),
 		done:      make(chan struct{}),
 		errch:     make(chan error),
 		pipewg:    &sync.WaitGroup{},
 		mainwg:    &sync.WaitGroup{},
-		domains:   make(map[string]struct{}),
 
 		entity: &origins.Ident{
 			Name: fmt.Sprint(id),

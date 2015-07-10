@@ -1,24 +1,20 @@
 package transactor
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/Workiva/go-datastructures/trie/ctrie"
 	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/dal"
 	"github.com/chop-dbhi/origins/storage"
 	"github.com/chop-dbhi/origins/view"
 	"github.com/satori/go.uuid"
-	"github.com/Sirupsen/logrus"
 )
 
 const commitLogName = "commit"
 
 // Stats contains information about a pipeline.
 type Stats struct {
-	// List of domains that were affected.
-	Domains []string
-
-	// Number of segments.
-	Segments int
+	Domain string
 
 	// Total number of blocks.
 	Blocks int
@@ -31,28 +27,9 @@ type Stats struct {
 }
 
 // A Pipeline does the actual work of processing and writing facts to storage.
-type Pipeline interface {
-	// Init initializes the pipeline for the transaction.
-	Init(*Transaction) error
-
-	// Receive takes a fact and returns an error if the fact cannot be handled.
-	Receive(*origins.Fact) error
-
-	// Commit takes a storage transaction and writes any headers or indexes to make
-	// the transacted facts visible. A storage transaction is passed in to enable
-	// the writes to occur atomically which ensures consistency of the transacted
-	// facts.
-	Commit(storage.Tx) error
-
-	// Abort aborts the pipeline and deletes any data written to storage.
-	Abort(storage.Tx) error
-
-	// Segments returns a slice of segments that were written to storage.
-	Stats() *Stats
-}
-
-type DomainPipeline struct {
+type Pipeline struct {
 	Domain      string
+	receiver    chan *origins.Fact
 	segment     *Segment
 	engine      storage.Engine
 	cache       *ctrie.Ctrie
@@ -60,22 +37,21 @@ type DomainPipeline struct {
 	dedupe      bool
 }
 
-func (p *DomainPipeline) String() string {
+func (p *Pipeline) String() string {
 	return p.Domain
 }
 
 // Stats returns the the stats for the pipeline.
-func (p *DomainPipeline) Stats() *Stats {
+func (p *Pipeline) Stats() *Stats {
 	return &Stats{
-		Domains:  []string{p.segment.Domain},
-		Segments: 1,
-		Blocks:   p.segment.Blocks,
-		Bytes:    p.segment.Bytes,
-		Count:    p.segment.Count,
+		Domain: p.Domain,
+		Blocks: p.segment.Blocks,
+		Bytes:  p.segment.Bytes,
+		Count:  p.segment.Count,
 	}
 }
 
-func (p *DomainPipeline) initCache() error {
+func (p *Pipeline) initCache() error {
 	logrus.Debugf("transactor.Pipeline(%s): initializing cache", p.Domain)
 
 	p.initialized = true
@@ -118,7 +94,8 @@ func (p *DomainPipeline) initCache() error {
 	return err
 }
 
-func (p *DomainPipeline) Init(tx *Transaction) error {
+// Init initializes the pipeline for the transaction.
+func (p *Pipeline) Init(tx *Transaction) error {
 	// Get the commit log for this domain.
 	log, err := dal.GetLog(tx.Engine, p.Domain, commitLogName)
 
@@ -141,7 +118,8 @@ func (p *DomainPipeline) Init(tx *Transaction) error {
 	return nil
 }
 
-func (p *DomainPipeline) Receive(fact *origins.Fact) error {
+// Handle takes a fact and returns an error if the fact cannot be handled.
+func (p *Pipeline) Handle(fact *origins.Fact) error {
 	// Do not dedupe.
 	if !p.dedupe {
 		return p.segment.Write(fact)
@@ -191,11 +169,16 @@ func (p *DomainPipeline) Receive(fact *origins.Fact) error {
 	return p.segment.Write(fact)
 }
 
-func (p *DomainPipeline) Abort(tx storage.Tx) error {
+// Abort aborts the pipeline and deletes any data written to storage.
+func (p *Pipeline) Abort(tx storage.Tx) error {
 	return p.segment.Abort(tx)
 }
 
-func (p *DomainPipeline) Commit(tx storage.Tx) error {
+// Commit takes a storage transaction and writes any headers or indexes to make
+// the transacted facts visible. A storage transaction is passed in to enable
+// the writes to occur atomically which ensures consistency of the transacted
+// facts.
+func (p *Pipeline) Commit(tx storage.Tx) error {
 	var (
 		err error
 		log *dal.Log
