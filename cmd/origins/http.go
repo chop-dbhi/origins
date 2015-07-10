@@ -23,14 +23,14 @@ var httpCmd = &cobra.Command{
 
 		debug := logrus.GetLevel() == logrus.DebugLevel
 
-		http.Serve(initStorage(), host, port, debug)
+		http.Serve(initStorage("http"), host, port, debug)
 	},
 }
 
 func init() {
 	flags := httpCmd.Flags()
 
-	addStorageFlags(flags)
+	addStorageFlags(flags, "http")
 
 	flags.String("host", "", "The host the HTTP service will listen on.")
 	flags.Int("port", 49110, "The port the HTTP will bind to.")
