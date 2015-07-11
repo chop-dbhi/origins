@@ -1,3 +1,5 @@
 *.sw?
 origins.yml
 sandbox.boltdb
+profile.cov
+profile.tmp

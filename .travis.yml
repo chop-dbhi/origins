@@ -8,8 +8,13 @@ go:
     - release
     - tip
 
+env:
+    global:
+        secure: FO74dKYrHCBHln21TPCIIQZ85HrOm4Zad0Hho43jMMfOgWokQxO6nNkqY0CqQRadyjAWb5fHd1FP0S7emKyxh0QNauVCKSZ8EDJe0YJKMdhbpTghpclPTCjBq6O94dxJ7fvjUjVxpJ0zexhhaXekC5u/C5XdaabfHMzCDafuIdw=
+
 install:
     - make test-install
 
 script:
-    - make test
+    - make test-travis
+    - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken=$COVERALLS_TOKEN
