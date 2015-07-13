@@ -1,35 +1,48 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/chop-dbhi/origins"
 	"github.com/chop-dbhi/origins/storage"
-	"github.com/chop-dbhi/origins/view"
 	"github.com/labstack/echo"
 	mw "github.com/labstack/echo/middleware"
+	"github.com/rs/cors"
 )
 
-const StatusUnprocessableEntity = 422
+type Server struct {
+	Host         string
+	Port         int
+	Debug        bool
+	Engine       storage.Engine
+	AllowedHosts []string
 
-func Serve(engine storage.Engine, host string, port int, debug bool) {
+	core *echo.Echo
+}
+
+// setup prepares the internal HTTP handle, middleware, and resources.
+func (s *Server) setup() {
 	e := echo.New()
+	s.core = e
 
+	// Enable HTTP 2
 	e.HTTP2(true)
-	e.SetDebug(debug)
 
+	// Toggle debug
+	e.SetDebug(s.Debug)
+
+	// Setup middleware.
 	e.Use(mw.Logger())
 	e.Use(mw.Recover())
 	e.Use(mw.Gzip())
 
-	// Adds the storage to the context.
-	e.Use(func(c *echo.Context) error {
-		c.Set("engine", engine)
-		return nil
-	})
+	// Setup CORS.
+	e.Use(cors.New(cors.Options{
+		AllowedOrigins: s.AllowedHosts,
+	}).Handler)
+
+	// Add middleware for setting the server context.
+	e.Use(s.serverContext)
 
 	e.Get("/", httpRoot)
 	e.Get("/domains", httpDomains)
@@ -40,182 +53,19 @@ func Serve(engine storage.Engine, host string, port int, debug bool) {
 	e.Get("/log/:domain/values", httpDomainValues)
 
 	e.Get("/timeline/:domain", httpTimeline)
+}
+
+func (s *Server) serverContext(c *echo.Context) error {
+	c.Set("engine", s.Engine)
+	return nil
+}
+
+func (s *Server) Serve() {
+	s.setup()
 
 	// Serve it up.
-	addr := fmt.Sprintf("%s:%d", host, port)
-
+	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	logrus.Infof("* Listening on %s...", addr)
 
-	e.Run(addr)
-}
-
-func httpRoot(c *echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"Title":   "Origins HTTP Service",
-		"Version": origins.Version,
-	})
-}
-
-func httpDomains(c *echo.Context) error {
-	r := c.Request()
-	e := c.Get("engine").(storage.Engine)
-
-	domain := "origins.domains"
-
-	iter, code, err := domainIteratorResource(domain, r, e)
-
-	// Special case, just show an empty list.
-	if err == view.ErrDoesNotExist {
-		return c.JSON(http.StatusOK, []string{})
-	}
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	// Extract the domain names.
-	idents, err := origins.Entities(iter)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	names := make([]string, len(idents))
-
-	for i, id := range idents {
-		names[i] = id.Name
-	}
-
-	return c.JSON(http.StatusOK, names)
-}
-
-func httpLog(c *echo.Context) error {
-	r := c.Request()
-	w := c.Response()
-	e := c.Get("engine").(storage.Engine)
-
-	domain := c.Param("domain")
-
-	iter, code, err := domainIteratorResource(domain, r, e)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	facts, err := origins.ReadAll(iter)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	return json.NewEncoder(w).Encode(facts)
-}
-
-func httpTimeline(c *echo.Context) error {
-	r := c.Request()
-	w := c.Response()
-	e := c.Get("engine").(storage.Engine)
-
-	domain := c.Param("domain")
-
-	iter, code, err := domainIteratorResource(domain, r, e)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	events, err := view.Timeline(iter, view.Descending)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	return json.NewEncoder(w).Encode(events)
-}
-
-func httpDomainEntities(c *echo.Context) error {
-	r := c.Request()
-	e := c.Get("engine").(storage.Engine)
-
-	domain := c.Param("domain")
-
-	iter, code, err := domainIteratorResource(domain, r, e)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	idents, err := origins.Entities(iter)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	return c.JSON(http.StatusOK, idents)
-}
-
-func httpDomainAttributes(c *echo.Context) error {
-	r := c.Request()
-	e := c.Get("engine").(storage.Engine)
-
-	domain := c.Param("domain")
-
-	iter, code, err := domainIteratorResource(domain, r, e)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	idents, err := origins.Attributes(iter)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	return c.JSON(http.StatusOK, idents)
-}
-
-func httpDomainValues(c *echo.Context) error {
-	r := c.Request()
-	e := c.Get("engine").(storage.Engine)
-
-	domain := c.Param("domain")
-
-	iter, code, err := domainIteratorResource(domain, r, e)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	idents, err := origins.Values(iter)
-
-	if err != nil {
-		return c.JSON(code, map[string]interface{}{
-			"error": fmt.Sprint(err),
-		})
-	}
-
-	return c.JSON(http.StatusOK, idents)
+	s.core.Run(addr)
 }

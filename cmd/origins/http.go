@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/chop-dbhi/origins/http"
 
 	"github.com/Sirupsen/logrus"
@@ -18,12 +20,17 @@ var httpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		bindStorageFlags(cmd.Flags())
 
-		engine := initStorage()
-		host := viper.GetString("http_host")
-		port := viper.GetInt("http_port")
-		debug := logrus.GetLevel() == logrus.DebugLevel
+		allowedHosts := strings.Split(viper.GetString("http_allowed_hosts"), ",")
 
-		http.Serve(engine, host, port, debug)
+		server := http.Server{
+			Engine:       initStorage(),
+			Host:         viper.GetString("http_host"),
+			Port:         viper.GetInt("http_port"),
+			Debug:        logrus.GetLevel() == logrus.DebugLevel,
+			AllowedHosts: allowedHosts,
+		}
+
+		server.Serve()
 	},
 }
 
@@ -34,7 +41,9 @@ func init() {
 
 	flags.String("host", "", "The host the HTTP service will listen on.")
 	flags.Int("port", 49110, "The port the HTTP will bind to.")
+	flags.String("allowed-hosts", "*", "Set of allowed hosts for cross-origin resource sharing.")
 
 	viper.BindPFlag("http_host", flags.Lookup("host"))
 	viper.BindPFlag("http_port", flags.Lookup("port"))
+	viper.BindPFlag("http_allowed_hosts", flags.Lookup("allowed-hosts"))
 }
