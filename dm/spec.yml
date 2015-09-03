@@ -1,0 +1,38 @@
+spec:
+    label: Spec Version
+    doc: The specification version of this format.
+    type: string
+
+domain:
+    label: Domain
+    doc: The domain the entity is being asserted in.
+    type: string
+
+operation:
+    label: Operation
+    doc: >
+        The operation to apply for the entity. If `retract`, the entity should be
+        retracted from downstream systems (removed). The default is `assert`.
+    type: string
+
+ident:
+    label: Identity
+    doc: >
+        The identity of the entity. The full expansion consists of a domain and
+        name attribute.
+    type: ident
+
+labels:
+    label: Labels
+    doc: >
+        A set of labels for the entity. Labels provide a simple means of expressing
+        secondary indexes on the entity.
+    type: string
+    cardinality: many
+
+attrs:
+    label: Attributes
+    doc: >
+        A set of key-value pairs that represent the entity. Keys are identity values
+        and values are either literal or identities themselves.
+    type: object
