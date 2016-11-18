@@ -3,18 +3,18 @@ language: go
 sudo: false
 
 go:
-    - 1.3
-    - 1.4
-    - release
-    - tip
+- 1.5
+- 1.6
+- 1.7
+- tip
 
 env:
-    global:
-        secure: FO74dKYrHCBHln21TPCIIQZ85HrOm4Zad0Hho43jMMfOgWokQxO6nNkqY0CqQRadyjAWb5fHd1FP0S7emKyxh0QNauVCKSZ8EDJe0YJKMdhbpTghpclPTCjBq6O94dxJ7fvjUjVxpJ0zexhhaXekC5u/C5XdaabfHMzCDafuIdw=
+  global:
+  - secure: XadQ5x49FeRfIRBiBxeSnfM6a31JKHoBTZ9NO/J3T0Wdq/qO3rDGjMu5ndds+ENsUUZRYCF7n5zUDChaQ2YRUFkpDeNEHJ+rhUFSK4od/gRX+O0B5tygmlxfUc5KZELd1569GwJI2hA1Rf4B20EjdrbUlTg6RLFA910ENM/UcU8=
 
 install:
-    - make test-install
+- make test-install
 
 script:
-    - make test-travis
-    - $HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken=$COVERALLS_TOKEN
+- make test-travis
+- "$HOME/gopath/bin/goveralls -coverprofile=profile.cov -service=travis-ci -repotoken=$COVERALLS_TOKEN"
